@@ -1,0 +1,7 @@
+{
+  "name": "Copy of AI Teenager",
+  "description": "Геймифицированная платформа для подростков и родителей с ИИ-наставником Катей. Обучение, медитации и трекинг прогресса.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
