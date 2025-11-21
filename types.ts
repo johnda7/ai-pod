@@ -1,3 +1,4 @@
+
 export enum UserRole {
   TEEN = 'TEEN',
   PARENT = 'PARENT',
@@ -16,6 +17,7 @@ export interface User {
   streak: number;
   completedTaskIds: string[];
   learningStyle?: LearningStyle;
+  interest: string; // e.g., "Football", "Anime", "Gaming"
 }
 
 export interface QuizQuestion {
@@ -29,6 +31,7 @@ export interface TaskContent {
   videoDuration?: string;
   questions?: QuizQuestion[];
   actionSteps?: string[];
+  adaptedText?: string; // AI generated text
 }
 
 export interface Task {
@@ -38,10 +41,10 @@ export interface Task {
   description: string;
   xpReward: number;
   type: 'VIDEO' | 'QUIZ' | 'ACTION' | 'UPLOAD' | 'AUDIO';
-  learningStyle: LearningStyle; // Google Learning adaptation
+  learningStyle: LearningStyle; 
   isLocked?: boolean;
-  position: { x: number; y: number }; // For the Path UI
-  content?: TaskContent; // Content for the game/lesson
+  position: { x: number; y: number }; 
+  content?: TaskContent;
 }
 
 export interface Lecture {
@@ -59,6 +62,21 @@ export interface Meditation {
   category: 'SLEEP' | 'FOCUS' | 'ANXIETY';
   duration: string;
   color: string;
+}
+
+export interface Soundscape {
+  id: string;
+  title: string;
+  iconType: 'RAIN' | 'FOREST' | 'OCEAN' | 'FIRE' | 'WIND';
+  youtubeId: string; // Real audio source
+  color: string;
+}
+
+export interface Quote {
+  text: string;
+  author: string;
+  movie?: string;
+  videoUrl?: string;
 }
 
 export interface ChatMessage {

@@ -11,7 +11,7 @@ const getAIClient = () => {
   return ai;
 };
 
-export const askKatya = async (userMessage: string, userContext: string): Promise<string> => {
+export const askKatya = async (userMessage: string, userContext: string, userInterest: string): Promise<string> => {
   try {
     if (!apiKey) {
       return "Привет! Я сейчас офлайн, но ты супер! Проверь интернет.";
@@ -20,26 +20,19 @@ export const askKatya = async (userMessage: string, userContext: string): Promis
     const client = getAIClient();
     
     const systemPrompt = `
-      Ты — Катя Карпенко, ИИ-наставник в приложении "AI Teenager".
+      Ты — Катя Карпенко, ИИ-наставник.
       
-      ТВОЯ МИССИЯ:
-      Помогать подросткам проходить образовательный путь (как в Duolingo) и поддерживать их ментальное здоровье (как в Calm).
+      ТВОЯ СУПЕР-СИЛА: АДАПТАЦИЯ (Google Learning Concept).
+      У пользователя есть интерес: "${userInterest}".
       
-      СТИЛЬ ОБЩЕНИЯ:
-      - Ты говоришь как крутая старшая сестра или молодой продвинутый ментор.
-      - Используй эмодзи, короткие фразы.
-      - ТЫ АДАПТИРУЕШЬСЯ ПОД ТИП ВОСПРИЯТИЯ (Google Learning):
-        * Если подросток любит смотреть -> Предлагай видео или схемы.
-        * Если любит слушать -> Предлагай аудио-форматы или подкасты.
-        * Если любит делать -> Давай конкретные челленджи.
+      ВСЕГДА используй метафоры, примеры и сленг, связанные с этим интересом.
+      Если интерес "Футбол" -> говори как тренер, используй термины "тайм", "пас", "гол".
+      Если интерес "Аниме" -> используй тропы сёнэн, говори про "прокачку", "арку персонажа".
+      Если интерес "Гейминг" -> говори про "XP", "боссов", "лут".
       
-      КОНТЕКСТ КУРСА:
-      3 недели. Неделя 1: Самопознание. Неделя 2: Дисциплина. Неделя 3: Цели.
+      Будь краткой, веселой и поддерживающей.
       
-      ТЕКУЩИЙ КОНТЕКСТ ПОЛЬЗОВАТЕЛЯ: ${userContext}
-      
-      Если спрашивают про скуку или усталость -> Предложи медитацию из раздела "Релакс".
-      Если спрашивают про учебу -> Подбодри и предложи выполнить следующий шаг на Карте.
+      КОНТЕКСТ ПОЛЬЗОВАТЕЛЯ: ${userContext}
     `;
 
     const response = await client.models.generateContent({
@@ -50,9 +43,31 @@ export const askKatya = async (userMessage: string, userContext: string): Promis
       }
     });
 
-    return response.text || "Что-то связь барахлит. Повтори?";
+    return response.text || "Связь барахлит, но я с тобой!";
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "Упс, мои нейросети перегрелись. Давай через минутку!";
+    return "Мои нейросети перегрелись. Давай через минутку!";
+  }
+};
+
+export const adaptTaskContent = async (taskTitle: string, originalDescription: string, userInterest: string): Promise<string> => {
+  try {
+    if (!apiKey) return originalDescription;
+
+    const client = getAIClient();
+    const prompt = `
+      Перепиши описание урока "${taskTitle}" (${originalDescription}) для подростка, который фанатеет от: "${userInterest}".
+      Используй этот интерес как метафору, чтобы объяснить суть урока.
+      Сделай текст захватывающим, игровым и мотивирующим. Максимум 3 предложения.
+    `;
+
+    const response = await client.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+
+    return response.text || originalDescription;
+  } catch (error) {
+    return originalDescription;
   }
 };

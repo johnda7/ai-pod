@@ -1,4 +1,5 @@
-import { Lecture, Task, User, UserRole, StudentProgress, Meditation } from "./types";
+
+import { Lecture, Task, User, UserRole, StudentProgress, Meditation, Soundscape, Quote } from "./types";
 
 export const MOCK_USER: User = {
   id: 'u1',
@@ -8,8 +9,9 @@ export const MOCK_USER: User = {
   level: 5,
   avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
   streak: 12,
-  completedTaskIds: [], // Reset for demo
-  learningStyle: 'VISUAL'
+  completedTaskIds: [], 
+  learningStyle: 'VISUAL',
+  interest: 'Гейминг' // Default interest
 };
 
 export const WEEKS = [1, 2, 3];
@@ -26,7 +28,7 @@ export const TASKS: Task[] = [
     learningStyle: 'VISUAL',
     position: { x: 50, y: 0 },
     content: {
-      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Placeholder
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", 
       videoDuration: "2:30"
     }
   },
@@ -126,11 +128,46 @@ export const TASKS: Task[] = [
 ];
 
 export const MEDITATIONS: Meditation[] = [
-  { id: 'm1', title: 'Супер-сон', category: 'SLEEP', duration: '15 мин', color: 'bg-indigo-900' },
-  { id: 'm2', title: 'Спокойствие перед экзаменом', category: 'ANXIETY', duration: '5 мин', color: 'bg-teal-700' },
-  { id: 'm3', title: 'Фокус внимания', category: 'FOCUS', duration: '10 мин', color: 'bg-orange-600' },
-  { id: 'm4', title: 'Сканирование тела', category: 'SLEEP', duration: '20 мин', color: 'bg-blue-800' },
-  { id: 'm5', title: 'Перезагрузка', category: 'ANXIETY', duration: '3 мин', color: 'bg-sky-600' },
+  { id: 'm1', title: 'Супер-сон', category: 'SLEEP', duration: '15 мин', color: 'from-indigo-900 to-blue-900' },
+  { id: 'm2', title: 'Спокойствие перед экзаменом', category: 'ANXIETY', duration: '5 мин', color: 'from-teal-700 to-emerald-800' },
+  { id: 'm3', title: 'Фокус внимания', category: 'FOCUS', duration: '10 мин', color: 'from-orange-600 to-red-700' },
+  { id: 'm4', title: 'Сканирование тела', category: 'SLEEP', duration: '20 мин', color: 'from-blue-800 to-indigo-900' },
+  { id: 'm5', title: 'Перезагрузка', category: 'ANXIETY', duration: '3 мин', color: 'from-sky-600 to-blue-600' },
+];
+
+// Updated with Real Ambient YouTube IDs
+export const SOUNDSCAPES: Soundscape[] = [
+  { id: 's1', title: 'Дождь', iconType: 'RAIN', color: 'bg-blue-500', youtubeId: 'mPZkdNFkNps' }, // Heavy Rain
+  { id: 's2', title: 'Лес', iconType: 'FOREST', color: 'bg-green-600', youtubeId: 'xNN7iTA57jM' }, // Forest Birds
+  { id: 's3', title: 'Океан', iconType: 'OCEAN', color: 'bg-cyan-500', youtubeId: 'BnT44CqT-ec' }, // Ocean Waves
+  { id: 's4', title: 'Камин', iconType: 'FIRE', color: 'bg-orange-500', youtubeId: 'L_LUpnjgPso' }, // Fireplace
+  { id: 's5', title: 'Ветер', iconType: 'WIND', color: 'bg-slate-400', youtubeId: '5mflS1Yb4Ms' }, // Wind
+];
+
+export const QUOTES: Quote[] = [
+  { 
+    text: "Не слушай никого, кто скажет, будто ты чего-то не можешь. Даже меня. Понял? Если есть мечта, оберегай её.", 
+    author: "Крис Гарднер", 
+    movie: "В погоне за счастьем",
+    videoUrl: "https://www.youtube.com/embed/UivKhvJHl1Q?si=MhX7_mXw5q9q1y1_" 
+  },
+  { 
+    text: "Совсем не важно, как ты ударишь, а важно, какой держишь удар, как двигаешься вперёд. Будешь идти – иди, если с испугу не свернёшь.", 
+    author: "Рокки Бальбоа", 
+    movie: "Рокки Бальбоа",
+    videoUrl: "https://www.youtube.com/embed/D_Vg4uyYwEk"
+  },
+  { 
+    text: "Да, прошлое может причинять боль. Но можно или убегать от него, или учиться у него.", 
+    author: "Рафики", 
+    movie: "Король Лев",
+    videoUrl: "https://www.youtube.com/embed/dZfGTL2PY3E" 
+  },
+  { 
+    text: "Странно, да? Мы путешествуем по миру, чтобы найти красоту, но должны нести её в себе, иначе не найдём.", 
+    author: "Хранитель Времени",
+    movie: "Хранитель Времени" 
+  },
 ];
 
 export const LECTURES: Lecture[] = [
@@ -173,17 +210,12 @@ export const MOCK_STUDENTS: StudentProgress[] = Array.from({ length: 20 }).map((
 }));
 
 // -- Rive-like Animation Assets --
-// Using DiceBear with distinct features to simulate animation frames
 const BASE = "https://api.dicebear.com/7.x/avataaars/svg?seed=KatyaNew&hairColor=4a3121&top=longHair&skinColor=f8d2a7&clothesColor=3c4f76&eyebrows=default&backgroundColor=transparent";
 
 export const KATYA_VARIANTS = {
-  // Idle: Happy smile
   IDLE: `${BASE}&eyes=happy&mouth=smile`,
-  // Blink: Eyes closed
   BLINK: `${BASE}&eyes=closed&mouth=smile`,
-  // Talk: Mouth open/default
   TALK: `${BASE}&eyes=happy&mouth=default`,
-  // Talk Open: Mouth wide/scream (used for animation)
   TALK_OPEN: `${BASE}&eyes=happy&mouth=scream`, 
 };
 
