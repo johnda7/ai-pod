@@ -12,6 +12,7 @@ import { User as UserIcon, Settings, RefreshCw, Github } from 'lucide-react';
 
 const STORAGE_KEY = 'ai_teen_v5_stable';
 
+// --- ROBUST STORAGE SOLUTION ---
 const memoryStorage: Record<string, string> = {};
 
 const safeStorage = {
@@ -66,6 +67,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     try {
+      // Safe access using global declaration
       const tg = window.Telegram?.WebApp;
       if (tg) {
         tg.ready();
@@ -73,7 +75,9 @@ const App: React.FC = () => {
         if (tg.setHeaderColor) tg.setHeaderColor('#ffffff');
         if (tg.setBackgroundColor) tg.setBackgroundColor('#f8fafc');
       }
-    } catch (e) {}
+    } catch (e) {
+        // Ignore Telegram errors
+    }
   }, []);
 
   const handleRoleChange = (role: UserRole) => {
@@ -207,6 +211,7 @@ const App: React.FC = () => {
         onSyncComplete={handleSyncComplete}
       />
 
+      {/* Profile Menu */}
       {isProfileOpen && (
         <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setIsProfileOpen(false)}></div>
