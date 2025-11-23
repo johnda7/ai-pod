@@ -50,4 +50,13 @@ Purpose: give a short, actionable summary so an AI agent can be productive right
 - `vite.config.ts` env `define` mapping — changing it alters how env values are available in the client.
 - Public asset URIs in `constants.ts` — they are used across many components for layout.
 
+9) For AI Studio agents: Commit guidelines
+When saving progress to GitHub, follow these rules:
+- **Always commit ALL changed files** (not just save_data.json): App.tsx, components/*.tsx, services/*.ts, index.html, vite.config.ts, etc.
+- **Use descriptive commit messages** with format: `<type>: Brief description` (types: feat, fix, style, docs, refactor)
+- **Group related changes** into one commit using GitHub Tree API (don't create 15 separate commits for 15 files)
+- **Example good commit**: `feat: Add meditation sounds and XP boost\n\n- Create MeditationView with 5 tracks\n- Update XP formula\n- Save user progress (1250 XP)`
+- **Example bad commit**: `💾 Auto-save: Full App Snapshot` or `update` (too vague, no context)
+- See `.aistudio/commit-instructions.md` and `AI_STUDIO_SYNC.md` for detailed instructions
+
 If anything above is unclear or you want the instructions to emphasize a different area (for example, adding tests, CI, or a server-side proxy for API keys), tell me what to add and I will iterate.
