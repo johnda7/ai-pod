@@ -1,0 +1,29 @@
+name: AI Studio Sync
+
+# Запускается при каждом push в main
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Можно запустить вручную
+
+jobs:
+  sync-to-ai-studio:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Notify AI Studio about update
+        run: |
+          echo "✅ Код обновлён на GitHub"
+          echo "🔄 AI Studio должен подтянуть изменения"
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"
+          
+      # Здесь можно добавить webhook в AI Studio если есть API
+      # - name: Trigger AI Studio Sync
+      #   run: |
+      #     curl -X POST "https://ai.studio/api/sync" \
+      #       -H "Authorization: Bearer ${{ secrets.AI_STUDIO_TOKEN }}" \
+      #       -d '{"repo": "${{ github.repository }}", "commit": "${{ github.sha }}"}'

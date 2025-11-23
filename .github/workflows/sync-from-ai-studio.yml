@@ -1,0 +1,44 @@
+name: Sync from AI Studio
+
+# Запускается по расписанию каждые 5 минут
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # Каждые 5 минут
+  workflow_dispatch: # Можно запустить вручную
+
+jobs:
+  pull-from-ai-studio:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Configure Git
+        run: |
+          git config user.name "AI Studio Bot"
+          git config user.email "ai-studio@bot.com"
+          
+      - name: Pull latest from main
+        run: |
+          git pull origin main --rebase || true
+          
+      - name: Check for AI Studio changes
+        id: check
+        run: |
+          # Проверяем есть ли изменения от AI Studio
+          if git log --since="5 minutes ago" --grep="💾 Auto-save" --oneline | grep -q "💾"; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "✅ Найдены новые изменения от AI Studio"
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ Нет новых изменений"
+          fi
+          
+      - name: Notify about sync
+        if: steps.check.outputs.changes == 'true'
+        run: |
+          echo "🔄 AI Studio синхронизирован с GitHub"
+          git log -1 --pretty=format:"%h - %s (%an)"
