@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, X, Mic } from 'lucide-react';
-import { ChatMessage, User } from '@/types';
+import { ChatMessage, User } from '../types';
 import { askKatya } from '../services/geminiService';
 import { KATYA_VARIANTS } from '../constants';
 

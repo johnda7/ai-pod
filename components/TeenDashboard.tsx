@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { TASKS } from '../constants';
-import { Task, LearningStyle, User } from '@/types';
+import { Task, LearningStyle, User } from '../types';
 import { Check, Lock, Star, Video, Headphones, Zap, Gamepad2, Dribbble, Palette, BrainCircuit, Eye, Hand, User as UserIcon, LayoutGrid, Music, Github } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
@@ -38,6 +38,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({
   const [activeTab, setActiveTab] = useState<Tab>('LEARN');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   
+  // Use local state for immediate UI feedback, but sync with prop
   const userInterest = user.interest || 'Гейминг';
 
   const handleInterestChange = (newInterest: string) => {
@@ -65,6 +66,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({
   return (
     <div className="h-full bg-slate-50 relative font-sans selection:bg-indigo-100 selection:text-indigo-700">
       
+      {/* --- LEARN TAB --- */}
       {activeTab === 'LEARN' && (
         <div className="min-h-full pb-32 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
           <div className="bg-white/80 backdrop-blur-md p-4 border-b border-slate-100 sticky top-0 z-30 shadow-sm">
@@ -90,6 +92,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({
                             <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full animate-pulse"></span>
                          </button>
                      )}
+
                      <button onClick={() => setActiveTab('PROFILE')} className="w-9 h-9 bg-indigo-100 rounded-full border-2 border-white shadow-md overflow-hidden active:scale-95 transition-transform">
                          <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
                      </button>
@@ -144,6 +147,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({
             {TASKS.map((task, index) => {
               const isCompleted = user.completedTaskIds.includes(task.id);
               const isLocked = false; 
+              
               const isNext = !isCompleted; 
 
               const TypeIcon = () => {
@@ -224,12 +228,14 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({
         </div>
       )}
 
+      {/* --- RELAX TAB --- */}
       {activeTab === 'RELAX' && (
         <div className="min-h-full animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
             <MeditationView />
         </div>
       )}
 
+      {/* --- PROFILE TAB --- */}
       {activeTab === 'PROFILE' && (
         <div className="min-h-full animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
             <TeenProfile 
