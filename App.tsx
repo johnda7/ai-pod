@@ -1,19 +1,84 @@
-import React, { useState } from 'react';
-import { UserRole, Task, User, LearningStyle } from './types';
+
+import React, { useState, useEffect } from 'react';
+import { UserRole, Task, User, LearningStyle, ChatMessage } from './types';
 import { MOCK_USER } from './constants';
 import { TeenDashboard } from './components/TeenDashboard';
 import { ParentDashboard } from './components/ParentDashboard';
 import { CuratorDashboard } from './components/CuratorDashboard';
 import { RoleSelector } from './components/RoleSelector';
 import { KatyaChat } from './components/KatyaChat';
-import { LogOut, User as UserIcon, Settings } from 'lucide-react';
+import { GitHubSyncModal } from './components/GitHubSyncModal';
+import { User as UserIcon, Settings, RefreshCw, Github } from 'lucide-react';
+
+const STORAGE_KEY = 'ai_teen_v5_stable';
+
+// --- ROBUST STORAGE SOLUTION ---
+const memoryStorage: Record<string, string> = {};
+
+const safeStorage = {
+  get: (key: string): any | null => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const item = window.localStorage.getItem(key);
+        return item ? JSON.parse(item) : null;
+      }
+    } catch (e) {
+      const item = memoryStorage[key];
+      return item ? JSON.parse(item) : null;
+    }
+    return null;
+  },
+  set: (key: string, value: any) => {
+    const stringValue = JSON.stringify(value);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(key, stringValue);
+      }
+    } catch (e) {
+      memoryStorage[key] = stringValue;
+    }
+  },
+  remove: (key: string) => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem(key);
+      }
+    } catch (e) {
+      delete memoryStorage[key];
+    }
+  }
+};
 
 const App: React.FC = () => {
-  console.log('🚀 App component loaded');
-  console.log('MOCK_USER:', MOCK_USER);
-  
-  const [currentUser, setCurrentUser] = useState<User>(MOCK_USER);
+  const [currentUser, setCurrentUser] = useState<User>(() => {
+    const saved = safeStorage.get(STORAGE_KEY);
+    if (saved && saved.id && saved.role) {
+      return saved;
+    }
+    return MOCK_USER;
+  });
+
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
+
+  useEffect(() => {
+    safeStorage.set(STORAGE_KEY, currentUser);
+  }, [currentUser]);
+
+  useEffect(() => {
+    try {
+      // Safe access using global declaration
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        tg.ready();
+        tg.expand();
+        if (tg.setHeaderColor) tg.setHeaderColor('#ffffff');
+        if (tg.setBackgroundColor) tg.setBackgroundColor('#f8fafc');
+      }
+    } catch (e) {
+        // Ignore Telegram errors
+    }
+  }, []);
 
   const handleRoleChange = (role: UserRole) => {
     setCurrentUser(prev => ({ ...prev, role }));
@@ -21,6 +86,10 @@ const App: React.FC = () => {
 
   const handleTaskComplete = (task: Task) => {
     if (currentUser.completedTaskIds.includes(task.id)) return;
+    try {
+       window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
+    } catch(e) {}
+
     setCurrentUser(prev => ({
       ...prev,
       xp: prev.xp + task.xpReward,
@@ -28,89 +97,148 @@ const App: React.FC = () => {
     }));
   };
 
-  const handleUpdateUserStyle = (style: LearningStyle) => {
+  const handleUpdateLearningStyle = (style: LearningStyle) => {
     setCurrentUser(prev => ({ ...prev, learningStyle: style }));
+  };
+
+  const handleUpdateInterest = (interest: string) => {
+    setCurrentUser(prev => ({ ...prev, interest }));
+  };
+
+  const handleResetProgress = () => {
+    const confirmed = window.confirm ? window.confirm("Сбросить весь прогресс?") : true;
+    if (confirmed) {
+      safeStorage.remove(STORAGE_KEY);
+      safeStorage.remove('katya_chat_history');
+      setCurrentUser(MOCK_USER);
+      window.location.reload();
+    }
+  };
+
+  const handleExportData = () => {
+    try {
+      const dataToSave = {
+        version: '1.0',
+        user: currentUser,
+        chatHistory: safeStorage.get('katya_chat_history') || [],
+        timestamp: new Date().toISOString()
+      };
+      
+      const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `AI-Teenager-Backup-${new Date().getDate()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+    } catch (e) {
+      alert("Ошибка экспорта.");
+    }
+  };
+
+  const handleImportData = (file: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const result = e.target?.result as string;
+        const parsed = JSON.parse(result);
+        if (parsed.user && parsed.user.id) {
+            safeStorage.set(STORAGE_KEY, parsed.user);
+            if (parsed.chatHistory) {
+              safeStorage.set('katya_chat_history', parsed.chatHistory);
+            }
+            setCurrentUser(parsed.user);
+            alert("✅ Прогресс восстановлен!");
+            setTimeout(() => setIsProfileOpen(false), 500);
+        } else {
+          alert("❌ Неверный формат файла.");
+        }
+      } catch (e) {
+        alert("❌ Ошибка чтения файла.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleSyncComplete = (data: { user: User; chatHistory: ChatMessage[] }) => {
+     safeStorage.set(STORAGE_KEY, data.user);
+     if (data.chatHistory) {
+        safeStorage.set('katya_chat_history', data.chatHistory);
+     }
+     setCurrentUser(data.user);
+     window.location.reload(); 
   };
 
   return (
     <div className="flex flex-col h-full bg-slate-50 relative overflow-hidden">
-      {/* Top Bar - Simplified for App Look */}
-      {currentUser.role !== UserRole.TEEN && (
-         <header className="flex-none bg-white px-4 py-3 flex items-center justify-between border-b border-slate-100 shadow-sm z-30">
-            <h1 className="font-bold text-lg text-slate-800">AI Teenager</h1>
-            <button onClick={() => setIsProfileOpen(true)}>
-                <img src={currentUser.avatarUrl} className="w-8 h-8 rounded-full bg-slate-200" alt="Profile" />
-            </button>
-         </header>
-      )}
-
-      {/* Dev Tool: Role Switcher (Only visible in profile or strictly top for dev) */}
-      <div className="absolute top-0 left-0 z-50 opacity-0 hover:opacity-100 transition-opacity">
+      
+      <div className="absolute top-0 left-0 z-50 opacity-0 hover:opacity-100 transition-opacity p-2 pointer-events-none hover:pointer-events-auto">
          <RoleSelector currentRole={currentUser.role} onRoleChange={handleRoleChange} />
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto scroll-smooth bg-slate-50">
+      <main className="flex-1 overflow-y-auto scroll-smooth bg-slate-50 overscroll-none safe-area-inset-bottom">
         {currentUser.role === UserRole.TEEN && (
           <TeenDashboard 
-            xp={currentUser.xp} 
-            completedTaskIds={currentUser.completedTaskIds}
-            onTaskComplete={handleTaskComplete} 
+            user={currentUser}
+            onTaskComplete={handleTaskComplete}
+            onUpdateUserStyle={handleUpdateLearningStyle}
+            onUpdateInterest={handleUpdateInterest}
+            onExportData={handleExportData}
+            onImportData={handleImportData}
+            onOpenGitHubSync={() => setIsGitHubModalOpen(true)}
           />
         )}
         {currentUser.role === UserRole.PARENT && (
-          <ParentDashboard />
+          <ParentDashboard student={currentUser} />
         )}
         {currentUser.role === UserRole.CURATOR && (
           <CuratorDashboard />
         )}
       </main>
 
-      {/* AI Assistant */}
-      {currentUser.role === UserRole.TEEN && <KatyaChat />}
+      {currentUser.role === UserRole.TEEN && <KatyaChat user={currentUser} />}
 
-      {/* Settings / Profile Drawer */}
+      <GitHubSyncModal 
+        isOpen={isGitHubModalOpen}
+        onClose={() => setIsGitHubModalOpen(false)}
+        currentUser={currentUser}
+        chatHistory={safeStorage.get('katya_chat_history') || []}
+        onSyncComplete={handleSyncComplete}
+      />
+
+      {/* Profile Menu */}
       {isProfileOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div 
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity"
-            onClick={() => setIsProfileOpen(false)}
-          ></div>
-          <div className="relative w-72 bg-white h-full shadow-2xl animate-in slide-in-from-right duration-300 p-6 flex flex-col">
-             <div className="flex items-center gap-4 mb-8">
-                 <img src={currentUser.avatarUrl} className="w-16 h-16 rounded-full" alt="" />
-                 <div>
-                     <h3 className="font-bold text-lg">{currentUser.name}</h3>
-                     <p className="text-sm text-slate-500">{currentUser.role}</p>
-                 </div>
+        <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setIsProfileOpen(false)}></div>
+          <div className="relative w-80 bg-white h-full shadow-2xl animate-in slide-in-from-right duration-300 p-6 flex flex-col">
+             <div className="flex justify-between items-start mb-6">
+                <h2 className="text-xl font-bold text-slate-800">Меню</h2>
+                <button onClick={() => setIsProfileOpen(false)} className="p-2 hover:bg-slate-100 rounded-full">
+                    <Settings size={20} className="text-slate-500" />
+                </button>
              </div>
              
              <div className="space-y-2 flex-1">
-                 <button className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left font-medium text-slate-700">
-                     <UserIcon size={20} className="text-slate-400" /> Профиль
+                 <button 
+                    onClick={() => { setIsProfileOpen(false); setIsGitHubModalOpen(true); }}
+                    className="w-full flex items-center gap-3 p-3 bg-slate-900 text-white hover:bg-slate-800 rounded-xl transition-colors text-left font-medium"
+                 >
+                     <Github size={20} /> GitHub Cloud Save
                  </button>
-                 <button className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left font-medium text-slate-700">
-                     <Settings size={20} className="text-slate-400" /> Настройки
-                 </button>
-             </div>
-
-             {/* Dev Role Switcher moved here for access */}
-             <div className="border-t border-slate-100 pt-4">
-                 <p className="text-xs text-slate-400 mb-2 uppercase font-bold">Режим отладки</p>
-                 <RoleSelector currentRole={currentUser.role} onRoleChange={handleRoleChange} />
+                 
+                 <div className="pt-4 mt-4 border-t border-slate-100">
+                    <button onClick={handleResetProgress} className="w-full flex items-center gap-3 p-3 bg-red-50 text-red-600 rounded-xl transition-colors text-left font-medium hover:bg-red-100">
+                        <RefreshCw size={20} /> Сброс прогресса
+                    </button>
+                 </div>
              </div>
           </div>
         </div>
-      )}
-      
-      {/* Overlay button for profile in Teen mode if needed, currently integrated in TeenDashboard Header */}
-      {currentUser.role === UserRole.TEEN && (
-          <button 
-            onClick={() => setIsProfileOpen(true)}
-            className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full overflow-hidden border-2 border-white shadow-sm"
-          >
-              <img src={currentUser.avatarUrl} className="w-full h-full object-cover" alt="Profile" />
-          </button>
       )}
     </div>
   );
