@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserRole, Task, User } from './types';
+import { UserRole, Task, User, LearningStyle } from './types';
 import { MOCK_USER } from './constants';
 import { TeenDashboard } from './components/TeenDashboard';
 import { ParentDashboard } from './components/ParentDashboard';
@@ -9,6 +9,9 @@ import { KatyaChat } from './components/KatyaChat';
 import { LogOut, User as UserIcon, Settings } from 'lucide-react';
 
 const App: React.FC = () => {
+  console.log('🚀 App component loaded');
+  console.log('MOCK_USER:', MOCK_USER);
+  
   const [currentUser, setCurrentUser] = useState<User>(MOCK_USER);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -23,6 +26,10 @@ const App: React.FC = () => {
       xp: prev.xp + task.xpReward,
       completedTaskIds: [...prev.completedTaskIds, task.id]
     }));
+  };
+
+  const handleUpdateUserStyle = (style: LearningStyle) => {
+    setCurrentUser(prev => ({ ...prev, learningStyle: style }));
   };
 
   return (
