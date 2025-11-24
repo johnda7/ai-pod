@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { TASKS, KATYA_IMAGE_URL } from '../constants';
 import { Task, User } from '../types';
-import { Check, Lock, Star, Gamepad2, Dribbble, Palette, BrainCircuit, LayoutGrid, User as UserIcon, Music, Play } from 'lucide-react';
+import { Check, Lock, Star, Gamepad2, Dribbble, Palette, BrainCircuit, LayoutGrid, User as UserIcon, Music, Play, Database, Wifi } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
 import { updateUserProfile } from '../services/db';
+import { isSupabaseEnabled } from '../services/supabaseClient';
 
 interface TeenDashboardProps {
   user: User;
@@ -76,7 +77,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                      <span className="text-slate-400 text-sm font-medium">{user.xp} XP</span>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 w-full max-w-xs px-4">
+                <div className="grid grid-cols-2 gap-4 w-full max-w-xs px-4 mb-8">
                     <div className="glass-panel p-5 rounded-3xl text-center hover:bg-white/5 transition-colors">
                         <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-indigo-400 to-cyan-400 mb-1">{user.streak}</div>
                         <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Дней подряд</div>
@@ -85,6 +86,43 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                         <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-amber-400 to-orange-400 mb-1">{user.completedTaskIds.length}</div>
                         <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Задания</div>
                     </div>
+                </div>
+
+                {/* SYSTEM STATUS PANEL */}
+                <div className="w-full max-w-xs px-4">
+                    <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">System Status</h3>
+                        
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2 text-slate-300">
+                                    <Database size={14} />
+                                    <span>Database (Supabase)</span>
+                                </div>
+                                {isSupabaseEnabled ? (
+                                    <span className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold bg-emerald-400/10 px-2 py-1 rounded-full">
+                                        <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
+                                        ONLINE
+                                    </span>
+                                ) : (
+                                    <span className="text-slate-500 text-xs font-bold bg-slate-700 px-2 py-1 rounded-full">
+                                        OFFLINE
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2 text-slate-300">
+                                    <Wifi size={14} />
+                                    <span>Connection</span>
+                                </div>
+                                <span className="text-emerald-400 text-xs font-bold">Stable</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p className="text-center text-[10px] text-slate-600 mt-4">
+                        v1.0.0 • ID: {user.id.slice(0, 8)}...
+                    </p>
                 </div>
             </div>
         );
