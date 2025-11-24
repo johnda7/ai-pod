@@ -1,8 +1,9 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { TASKS } from '../constants';
 import { Task, User } from '../types';
-import { Check, Lock, Star, LayoutGrid, User as UserIcon, Music, Database, Zap, Shield, Hexagon, Brain, Play, Sparkles } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, Music, Database, Zap, Shield, Hexagon, Brain, Play, Sparkles, Heart } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
 import { MemoryGame } from './MemoryGame';
@@ -43,9 +44,9 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
           title: 'Нейро-Тренировка',
           description: 'Успешная калибровка',
           xpReward: xp,
-          type: 'ACTION',
-          learningStyle: 'VISUAL',
-          position: { x: 0, y: 0 }
+          isLocked: false,
+          position: { x: 0, y: 0 },
+          slides: []
       };
       onTaskComplete(gameTask);
   };
@@ -163,20 +164,18 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                     </div>
                  </div>
                  
-                 <div className="flex gap-3 items-center">
-                     <button 
-                        onClick={() => setIsGameOpen(true)}
-                        className="w-14 h-14 rounded-2xl bg-[#1E2332] border border-rose-500/30 flex items-center justify-center shadow-[0_0_20px_rgba(244,63,94,0.3)] hover:scale-105 active:scale-95 transition-all group relative"
-                     >
-                         <Brain size={28} className="text-rose-400 group-hover:text-rose-300 transition-colors" />
-                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-[#0A0F1C] animate-pulse"></div>
-                     </button>
+                 <div className="flex gap-2 items-center">
+                     {/* HP Indicator */}
+                     <div className="glass-panel px-3 py-2 rounded-2xl flex items-center gap-2 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
+                        <Heart size={20} fill="currentColor" className="text-rose-500 drop-shadow-[0_0_10px_rgba(244,63,94,0.6)]" />
+                        <span className="text-white font-black font-mono">{user.hp || 5}</span>
+                     </div>
 
-                     <div className="glass-panel px-5 py-3 rounded-2xl flex items-center gap-3 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
+                     <div className="glass-panel px-3 py-2 rounded-2xl flex items-center gap-2 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
                          <div className={`transition-transform duration-300 ${isXpAnimating ? 'scale-125 rotate-12' : ''}`}>
                              <Star size={20} fill="currentColor" className="text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.6)]" />
                          </div>
-                         <div className={`text-xl font-black font-mono ${isXpAnimating ? 'text-yellow-300' : 'text-white'}`}>
+                         <div className={`text-lg font-black font-mono ${isXpAnimating ? 'text-yellow-300' : 'text-white'}`}>
                              {user.xp}
                          </div>
                      </div>
@@ -284,7 +283,6 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                                                 ? <Check size={40} strokeWidth={4} className="text-emerald-400 drop-shadow-md" /> 
                                                 : isLocked 
                                                     ? <Lock size={28} className="text-slate-500" /> 
-                                                    : task.type === 'VIDEO' ? <Play size={36} fill="currentColor" className="text-white drop-shadow-lg" />
                                                     : <div className="text-white drop-shadow-md font-black text-4xl font-mono">{index + 1}</div>
                                             }
                                          </div>

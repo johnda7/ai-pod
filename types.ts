@@ -9,41 +9,77 @@ export enum UserRole {
 export type LearningStyle = 'VISUAL' | 'AUDIO' | 'KINESTHETIC';
 
 export interface User {
-  id: string; // Internal UUID
-  telegramId?: number; // Telegram User ID
-  username?: string; // Telegram Username
+  id: string; 
+  telegramId?: number; 
+  username?: string; 
   name: string;
   role: UserRole;
   xp: number;
   level: number;
+  hp: number; // Health Points (Lives)
+  maxHp: number;
   avatarUrl: string;
   streak: number;
-  completedTaskIds: string[]; // Legacy local check
+  completedTaskIds: string[]; 
   learningStyle?: LearningStyle;
   interest: string;
 }
 
-export interface TaskProgress {
-  userId: string;
-  taskId: string;
-  completedAt: string; // ISO Date
-  xpEarned: number;
+// --- NEW LESSON ENGINE TYPES ---
+
+export type SlideType = 'THEORY' | 'QUIZ' | 'SORTING' | 'PUZZLE' | 'VIDEO';
+
+export interface BaseSlide {
+  id: string;
+  type: SlideType;
+  title?: string; // Optional header
 }
 
-export interface QuizQuestion {
+export interface TheorySlide extends BaseSlide {
+  type: 'THEORY';
+  content: string;
+  imageUrl?: string;
+  buttonText?: string;
+}
+
+export interface VideoSlide extends BaseSlide {
+  type: 'VIDEO';
+  videoUrl: string;
+  duration: string;
+  description: string;
+}
+
+export interface QuizSlide extends BaseSlide {
+  type: 'QUIZ';
   question: string;
   options: string[];
   correctIndex: number;
+  explanation?: string; // Shown after answer
 }
 
-export interface TaskContent {
-  videoUrl?: string;
-  videoDuration?: string;
-  questions?: QuizQuestion[];
-  actionSteps?: string[];
-  topics?: string[];
-  adaptedText?: string;
+export interface SortingItem {
+  id: string;
+  text: string;
+  emoji: string;
+  category: 'LEFT' | 'RIGHT'; // e.g., 'BAD' | 'GOOD'
 }
+
+export interface SortingSlide extends BaseSlide {
+  type: 'SORTING';
+  question: string;
+  leftCategoryLabel: string;
+  rightCategoryLabel: string;
+  items: SortingItem[];
+}
+
+export interface PuzzleSlide extends BaseSlide {
+  type: 'PUZZLE';
+  question: string;
+  correctSentence: string[]; // Array of words in order
+  distractorWords?: string[]; // Extra words to confuse
+}
+
+export type LessonSlide = TheorySlide | QuizSlide | SortingSlide | PuzzleSlide | VideoSlide;
 
 export interface Task {
   id: string;
@@ -51,11 +87,18 @@ export interface Task {
   title: string;
   description: string;
   xpReward: number;
-  type: 'VIDEO' | 'QUIZ' | 'ACTION' | 'UPLOAD' | 'AUDIO';
-  learningStyle: LearningStyle; 
   isLocked?: boolean;
   position: { x: number; y: number }; 
-  content?: TaskContent;
+  slides: LessonSlide[]; // The content flow
+}
+
+// --- LEGACY/OTHER TYPES ---
+
+export interface TaskProgress {
+  userId: string;
+  taskId: string;
+  completedAt: string; 
+  xpEarned: number;
 }
 
 export interface Lecture {
@@ -98,7 +141,6 @@ export interface ChatMessage {
   timestamp: number;
 }
 
-// Used for Mock Data in constants.ts
 export interface StudentProgress {
   id: string;
   name: string;
@@ -111,12 +153,11 @@ export interface StudentProgress {
   tasksCompleted: number;
 }
 
-// For Curator View
 export interface StudentStats {
   id: string;
   name: string;
   avatar: string;
-  week1Progress: number; // 0-100
+  week1Progress: number; 
   week2Progress: number;
   week3Progress: number;
   status: 'active' | 'risk' | 'inactive';
