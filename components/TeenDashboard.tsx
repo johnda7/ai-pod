@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { TASKS } from '../constants';
 import { Task, User } from '../types';
-import { Check, Lock, Star, LayoutGrid, User as UserIcon, Music, Database, Zap, Shield, QrCode, Brain, Play } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, Music, Database, Zap, Shield, QrCode, Brain, Play, Hexagon, Sparkles } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
 import { MemoryGame } from './MemoryGame';
@@ -75,24 +75,25 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                     
                     <div className="relative z-10 flex items-center gap-5">
                         {/* Avatar */}
-                        <div className="relative">
-                            <div className="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20">
-                                <img src={user.avatarUrl} className="w-full h-full rounded-full object-cover border-2 border-[#151925]" alt="Profile" />
+                        <div className="relative group">
+                            <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full opacity-75 group-hover:opacity-100 blur transition duration-1000 group-hover:duration-200"></div>
+                            <div className="relative w-24 h-24 rounded-full p-0.5 bg-[#151925]">
+                                <img src={user.avatarUrl} className="w-full h-full rounded-full object-cover" alt="Profile" />
                             </div>
                             <div className="absolute -bottom-1 -right-1 bg-[#151925] p-1 rounded-full">
-                                <div className="bg-emerald-500 w-3 h-3 rounded-full border-2 border-[#151925]"></div>
+                                <div className="bg-emerald-500 w-4 h-4 rounded-full border-2 border-[#151925] shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
                             </div>
                         </div>
                         
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                            <h2 className="text-2xl font-bold text-white tracking-tight truncate">{user.name}</h2>
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className="px-2 py-0.5 rounded-md bg-white/10 text-[10px] font-bold text-indigo-300 uppercase tracking-wider border border-white/5">
+                            <h2 className="text-2xl font-bold text-white tracking-tight truncate mb-1">{user.name}</h2>
+                            <div className="flex items-center gap-2">
+                                <span className="px-3 py-1 rounded-lg bg-indigo-500/20 text-xs font-bold text-indigo-300 border border-indigo-500/30">
                                     Уровень {user.level}
                                 </span>
                                 {user.telegramId && (
-                                    <span className="text-[10px] text-slate-500 font-mono truncate">
+                                    <span className="text-[10px] text-slate-500 font-mono truncate flex items-center gap-1 bg-white/5 px-2 py-1 rounded-lg">
                                         ID: {user.telegramId}
                                     </span>
                                 )}
@@ -101,64 +102,66 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                     </div>
 
                     {/* Level Progress Bar */}
-                    <div className="mt-6">
+                    <div className="mt-8">
                         <div className="flex justify-between items-end mb-2">
-                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Прогресс уровня</span>
-                             <span className="text-[10px] font-bold text-white">{Math.round(levelProgress)}%</span>
+                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Прокачка</span>
+                             <span className="text-[10px] font-bold text-indigo-300">{Math.round(levelProgress)}%</span>
                         </div>
-                        <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
+                        <div className="w-full h-3 bg-black/40 rounded-full overflow-hidden border border-white/5">
                             <div 
-                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                                className="h-full bg-gradient-to-r from-indigo-600 to-purple-500 transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(99,102,241,0.6)] relative"
                                 style={{ width: `${levelProgress}%` }}
-                            ></div>
+                            >
+                                <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/50 blur-[1px]"></div>
+                            </div>
                         </div>
-                        <div className="text-right mt-1">
-                             <span className="text-[10px] text-slate-600 font-medium">{user.xp} / {nextLevelXp} XP</span>
+                        <div className="text-right mt-2">
+                             <span className="text-[10px] text-slate-500 font-medium font-mono">{user.xp} / {nextLevelXp} XP</span>
                         </div>
                     </div>
                 </div>
 
                 {/* STATS GRID */}
                 <h3 className="text-white font-bold text-lg mb-4 px-1 flex items-center gap-2">
-                    <QrCode size={18} className="text-indigo-400" />
-                    Данные
+                    <Database size={18} className="text-indigo-400" />
+                    Статистика
                 </h3>
                 
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                    <div className="bg-[#1E2332] border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-lg">
-                        <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 mb-1">
-                            <Zap size={20} fill="currentColor" />
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-[#1E2332] border border-white/5 p-5 rounded-3xl flex flex-col items-center justify-center gap-2 shadow-lg hover:border-white/10 transition-colors">
+                        <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 mb-1 border border-amber-500/20">
+                            <Zap size={24} fill="currentColor" />
                         </div>
-                        <div className="text-2xl font-black text-white">{user.streak}</div>
-                        <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Серия дней</div>
+                        <div className="text-3xl font-black text-white">{user.streak}</div>
+                        <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Дней подряд</div>
                     </div>
-                    <div className="bg-[#1E2332] border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-lg">
-                        <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 mb-1">
-                            <Shield size={20} fill="currentColor" />
+                    <div className="bg-[#1E2332] border border-white/5 p-5 rounded-3xl flex flex-col items-center justify-center gap-2 shadow-lg hover:border-white/10 transition-colors">
+                        <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 mb-1 border border-purple-500/20">
+                            <Shield size={24} fill="currentColor" />
                         </div>
-                        <div className="text-2xl font-black text-white">{user.completedTaskIds.length}</div>
-                        <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Заданий</div>
+                        <div className="text-3xl font-black text-white">{user.completedTaskIds.length}</div>
+                        <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Миссий выполнено</div>
                     </div>
                 </div>
 
                 {/* CLOUD STATUS */}
-                <div className="bg-[#151925] border border-white/5 rounded-2xl p-4 flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isSupabaseEnabled ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-700/20 text-slate-500'}`}>
-                            <Database size={18} />
+                <div className="bg-[#151925] border border-white/5 rounded-3xl p-5 flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${isSupabaseEnabled ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-700/20 text-slate-500'}`}>
+                            <Hexagon size={20} />
                         </div>
                         <div>
-                            <div className="text-sm font-bold text-white">Синхронизация</div>
-                            <div className="text-[10px] text-slate-400 font-medium mt-0.5">
-                                {isSupabaseEnabled ? 'Облако подключено' : 'Локальный режим'}
+                            <div className="text-base font-bold text-white">Облако данных</div>
+                            <div className="text-xs text-slate-400 font-medium mt-0.5">
+                                {isSupabaseEnabled ? 'Синхронизация активна' : 'Локальный режим'}
                             </div>
                         </div>
                     </div>
-                    <div className={`w-2 h-2 rounded-full ${isSupabaseEnabled ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]' : 'bg-slate-600'}`}></div>
+                    <div className={`w-3 h-3 rounded-full ${isSupabaseEnabled ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-600'}`}></div>
                 </div>
                 
-                <div className="flex justify-center">
-                   <p className="text-[10px] text-slate-700 font-mono">v1.0.3 • Motivation Edition</p>
+                <div className="flex justify-center opacity-50">
+                   <p className="text-[10px] text-slate-600 font-mono uppercase">ID ПОЛЬЗОВАТЕЛЯ: {user.id.slice(0,8)}</p>
                 </div>
             </div>
         );
@@ -166,27 +169,41 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
 
     // Default: LEARN Tab (The Game Map)
     return (
-        <div className="relative pt-6 pb-40 px-4 min-h-screen">
+        <div className="relative pt-6 pb-40 px-4 min-h-screen overflow-x-hidden">
              
+             {/* Animated Background Particles */}
+             <div className="fixed inset-0 pointer-events-none">
+                <div className="absolute top-10 left-10 w-1 h-1 bg-white rounded-full opacity-20 animate-pulse"></div>
+                <div className="absolute top-40 right-20 w-1.5 h-1.5 bg-indigo-400 rounded-full opacity-30 animate-ping" style={{animationDuration: '3s'}}></div>
+                <div className="absolute bottom-40 left-1/2 w-1 h-1 bg-purple-400 rounded-full opacity-20"></div>
+             </div>
+
              {/* Top Bar: XP and Daily Challenge */}
              <div className="flex justify-between items-center mb-8 relative z-20 px-2">
                  <div>
-                    <h1 className="text-xl font-black text-white tracking-tight">Мой Путь</h1>
-                    <p className="text-xs text-indigo-300 font-medium uppercase tracking-wider">Сезон 1: Мотивация</p>
+                    <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+                            КАРТА ПУТИ
+                        </span>
+                    </h1>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Сезон 1: Дофамин</p>
                  </div>
                  
-                 <div className="flex gap-2">
+                 <div className="flex gap-3 items-center">
                      {/* Mini Game Button */}
                      <button 
                         onClick={() => setIsGameOpen(true)}
-                        className="w-10 h-10 rounded-full bg-gradient-to-tr from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/30 hover:scale-105 transition-transform animate-pulse"
+                        className="w-12 h-12 rounded-2xl bg-[#1E2332] border border-rose-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(244,63,94,0.2)] hover:scale-105 transition-transform group relative"
                      >
-                         <Brain size={20} className="text-white" />
+                         <Brain size={24} className="text-rose-400 group-hover:text-rose-300" />
+                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-[#0A0F1C] animate-pulse"></div>
                      </button>
 
-                     <div className="glass-panel px-4 py-2 rounded-full flex items-center gap-2 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
-                         <Star size={16} fill="currentColor" className="text-yellow-400" />
-                         <div className={`text-lg font-black ${isXpAnimating ? 'text-yellow-400 scale-110' : 'text-white'} transition-all duration-300`}>
+                     <div className="glass-panel px-4 py-2.5 rounded-2xl flex items-center gap-2 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
+                         <div className={`transition-transform duration-300 ${isXpAnimating ? 'scale-125 rotate-12' : ''}`}>
+                             <Star size={18} fill="currentColor" className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
+                         </div>
+                         <div className={`text-lg font-black font-mono ${isXpAnimating ? 'text-yellow-300' : 'text-white'}`}>
                              {user.xp}
                          </div>
                      </div>
@@ -201,12 +218,12 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                     <defs>
                         <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" stopColor="#6366f1" stopOpacity="0" />
-                            <stop offset="10%" stopColor="#6366f1" stopOpacity="0.8" />
-                            <stop offset="90%" stopColor="#a855f7" stopOpacity="0.8" />
+                            <stop offset="10%" stopColor="#6366f1" stopOpacity="0.5" />
+                            <stop offset="90%" stopColor="#a855f7" stopOpacity="0.5" />
                             <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
                         </linearGradient>
                         <filter id="glow">
-                            <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+                            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
                             <feMerge>
                                 <feMergeNode in="coloredBlur"/>
                                 <feMergeNode in="SourceGraphic"/>
@@ -214,37 +231,31 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                         </filter>
                     </defs>
                     
-                    {/* Main Glowing Path */}
+                    {/* Connector Lines */}
                     <path 
                         d="M 192 40 C 192 100, 80 150, 80 250 C 80 350, 304 400, 304 500 C 304 600, 192 650, 192 750 C 192 850, 80 900, 80 1000"
                         fill="none" 
                         stroke="url(#pathGradient)" 
-                        strokeWidth="6"
+                        strokeWidth="4"
                         strokeLinecap="round"
                         filter="url(#glow)"
-                        className="opacity-40"
+                        className="opacity-60"
                     />
                     
-                    {/* Dashed Center Line */}
-                    <path 
-                        d="M 192 40 C 192 100, 80 150, 80 250 C 80 350, 304 400, 304 500 C 304 600, 192 650, 192 750 C 192 850, 80 900, 80 1000"
-                        fill="none" 
-                        stroke="white" 
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeDasharray="0 15"
-                        strokeLinejoin="round"
-                        strokeOpacity="0.4"
-                    />
+                    {/* Tech Markers along the path */}
+                    <circle cx="80" cy="250" r="3" fill="#6366f1" className="animate-pulse" />
+                    <circle cx="304" cy="500" r="3" fill="#a855f7" className="animate-pulse" />
+                    <circle cx="192" cy="750" r="3" fill="#ec4899" className="animate-pulse" />
                 </svg>
 
                 {/* WEEK 1 MARKER */}
                 <div className="relative mb-12 text-center z-10">
                     <div className="inline-block relative">
-                        <div className="absolute inset-0 bg-indigo-500 blur-lg opacity-40"></div>
-                        <span className="relative z-10 bg-[#0A0F1C] text-indigo-300 border border-indigo-500/50 px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] shadow-xl">
-                            Chapter 1 • Dopamine
-                        </span>
+                        <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-30"></div>
+                        <div className="relative z-10 bg-[#0A0F1C]/80 backdrop-blur border border-indigo-500/50 px-6 py-3 rounded-2xl shadow-2xl">
+                            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-[0.2em] block mb-1">Сектор 01</span>
+                            <span className="text-base font-black text-white">ПРОБУЖДЕНИЕ</span>
+                        </div>
                     </div>
                 </div>
 
@@ -277,32 +288,40 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                                     disabled={isLocked}
                                     className={`
                                         relative flex items-center justify-center transition-all duration-500
-                                        ${isLocked ? 'grayscale opacity-60 cursor-not-allowed w-16 h-16' : 'cursor-pointer hover:scale-110 w-24 h-24'}
+                                        ${isLocked ? 'grayscale opacity-50 cursor-not-allowed w-20 h-20' : 'cursor-pointer hover:scale-110 w-28 h-28'}
                                     `}
                                 >
-                                    {/* Glow behind active/completed */}
-                                    {!isLocked && (
-                                        <div className={`absolute inset-0 rounded-full blur-xl ${isCompleted ? 'bg-emerald-500/40' : 'bg-indigo-500/60 animate-pulse'}`}></div>
+                                    {/* Active State Ring */}
+                                    {!isLocked && !isCompleted && (
+                                        <div className="absolute inset-0 border-2 border-indigo-400/50 rounded-3xl rotate-45 animate-[spin_10s_linear_infinite]"></div>
+                                    )}
+                                    {!isLocked && !isCompleted && (
+                                        <div className="absolute inset-0 border-2 border-purple-400/30 rounded-3xl rotate-[22.5deg] scale-110"></div>
                                     )}
 
-                                    {/* Main Circle */}
+                                    {/* Glow behind */}
+                                    {!isLocked && (
+                                        <div className={`absolute inset-0 rounded-full blur-2xl ${isCompleted ? 'bg-emerald-500/30' : 'bg-indigo-500/50 animate-pulse'}`}></div>
+                                    )}
+
+                                    {/* Main Shape */}
                                     <div className={`
-                                        w-full h-full rounded-2xl rotate-45 flex items-center justify-center border shadow-2xl z-10 transition-all
+                                        w-full h-full rounded-3xl rotate-45 flex items-center justify-center border shadow-2xl z-10 transition-all backdrop-blur-sm
                                         ${isCompleted 
                                             ? 'bg-[#1E2332] border-emerald-500' 
                                             : isLocked 
                                                 ? 'bg-[#0A0F1C] border-white/10' 
-                                                : 'bg-gradient-to-br from-indigo-600 to-purple-700 border-indigo-300'
+                                                : 'bg-gradient-to-br from-indigo-600/90 to-purple-700/90 border-indigo-300 shadow-[0_0_30px_rgba(79,70,229,0.4)]'
                                         }
                                     `}>
                                          {/* Icon (Counter-rotated) */}
                                          <div className="-rotate-45">
                                             {isCompleted 
-                                                ? <Check size={32} strokeWidth={4} className="text-emerald-400 drop-shadow-md" /> 
+                                                ? <Check size={36} strokeWidth={4} className="text-emerald-400 drop-shadow-md" /> 
                                                 : isLocked 
-                                                    ? <Lock size={20} className="text-slate-500" /> 
-                                                    : task.type === 'VIDEO' ? <Play size={28} className="text-white fill-white" />
-                                                    : <div className="text-white drop-shadow-md font-black text-xl">{index + 1}</div>
+                                                    ? <Lock size={24} className="text-slate-500" /> 
+                                                    : task.type === 'VIDEO' ? <Play size={32} className="text-white fill-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]" />
+                                                    : <div className="text-white drop-shadow-md font-black text-3xl font-mono">{index + 1}</div>
                                             }
                                          </div>
                                     </div>
@@ -310,18 +329,23 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                                 
                                 {/* Label */}
                                 <div className={`
-                                    mt-8 px-4 py-2 rounded-xl backdrop-blur-md border transition-all duration-300 text-center min-w-[120px]
+                                    mt-12 px-5 py-3 rounded-2xl backdrop-blur-xl border transition-all duration-300 text-center min-w-[160px] relative
                                     ${isActive 
-                                        ? 'bg-white/10 border-white/30 text-white transform scale-100 opacity-100 shadow-lg' 
+                                        ? 'bg-white/10 border-indigo-400/50 text-white transform scale-100 opacity-100 shadow-[0_10px_30px_rgba(0,0,0,0.5)]' 
                                         : isLocked
-                                            ? 'bg-[#0A0F1C]/50 border-white/5 text-slate-600 scale-90 opacity-0 group-hover:opacity-100 transition-opacity'
-                                            : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
+                                            ? 'bg-[#0A0F1C]/80 border-white/5 text-slate-600 scale-90 opacity-0 group-hover:opacity-100 transition-opacity'
+                                            : 'bg-emerald-900/20 border-emerald-500/30 text-emerald-400'
                                     }
                                 `}>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider block mb-0.5">
-                                        {isCompleted ? "Взломано" : isLocked ? "Закрыто" : "Доступно"}
+                                    {isActive && <div className="absolute -top-1 -left-1 w-2 h-2 bg-indigo-400 rounded-full"></div>}
+                                    {isActive && <div className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-400 rounded-full"></div>}
+                                    {isActive && <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-indigo-400 rounded-full"></div>}
+                                    {isActive && <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-indigo-400 rounded-full"></div>}
+
+                                    <span className="text-[10px] font-bold uppercase tracking-wider block mb-1 opacity-80">
+                                        {isCompleted ? "ДОСТУП РАЗРЕШЕН" : isLocked ? "ЗАБЛОКИРОВАНО" : "НОВАЯ МИССИЯ"}
                                     </span>
-                                    <span className="text-sm font-bold whitespace-nowrap leading-tight">
+                                    <span className="text-sm font-bold whitespace-nowrap leading-tight block">
                                         {task.title}
                                     </span>
                                 </div>
@@ -337,54 +361,58 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
   return (
     <div className="h-full relative overflow-hidden text-white bg-[#020617]">
       
-      <div className="h-full overflow-y-auto scroll-smooth">
+      <div className="h-full overflow-y-auto scroll-smooth scrollbar-hide">
          {renderContent()}
       </div>
 
       {/* DOCK */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-auto animate-in slide-in-from-bottom-10 duration-500 delay-200">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md animate-in slide-in-from-bottom-10 duration-500 delay-200">
         <div className="relative group">
-            <div className="absolute inset-0 bg-white/5 blur-xl rounded-[3rem] transition-colors"></div>
+            {/* Dock Glow */}
+            <div className="absolute -inset-1 bg-indigo-500/20 blur-xl rounded-[3rem] transition-opacity opacity-70"></div>
             
-            <div className="relative flex items-center justify-between gap-2 p-2 bg-[#151925]/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-2xl ring-1 ring-black/50">
+            <div className="relative flex items-center justify-between gap-1 p-2 bg-[#151925]/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-2xl ring-1 ring-white/5">
                 
                 <button 
                     onClick={() => setActiveTab('LEARN')}
                     className={`
-                      h-12 px-6 rounded-[2rem] flex items-center gap-2 transition-all duration-300 font-bold text-sm
+                      h-14 flex-1 rounded-[2rem] flex flex-col items-center justify-center gap-1 transition-all duration-300 font-bold text-[10px] relative overflow-hidden
                       ${activeTab === 'LEARN' 
                         ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40' 
                         : 'text-slate-400 hover:text-white hover:bg-white/5'}
                     `}
                 >
-                    <LayoutGrid size={18} />
-                    {activeTab === 'LEARN' && <span>Путь</span>}
+                    {activeTab === 'LEARN' && <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>}
+                    <LayoutGrid size={20} strokeWidth={2.5} />
+                    <span className="uppercase tracking-wide">Путь</span>
                 </button>
 
                 <button 
                     onClick={() => setActiveTab('RELAX')}
                     className={`
-                      h-12 px-6 rounded-[2rem] flex items-center gap-2 transition-all duration-300 font-bold text-sm
+                      h-14 flex-1 rounded-[2rem] flex flex-col items-center justify-center gap-1 transition-all duration-300 font-bold text-[10px] relative overflow-hidden
                       ${activeTab === 'RELAX' 
                         ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40' 
                         : 'text-slate-400 hover:text-white hover:bg-white/5'}
                     `}
                 >
-                    <Music size={18} />
-                    {activeTab === 'RELAX' && <span>Chill</span>}
+                    {activeTab === 'RELAX' && <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>}
+                    <Sparkles size={20} strokeWidth={2.5} />
+                    <span className="uppercase tracking-wide">Релакс</span>
                 </button>
 
                 <button 
                     onClick={() => setActiveTab('PROFILE')}
                     className={`
-                      h-12 px-6 rounded-[2rem] flex items-center gap-2 transition-all duration-300 font-bold text-sm
+                      h-14 flex-1 rounded-[2rem] flex flex-col items-center justify-center gap-1 transition-all duration-300 font-bold text-[10px] relative overflow-hidden
                       ${activeTab === 'PROFILE' 
                         ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40' 
                         : 'text-slate-400 hover:text-white hover:bg-white/5'}
                     `}
                 >
-                    <UserIcon size={18} />
-                    {activeTab === 'PROFILE' && <span>Я</span>}
+                    {activeTab === 'PROFILE' && <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>}
+                    <UserIcon size={20} strokeWidth={2.5} />
+                    <span className="uppercase tracking-wide">Профиль</span>
                 </button>
             </div>
         </div>
