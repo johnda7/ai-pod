@@ -6,9 +6,20 @@ import { Play, Wind, CloudRain, Trees, Waves, Flame, Zap, Moon, Music, Pause, X 
 export const MeditationView: React.FC = () => {
   const [activeSoundId, setActiveSoundId] = useState<string | null>(null);
   const [activeMeditationId, setActiveMeditationId] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const activeSound = SOUNDSCAPES.find(s => s.id === activeSoundId);
   const dailyQuote = QUOTES[0];
+
+  const handleSoundClick = (id: string) => {
+      if (activeSoundId === id) {
+          setActiveSoundId(null);
+          setIsPlaying(false);
+      } else {
+          setActiveSoundId(id);
+          setIsPlaying(true);
+      }
+  };
 
   const getSoundIcon = (type: string) => {
     switch(type) {
@@ -49,7 +60,7 @@ export const MeditationView: React.FC = () => {
                          <span className="w-0.5 h-3 bg-emerald-500 animate-[bounce_1.1s_infinite]"></span>
                          <span className="w-0.5 h-1.5 bg-emerald-500 animate-[bounce_0.9s_infinite]"></span>
                      </span>
-                     <span className="text-[10px] font-bold text-emerald-400 uppercase">Играет</span>
+                     <span className="text-[10px] font-bold text-emerald-400 uppercase">Активно</span>
                  </div>
             )}
         </div>
@@ -60,7 +71,7 @@ export const MeditationView: React.FC = () => {
             return (
               <button
                 key={sound.id}
-                onClick={() => setActiveSoundId(isActive ? null : sound.id)}
+                onClick={() => handleSoundClick(sound.id)}
                 className={`
                     relative h-24 rounded-2xl overflow-hidden transition-all duration-300 group text-left p-4 flex flex-col justify-between border
                     ${isActive 
@@ -136,32 +147,42 @@ export const MeditationView: React.FC = () => {
                
                <div className="flex-1 min-w-0">
                    <div className="text-white font-bold text-sm truncate">{activeSound.title}</div>
-                   <div className="text-indigo-400 text-xs font-bold uppercase tracking-wider">Playing Soundscape</div>
+                   <div className="text-indigo-400 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                       {isPlaying ? 'Играет...' : 'На паузе'}
+                   </div>
                </div>
 
+               {/* Play/Pause Controls */}
                <button 
-                  onClick={() => setActiveSoundId(null)}
-                  className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  className="w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white transition-colors shadow-lg"
                >
-                 <X size={20} />
+                 {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-1" />}
+               </button>
+
+               <button 
+                  onClick={() => { setActiveSoundId(null); setIsPlaying(false); }}
+                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+               >
+                 <X size={16} />
                </button>
 
                {/* 
-                 YOUTUBE EMBED - VISIBILITY FIX 
-                 We make it 1px by 1px instead of 0x0 to prevent aggressive browser throttling on background tabs.
-                 We also position it absolutely within the card but visually hidden behind content if needed, 
-                 or just barely visible (opacity 0.01).
+                 YOUTUBE EMBED - HIDDEN BUT ACTIVE
+                 Added 'mute=0' and conditional rendering based on 'isPlaying'
                */}
-               <div className="absolute top-0 left-0 w-1 h-1 opacity-[0.01] pointer-events-none overflow-hidden">
-                 <iframe 
-                   width="100%" 
-                   height="100%" 
-                   src={`https://www.youtube.com/embed/${activeSound.youtubeId}?autoplay=1&controls=0&showinfo=0&loop=1&playlist=${activeSound.youtubeId}&enablejsapi=1&version=3&playsinline=1`} 
-                   title="Audio" 
-                   allow="autoplay; encrypted-media;"
-                   referrerPolicy="strict-origin-when-cross-origin"
-                 ></iframe>
-               </div>
+               {isPlaying && (
+                   <div className="absolute top-0 left-0 w-1 h-1 opacity-[0.01] pointer-events-none overflow-hidden">
+                     <iframe 
+                       width="100%" 
+                       height="100%" 
+                       src={`https://www.youtube.com/embed/${activeSound.youtubeId}?autoplay=1&controls=0&showinfo=0&loop=1&playlist=${activeSound.youtubeId}&enablejsapi=1&version=3&playsinline=1&mute=0`} 
+                       title="Audio" 
+                       allow="autoplay; encrypted-media;"
+                       referrerPolicy="strict-origin-when-cross-origin"
+                     ></iframe>
+                   </div>
+               )}
            </div>
         </div>
       )}

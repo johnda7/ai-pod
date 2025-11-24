@@ -4,15 +4,12 @@ import { UserRole, Task, User } from './types';
 import { TeenDashboard } from './components/TeenDashboard';
 import { ParentDashboard } from './components/ParentDashboard';
 import { CuratorDashboard } from './components/CuratorDashboard';
-import { RoleSelector } from './components/RoleSelector';
-import { KatyaChat } from './components/KatyaChat';
-import { User as UserIcon, Settings, Loader2 } from 'lucide-react';
+import { User as UserIcon, Loader2 } from 'lucide-react';
 import { initTelegramApp, getTelegramUser } from './services/telegramService';
 import { getOrCreateUser, completeTask, updateUserProfile } from './services/db';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // --- INITIALIZATION ---
@@ -38,15 +35,6 @@ const App: React.FC = () => {
     init();
   }, []);
 
-  const handleRoleChange = (role: UserRole) => {
-    if (!currentUser) return;
-    const updated = { ...currentUser, role };
-    setCurrentUser(updated);
-    // In a real app, we might not want to save role change to DB for teens, 
-    // but for this demo it helps testing.
-    updateUserProfile(updated); 
-  };
-
   const handleTaskComplete = async (task: Task) => {
     if (!currentUser) return;
     if (currentUser.completedTaskIds.includes(task.id)) return;
@@ -63,7 +51,6 @@ const App: React.FC = () => {
        await completeTask(currentUser.id, task);
     } catch (e) {
        console.error("Sync error", e);
-       // Rollback logic would go here
     }
   };
 
@@ -78,20 +65,15 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-slate-50 relative overflow-hidden">
-      {/* Top Bar - Simplified for App Look */}
+      {/* Top Bar - Only for Non-Teen Roles */}
       {currentUser.role !== UserRole.TEEN && (
          <header className="flex-none bg-white px-4 py-3 flex items-center justify-between border-b border-slate-100 shadow-sm z-30">
             <h1 className="font-bold text-lg text-slate-800">AI Teenager</h1>
-            <button onClick={() => setIsProfileOpen(true)}>
+            <div className="flex items-center gap-2">
                 <img src={currentUser.avatarUrl} className="w-8 h-8 rounded-full bg-slate-200" alt="Profile" />
-            </button>
+            </div>
          </header>
       )}
-
-      {/* Dev Tool: Role Switcher (Visible in Profile for simplicity) */}
-      <div className="absolute top-0 left-0 z-50 opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
-         {/* Hidden trigger for dev */}
-      </div>
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto scroll-smooth bg-slate-50">
@@ -109,54 +91,14 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* AI Assistant */}
+      {/* AI Assistant (Only for Teen) */}
       {currentUser.role === UserRole.TEEN && <KatyaChat />}
-
-      {/* Settings / Profile Drawer */}
-      {isProfileOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div 
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity"
-            onClick={() => setIsProfileOpen(false)}
-          ></div>
-          <div className="relative w-72 bg-white h-full shadow-2xl animate-in slide-in-from-right duration-300 p-6 flex flex-col">
-             <div className="flex items-center gap-4 mb-8">
-                 <img src={currentUser.avatarUrl} className="w-16 h-16 rounded-full" alt="" />
-                 <div>
-                     <h3 className="font-bold text-lg">{currentUser.name}</h3>
-                     <p className="text-sm text-slate-500">{currentUser.role}</p>
-                 </div>
-             </div>
-             
-             <div className="space-y-2 flex-1">
-                 <button className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left font-medium text-slate-700">
-                     <UserIcon size={20} className="text-slate-400" /> Профиль
-                 </button>
-                 <button className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left font-medium text-slate-700">
-                     <Settings size={20} className="text-slate-400" /> Настройки
-                 </button>
-             </div>
-
-             {/* Dev Role Switcher */}
-             <div className="border-t border-slate-100 pt-4">
-                 <p className="text-xs text-slate-400 mb-2 uppercase font-bold">Смена роли (Dev)</p>
-                 <RoleSelector currentRole={currentUser.role} onRoleChange={handleRoleChange} />
-             </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Overlay button for profile in Teen mode */}
-      {currentUser.role === UserRole.TEEN && (
-          <button 
-            onClick={() => setIsProfileOpen(true)}
-            className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full overflow-hidden border-2 border-white shadow-sm"
-          >
-              <img src={currentUser.avatarUrl} className="w-full h-full object-cover" alt="Profile" />
-          </button>
-      )}
     </div>
   );
 };
+
+// Import KatyaChat at the bottom to avoid circular dependency issues in some bundlers if structured differently,
+// but here we keep it standard.
+import { KatyaChat } from './components/KatyaChat';
 
 export default App;
