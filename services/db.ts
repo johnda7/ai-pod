@@ -1,4 +1,5 @@
 
+
 import { Task, TaskProgress, User, UserRole, StudentStats } from '../types';
 import { MOCK_USER, MOCK_STUDENTS, TASKS } from '../constants';
 import { supabase, isSupabaseEnabled } from './supabaseClient';
@@ -37,6 +38,8 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
             role: UserRole.TEEN,
             xp: 0,
             level: 1,
+            hp: 5,
+            maxHp: 5,
             avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + telegramUser.id,
             streak: 0,
             completedTaskIds: [],
@@ -79,6 +82,8 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
       role: UserRole.TEEN,
       xp: 0,
       level: 1,
+      hp: 5,
+      max_hp: 5,
       avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + telegramUser.id,
       streak: 0,
       interest: 'Гейминг'
@@ -116,6 +121,8 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
       role: UserRole.TEEN,
       xp: 0,
       level: 1,
+      hp: 5,
+      maxHp: 5,
       avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + telegramUser.id,
       streak: 0,
       completedTaskIds: [],
@@ -323,6 +330,8 @@ function mockStudentsAsUsers(): User[] {
     role: UserRole.TEEN,
     xp: s.tasksCompleted * 100,
     level: 2,
+    hp: 5,
+    maxHp: 5,
     avatarUrl: s.avatar,
     streak: 5,
     completedTaskIds: [], 
