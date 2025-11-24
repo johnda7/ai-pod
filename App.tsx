@@ -15,8 +15,8 @@ const BootSequence = ({ onComplete }: { onComplete: () => void }) => {
   const [progress, setProgress] = useState(0);
 
   const bootLines = [
-    "ИНИЦИАЛИЗАЦИЯ НЕЙРОСЕТИ...",
-    "ПРОВЕРКА БИОРИТМОВ...",
+    "ЗАГРУЗКА НЕЙРОСЕТИ...",
+    "СКАНИРОВАНИЕ БИОРИТМОВ...",
     "УСТАНОВКА ЗАЩИЩЕННОГО СОЕДИНЕНИЯ...",
     "ЗАГРУЗКА ПРОТОКОЛОВ МОТИВАЦИИ...",
     "ДОСТУП РАЗРЕШЕН."
@@ -56,14 +56,14 @@ const BootSequence = ({ onComplete }: { onComplete: () => void }) => {
       <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
       
       <div className="z-10 w-full max-w-xs">
-         <div className="flex justify-center mb-8 relative">
-             <div className="absolute inset-0 bg-indigo-500 blur-[40px] opacity-20 animate-pulse"></div>
-             <Terminal size={64} className="text-indigo-400 relative z-10" />
+         <div className="flex justify-center mb-10 relative">
+             <div className="absolute inset-0 bg-indigo-500 blur-[50px] opacity-30 animate-pulse"></div>
+             <Terminal size={80} className="text-indigo-400 relative z-10" />
          </div>
 
-         <div className="bg-[#0A0F1C] border border-indigo-500/30 rounded-2xl p-4 mb-6 shadow-lg min-h-[160px]">
+         <div className="bg-[#0A0F1C] border border-indigo-500/30 rounded-2xl p-6 mb-8 shadow-2xl min-h-[180px]">
             {lines.map((line, i) => (
-              <div key={i} className="text-xs sm:text-sm mb-2 text-emerald-400 animate-in fade-in slide-in-from-left-2 duration-300 font-bold">
+              <div key={i} className="text-xs sm:text-sm mb-3 text-emerald-400 animate-in fade-in slide-in-from-left-2 duration-300 font-bold tracking-wide">
                 <span className="text-indigo-600 mr-2">{">"}</span>
                 {line}
               </div>
@@ -72,25 +72,25 @@ const BootSequence = ({ onComplete }: { onComplete: () => void }) => {
          </div>
 
          {/* Loading Bar */}
-         <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+         <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-white/5">
             <div 
-              className="h-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)] transition-all duration-100 ease-out"
+              className="h-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.8)] transition-all duration-100 ease-out"
               style={{ width: `${progress}%` }}
             ></div>
          </div>
-         <div className="flex justify-between mt-2 text-[10px] text-indigo-400/60 uppercase tracking-widest font-bold">
+         <div className="flex justify-between mt-3 text-[10px] text-indigo-400/60 uppercase tracking-widest font-bold">
             <span>Система v2.0</span>
             <span>{progress}%</span>
          </div>
       </div>
       
       {/* Footer Stats */}
-      <div className="absolute bottom-8 flex gap-6 text-slate-600">
-         <div className="flex items-center gap-1">
-            <ShieldCheck size={14} /> <span className="text-[10px] font-bold">ЗАЩИЩЕНО</span>
+      <div className="absolute bottom-10 flex gap-8 text-slate-600">
+         <div className="flex items-center gap-2">
+            <ShieldCheck size={16} /> <span className="text-[10px] font-bold tracking-widest">ЗАЩИЩЕНО</span>
          </div>
-         <div className="flex items-center gap-1">
-            <Wifi size={14} /> <span className="text-[10px] font-bold">ОНЛАЙН</span>
+         <div className="flex items-center gap-2">
+            <Wifi size={16} /> <span className="text-[10px] font-bold tracking-widest">В СЕТИ</span>
          </div>
       </div>
     </div>
