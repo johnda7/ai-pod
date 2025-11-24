@@ -2,10 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { TASKS, KATYA_IMAGE_URL } from '../constants';
 import { Task, User } from '../types';
-import { Check, Lock, Star, Gamepad2, Dribbble, Palette, BrainCircuit, LayoutGrid, User as UserIcon, Music, Play, Database, Wifi } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, Music, Database, Wifi, Zap, Shield, ChevronRight } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
-import { updateUserProfile } from '../services/db';
 import { isSupabaseEnabled } from '../services/supabaseClient';
 
 interface TeenDashboardProps {
@@ -15,20 +14,10 @@ interface TeenDashboardProps {
 
 type Tab = 'LEARN' | 'RELAX' | 'PROFILE';
 
-const INTERESTS = [
-  { id: 'Гейминг', icon: Gamepad2, color: 'from-purple-500 to-indigo-600' },
-  { id: 'Футбол', icon: Dribbble, color: 'from-green-500 to-emerald-600' },
-  { id: 'Арт', icon: Palette, color: 'from-pink-500 to-rose-600' },
-  { id: 'IT', icon: BrainCircuit, color: 'from-blue-500 to-cyan-600' },
-];
-
 export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComplete }) => {
   const [activeTab, setActiveTab] = useState<Tab>('LEARN'); 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   
-  // Local state for immediate feedback on interest change
-  const [localInterest, setLocalInterest] = useState(user.interest);
-
   // Animation state for XP update
   const [prevXp, setPrevXp] = useState(user.xp);
   const [isXpAnimating, setIsXpAnimating] = useState(false);
@@ -42,16 +31,15 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
     }
   }, [user.xp, prevXp]);
 
-  const handleInterestChange = (newInterest: string) => {
-    setLocalInterest(newInterest);
-    // Save to DB
-    updateUserProfile({ ...user, interest: newInterest });
-  };
-
   const handleTaskClick = (task: Task, isLocked: boolean) => {
-      if (isLocked) return; // Strictly ignore clicks on locked tasks
+      if (isLocked) return; 
       setSelectedTask(task);
   };
+
+  // Calculate Level Progress
+  const nextLevelXp = user.level * 500;
+  const prevLevelXp = (user.level - 1) * 500;
+  const levelProgress = Math.min(100, Math.max(0, ((user.xp - prevLevelXp) / (nextLevelXp - prevLevelXp)) * 100));
 
   const renderContent = () => {
     if (activeTab === 'RELAX') {
@@ -60,69 +48,80 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
 
     if (activeTab === 'PROFILE') {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[80vh] pb-32 animate-in fade-in zoom-in-95 duration-500">
-                <div className="relative mb-6 group cursor-pointer">
-                    <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-40 group-hover:opacity-60 transition-opacity rounded-full"></div>
-                    <div className="relative w-32 h-32 bg-[#1E2332] rounded-full p-1 border border-white/10 shadow-2xl overflow-hidden">
-                       <img src={user.avatarUrl} className="w-full h-full rounded-full object-cover" alt="Profile" />
-                    </div>
-                    <div className="absolute bottom-1 right-1 bg-green-500 w-6 h-6 rounded-full border-4 border-[#0A0F1C]"></div>
-                </div>
+            <div className="px-6 pt-8 pb-32 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 
-                <h2 className="text-3xl font-black text-white mb-1 tracking-tight text-glow">{user.name}</h2>
-                <div className="flex items-center gap-2 mb-8">
-                     <span className="bg-white/10 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-indigo-300 backdrop-blur-md">
-                        Level {user.level}
-                     </span>
-                     <span className="text-slate-400 text-sm font-medium">{user.xp} XP</span>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 w-full max-w-xs px-4 mb-8">
-                    <div className="glass-panel p-5 rounded-3xl text-center hover:bg-white/5 transition-colors">
-                        <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-indigo-400 to-cyan-400 mb-1">{user.streak}</div>
-                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Дней подряд</div>
-                    </div>
-                    <div className="glass-panel p-5 rounded-3xl text-center hover:bg-white/5 transition-colors">
-                        <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-amber-400 to-orange-400 mb-1">{user.completedTaskIds.length}</div>
-                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Задания</div>
-                    </div>
-                </div>
-
-                {/* SYSTEM STATUS PANEL */}
-                <div className="w-full max-w-xs px-4">
-                    <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">System Status</h3>
-                        
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-2 text-slate-300">
-                                    <Database size={14} />
-                                    <span>Database (Supabase)</span>
-                                </div>
-                                {isSupabaseEnabled ? (
-                                    <span className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold bg-emerald-400/10 px-2 py-1 rounded-full">
-                                        <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
-                                        ONLINE
-                                    </span>
-                                ) : (
-                                    <span className="text-slate-500 text-xs font-bold bg-slate-700 px-2 py-1 rounded-full">
-                                        OFFLINE
-                                    </span>
-                                )}
+                {/* HEADER CARD */}
+                <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#1E2332] to-[#0A0F1C] border border-white/10 p-6 shadow-2xl mb-6">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/20 blur-[80px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+                    
+                    <div className="relative z-10 flex flex-col items-center">
+                        <div className="relative mb-4">
+                            <div className="w-28 h-28 rounded-full p-1 bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30">
+                                <img src={user.avatarUrl} className="w-full h-full rounded-full object-cover border-4 border-[#0A0F1C]" alt="Profile" />
                             </div>
+                            <div className="absolute bottom-0 right-0 bg-[#0A0F1C] p-1 rounded-full">
+                                <div className="bg-emerald-500 w-4 h-4 rounded-full border-2 border-[#0A0F1C] animate-pulse"></div>
+                            </div>
+                        </div>
+                        
+                        <h2 className="text-2xl font-black text-white tracking-tight mb-1">{user.name}</h2>
+                        <p className="text-slate-400 text-sm font-medium mb-6">{user.role === 'TEEN' ? 'Игрок' : user.role}</p>
 
-                            <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-2 text-slate-300">
-                                    <Wifi size={14} />
-                                    <span>Connection</span>
-                                </div>
-                                <span className="text-emerald-400 text-xs font-bold">Stable</span>
+                        {/* LEVEL PROGRESS */}
+                        <div className="w-full bg-white/5 rounded-2xl p-4 border border-white/5 mb-4">
+                            <div className="flex justify-between items-end mb-2">
+                                <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">Уровень {user.level}</span>
+                                <span className="text-xs font-bold text-slate-400">{user.xp} / {nextLevelXp} XP</span>
+                            </div>
+                            <div className="w-full h-3 bg-[#0A0F1C] rounded-full overflow-hidden relative">
+                                <div 
+                                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out"
+                                    style={{ width: `${levelProgress}%` }}
+                                ></div>
                             </div>
                         </div>
                     </div>
-                    <p className="text-center text-[10px] text-slate-600 mt-4">
-                        v1.0.0 • ID: {user.id.slice(0, 8)}...
-                    </p>
+                </div>
+
+                {/* STATS GRID */}
+                <h3 className="text-white font-bold text-lg mb-4 px-2">Статистика</h3>
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="bg-[#1E2332]/50 border border-white/5 p-4 rounded-3xl flex flex-col items-center justify-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400 mb-1">
+                            <Zap size={20} fill="currentColor" />
+                        </div>
+                        <div className="text-2xl font-black text-white">{user.streak}</div>
+                        <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Дней подряд</div>
+                    </div>
+                    <div className="bg-[#1E2332]/50 border border-white/5 p-4 rounded-3xl flex flex-col items-center justify-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 mb-1">
+                            <Shield size={20} fill="currentColor" />
+                        </div>
+                        <div className="text-2xl font-black text-white">{user.completedTaskIds.length}</div>
+                        <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Заданий</div>
+                    </div>
+                </div>
+
+                {/* SYSTEM STATUS (Compact) */}
+                <div className="bg-[#1E2332]/30 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isSupabaseEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700/50 text-slate-500'}`}>
+                            <Database size={14} />
+                        </div>
+                        <div>
+                            <div className="text-xs font-bold text-white">Supabase Cloud</div>
+                            <div className="text-[10px] text-slate-500 font-medium">
+                                {isSupabaseEnabled ? 'Connected' : 'Offline Mode'}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                         <div className={`w-2 h-2 rounded-full ${isSupabaseEnabled ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-slate-600'}`}></div>
+                    </div>
+                </div>
+                
+                <div className="text-center mt-6">
+                    <p className="text-[10px] text-slate-600 uppercase tracking-widest opacity-50">ID: {user.id.slice(0, 6)}</p>
                 </div>
             </div>
         );
@@ -132,62 +131,17 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
     return (
         <div className="relative pt-6 pb-40 px-4 min-h-screen">
              
-             {/* Header: Interest & XP */}
-             <div className="flex justify-between items-center mb-6 relative z-20">
-                 <div className="glass-panel px-4 py-2 rounded-full flex items-center gap-3">
-                     <div className={`text-xl font-black ${isXpAnimating ? 'text-yellow-400 scale-125' : 'text-white'} transition-all duration-300`}>
+             {/* Top Bar: Just XP */}
+             <div className="flex justify-between items-center mb-8 relative z-20 px-2">
+                 <div>
+                    <h1 className="text-xl font-black text-white tracking-tight">Мой Путь</h1>
+                    <p className="text-xs text-indigo-300 font-medium uppercase tracking-wider">Сезон 1</p>
+                 </div>
+                 
+                 <div className="glass-panel px-4 py-2 rounded-full flex items-center gap-2 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
+                     <Star size={16} fill="currentColor" className="text-yellow-400" />
+                     <div className={`text-lg font-black ${isXpAnimating ? 'text-yellow-400 scale-110' : 'text-white'} transition-all duration-300`}>
                          {user.xp}
-                     </div>
-                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">XP Points</span>
-                 </div>
-
-                 {/* Interest Dropdown */}
-                 <div className="flex gap-2 overflow-x-auto scrollbar-hide max-w-[50vw] pr-2">
-                    {INTERESTS.map((item) => (
-                        <button
-                            key={item.id}
-                            onClick={() => handleInterestChange(item.id)}
-                            className={`p-2 rounded-full transition-all duration-300 ${
-                                localInterest === item.id 
-                                ? `bg-gradient-to-tr ${item.color} text-white shadow-lg shadow-indigo-500/30 scale-100 ring-2 ring-white/20` 
-                                : 'bg-white/5 text-slate-400 hover:bg-white/10'
-                            }`}
-                        >
-                            <item.icon size={18} />
-                        </button>
-                    ))}
-                 </div>
-             </div>
-
-             {/* LIVE EVENT CARD WITH KATYA */}
-             <div className="mb-10 relative group cursor-pointer animate-in slide-in-from-top-4 duration-700">
-                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-[2rem] blur opacity-40 group-hover:opacity-60 transition-opacity"></div>
-                 <div className="relative glass-panel rounded-[2rem] p-1 overflow-hidden">
-                     <div className="bg-[#0A0F1C]/80 backdrop-blur-xl rounded-[1.8rem] p-5 flex items-center justify-between">
-                         <div>
-                             <div className="flex items-center gap-2 mb-2">
-                                 <span className="relative flex h-2.5 w-2.5">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                                 </span>
-                                 <span className="text-[10px] font-bold uppercase tracking-widest text-red-400">Live эфир</span>
-                             </div>
-                             <h3 className="text-white font-bold text-lg leading-tight mb-1">Стрим с Катей</h3>
-                             <p className="text-slate-400 text-xs">Через 20 минут</p>
-                         </div>
-                         
-                         {/* Katya's Photo in Live Card */}
-                         <div className="relative w-14 h-14">
-                             <div className="absolute inset-0 bg-indigo-500 rounded-full animate-ping opacity-20"></div>
-                             <img 
-                                src={KATYA_IMAGE_URL} 
-                                className="w-full h-full rounded-full object-cover border-2 border-white/20 shadow-lg" 
-                                alt="Katya" 
-                             />
-                             <div className="absolute -bottom-1 -right-1 bg-red-500 w-5 h-5 rounded-full border-2 border-[#0A0F1C] flex items-center justify-center">
-                                 <Play size={8} fill="white" className="text-white ml-0.5" />
-                             </div>
-                         </div>
                      </div>
                  </div>
              </div>
@@ -199,50 +153,57 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                 <svg className="absolute top-0 left-0 w-full h-[1200px] pointer-events-none z-0" overflow="visible">
                     <defs>
                         <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#818cf8" stopOpacity="0" />
-                            <stop offset="20%" stopColor="#818cf8" stopOpacity="1" />
-                            <stop offset="80%" stopColor="#c084fc" stopOpacity="1" />
-                            <stop offset="100%" stopColor="#c084fc" stopOpacity="0" />
+                            <stop offset="0%" stopColor="#6366f1" stopOpacity="0" />
+                            <stop offset="10%" stopColor="#6366f1" stopOpacity="0.8" />
+                            <stop offset="90%" stopColor="#a855f7" stopOpacity="0.8" />
+                            <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
                         </linearGradient>
                         <filter id="glow">
-                            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                            <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
                             <feMerge>
                                 <feMergeNode in="coloredBlur"/>
                                 <feMergeNode in="SourceGraphic"/>
                             </feMerge>
                         </filter>
                     </defs>
+                    
+                    {/* Main Glowing Path */}
                     <path 
                         d="M 192 40 C 192 100, 80 150, 80 250 C 80 350, 304 400, 304 500 C 304 600, 192 650, 192 750 C 192 850, 80 900, 80 1000"
                         fill="none" 
                         stroke="url(#pathGradient)" 
-                        strokeWidth="4"
+                        strokeWidth="6"
                         strokeLinecap="round"
                         filter="url(#glow)"
-                        className="opacity-60"
+                        className="opacity-40"
                     />
+                    
+                    {/* Dashed Center Line */}
                     <path 
                         d="M 192 40 C 192 100, 80 150, 80 250 C 80 350, 304 400, 304 500 C 304 600, 192 650, 192 750 C 192 850, 80 900, 80 1000"
                         fill="none" 
                         stroke="white" 
                         strokeWidth="2"
                         strokeLinecap="round"
-                        strokeDasharray="4 12"
-                        strokeOpacity="0.2"
+                        strokeDasharray="0 15"
+                        strokeLinejoin="round"
+                        strokeOpacity="0.4"
                     />
                 </svg>
 
-                {/* WEEK 1 */}
-                <div className="relative mb-8 text-center z-10">
-                    <span className="bg-indigo-600/20 text-indigo-200 border border-indigo-500/30 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] backdrop-blur-md shadow-lg">
-                        Неделя 1 • Пробуждение
-                    </span>
+                {/* WEEK 1 MARKER */}
+                <div className="relative mb-12 text-center z-10">
+                    <div className="inline-block relative">
+                        <div className="absolute inset-0 bg-indigo-500 blur-lg opacity-40"></div>
+                        <span className="relative z-10 bg-[#0A0F1C] text-indigo-300 border border-indigo-500/50 px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] shadow-xl">
+                            Start • Пробуждение
+                        </span>
+                    </div>
                 </div>
 
                 <div className="relative h-[1100px]">
                     {TASKS.map((task, index) => {
                         const isCompleted = user.completedTaskIds.includes(task.id);
-                        // STRICT LOCKING: Locked if previous task not in completed list (and not first task)
                         const isLocked = index > 0 && !user.completedTaskIds.includes(TASKS[index-1].id);
                         const isActive = !isCompleted && !isLocked;
 
@@ -251,9 +212,9 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                         let transform = 'translate(-50%, 0)';
 
                         if (index === 0) { topPos = 40; leftPos = '50%'; }
-                        else if (index === 1) { topPos = 250; leftPos = '21%'; } // Curve Left
-                        else if (index === 2) { topPos = 500; leftPos = '79%'; } // Curve Right
-                        else if (index === 3) { topPos = 750; leftPos = '50%'; } // Center
+                        else if (index === 1) { topPos = 250; leftPos = '21%'; } 
+                        else if (index === 2) { topPos = 500; leftPos = '79%'; } 
+                        else if (index === 3) { topPos = 750; leftPos = '50%'; } 
                         else if (index === 4) { topPos = 950; leftPos = '21%'; }
                         else if (index === 5) { topPos = 1150; leftPos = '79%'; }
 
@@ -263,59 +224,57 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                                 className="absolute flex flex-col items-center z-10 group"
                                 style={{ top: topPos, left: leftPos, transform }}
                             >
+                                {/* Task Node */}
                                 <button
                                     onClick={() => handleTaskClick(task, isLocked)}
                                     disabled={isLocked}
                                     className={`
-                                        w-20 h-20 rounded-full flex items-center justify-center relative transition-all duration-500
-                                        ${isLocked ? 'grayscale opacity-70 cursor-not-allowed' : 'cursor-pointer hover:scale-110'}
+                                        relative flex items-center justify-center transition-all duration-500
+                                        ${isLocked ? 'grayscale opacity-60 cursor-not-allowed w-16 h-16' : 'cursor-pointer hover:scale-110 w-20 h-20'}
                                     `}
                                 >
-                                    {/* Orb Background */}
-                                    <div className={`
-                                        absolute inset-0 rounded-full border-2 
-                                        ${isCompleted 
-                                            ? 'bg-emerald-900/80 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.3)]' 
-                                            : isLocked 
-                                                ? 'bg-[#1E2332] border-white/10' 
-                                                : 'bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-300 shadow-[0_0_40px_rgba(99,102,241,0.6)] animate-pulse'
-                                        }
-                                    `}></div>
-
-                                    {/* Glass Shine */}
-                                    <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/40 to-transparent opacity-50"></div>
-                                    <div className="absolute top-2 left-4 w-4 h-2 bg-white/40 blur-sm rounded-full transform -rotate-12"></div>
-
-                                    {/* Icon */}
-                                    <div className="relative z-10 text-white drop-shadow-md">
-                                        {isCompleted 
-                                            ? <Check size={32} strokeWidth={4} className="text-emerald-400" /> 
-                                            : isLocked 
-                                                ? <Lock size={24} className="text-slate-500" /> 
-                                                : <Star size={32} fill="currentColor" className="text-yellow-300" />
-                                        }
-                                    </div>
-
-                                    {/* Active "Ripples" only for current task */}
-                                    {isActive && (
-                                        <>
-                                           <div className="absolute -inset-4 border border-indigo-500/30 rounded-full animate-ping"></div>
-                                           <div className="absolute -inset-8 border border-indigo-500/10 rounded-full animate-[ping_2s_infinite]"></div>
-                                        </>
+                                    {/* Glow behind active/completed */}
+                                    {!isLocked && (
+                                        <div className={`absolute inset-0 rounded-full blur-xl ${isCompleted ? 'bg-emerald-500/40' : 'bg-indigo-500/60 animate-pulse'}`}></div>
                                     )}
+
+                                    {/* Main Circle */}
+                                    <div className={`
+                                        w-full h-full rounded-2xl rotate-45 flex items-center justify-center border shadow-2xl z-10 transition-all
+                                        ${isCompleted 
+                                            ? 'bg-[#1E2332] border-emerald-500' 
+                                            : isLocked 
+                                                ? 'bg-[#0A0F1C] border-white/10' 
+                                                : 'bg-gradient-to-br from-indigo-600 to-purple-700 border-indigo-300'
+                                        }
+                                    `}>
+                                         {/* Icon (Counter-rotated) */}
+                                         <div className="-rotate-45">
+                                            {isCompleted 
+                                                ? <Check size={28} strokeWidth={4} className="text-emerald-400 drop-shadow-md" /> 
+                                                : isLocked 
+                                                    ? <Lock size={20} className="text-slate-500" /> 
+                                                    : <div className="text-white drop-shadow-md font-black text-lg">{index + 1}</div>
+                                            }
+                                         </div>
+                                    </div>
                                 </button>
                                 
+                                {/* Label */}
                                 <div className={`
-                                    mt-4 px-4 py-2 rounded-2xl backdrop-blur-md border transition-all duration-300
+                                    mt-6 px-4 py-2 rounded-xl backdrop-blur-md border transition-all duration-300 text-center min-w-[100px]
                                     ${isActive 
-                                        ? 'bg-white/10 border-white/30 text-white transform scale-100 opacity-100' 
+                                        ? 'bg-white/10 border-white/30 text-white transform scale-100 opacity-100 shadow-lg' 
                                         : isLocked
-                                            ? 'bg-[#0A0F1C]/50 border-white/5 text-slate-500 scale-90 opacity-70'
-                                            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                                            ? 'bg-[#0A0F1C]/50 border-white/5 text-slate-600 scale-90 opacity-0 group-hover:opacity-100 transition-opacity'
+                                            : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
                                     }
                                 `}>
-                                    <span className="text-xs font-bold whitespace-nowrap">
-                                        {isCompleted ? "Выполнено" : task.title}
+                                    <span className="text-[10px] font-bold uppercase tracking-wider block mb-0.5">
+                                        {isCompleted ? "Выполнено" : isLocked ? "Закрыто" : "Текущее"}
+                                    </span>
+                                    <span className="text-sm font-bold whitespace-nowrap">
+                                        {task.title}
                                     </span>
                                 </div>
                             </div>
@@ -328,56 +287,56 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
   };
 
   return (
-    <div className="h-full relative overflow-hidden text-white">
+    <div className="h-full relative overflow-hidden text-white bg-[#020617]">
       
-      <div className="h-full overflow-y-auto scroll-smooth pb-32">
+      <div className="h-full overflow-y-auto scroll-smooth">
          {renderContent()}
       </div>
 
       {/* DOCK */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-auto animate-in slide-in-from-bottom-10 duration-500 delay-200">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-auto animate-in slide-in-from-bottom-10 duration-500 delay-200">
         <div className="relative group">
-            <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-[3rem] group-hover:bg-indigo-500/30 transition-colors"></div>
+            <div className="absolute inset-0 bg-white/5 blur-xl rounded-[3rem] transition-colors"></div>
             
-            <div className="relative flex items-center justify-between gap-1 p-2 bg-[#1E2332]/80 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5)]">
+            <div className="relative flex items-center justify-between gap-2 p-2 bg-[#151925]/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-2xl ring-1 ring-black/50">
                 
                 <button 
                     onClick={() => setActiveTab('LEARN')}
                     className={`
-                      w-14 h-14 rounded-[2rem] flex flex-col items-center justify-center gap-1 transition-all duration-300
+                      h-12 px-6 rounded-[2rem] flex items-center gap-2 transition-all duration-300 font-bold text-sm
                       ${activeTab === 'LEARN' 
-                        ? 'bg-white text-black shadow-lg shadow-white/10 scale-100' 
-                        : 'text-slate-400 hover:text-white hover:bg-white/5 scale-95'}
+                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'}
                     `}
                 >
-                    <LayoutGrid size={22} strokeWidth={activeTab === 'LEARN' ? 2.5 : 2} />
-                    {activeTab === 'LEARN' && <div className="w-1 h-1 bg-black rounded-full"></div>}
+                    <LayoutGrid size={18} />
+                    {activeTab === 'LEARN' && <span>Путь</span>}
                 </button>
 
                 <button 
                     onClick={() => setActiveTab('RELAX')}
                     className={`
-                      w-14 h-14 rounded-[2rem] flex flex-col items-center justify-center gap-1 transition-all duration-300
+                      h-12 px-6 rounded-[2rem] flex items-center gap-2 transition-all duration-300 font-bold text-sm
                       ${activeTab === 'RELAX' 
-                        ? 'bg-white text-black shadow-lg shadow-white/10 scale-100' 
-                        : 'text-slate-400 hover:text-white hover:bg-white/5 scale-95'}
+                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'}
                     `}
                 >
-                    <Music size={22} strokeWidth={activeTab === 'RELAX' ? 2.5 : 2} />
-                    {activeTab === 'RELAX' && <div className="w-1 h-1 bg-black rounded-full"></div>}
+                    <Music size={18} />
+                    {activeTab === 'RELAX' && <span>Chill</span>}
                 </button>
 
                 <button 
                     onClick={() => setActiveTab('PROFILE')}
                     className={`
-                      w-14 h-14 rounded-[2rem] flex flex-col items-center justify-center gap-1 transition-all duration-300
+                      h-12 px-6 rounded-[2rem] flex items-center gap-2 transition-all duration-300 font-bold text-sm
                       ${activeTab === 'PROFILE' 
-                        ? 'bg-white text-black shadow-lg shadow-white/10 scale-100' 
-                        : 'text-slate-400 hover:text-white hover:bg-white/5 scale-95'}
+                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'}
                     `}
                 >
-                    <UserIcon size={22} strokeWidth={activeTab === 'PROFILE' ? 2.5 : 2} />
-                    {activeTab === 'PROFILE' && <div className="w-1 h-1 bg-black rounded-full"></div>}
+                    <UserIcon size={18} />
+                    {activeTab === 'PROFILE' && <span>Я</span>}
                 </button>
             </div>
         </div>
@@ -387,8 +346,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
         <TaskModal 
             task={selectedTask} 
             isOpen={!!selectedTask} 
-            userInterest={localInterest}
-            // Pass completions to modal to determine mode (Edit vs Review)
+            userInterest={user.interest}
             isPreviouslyCompleted={user.completedTaskIds.includes(selectedTask.id)}
             onClose={() => setSelectedTask(null)} 
             onComplete={() => {
