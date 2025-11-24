@@ -1,4 +1,5 @@
 
+
 export enum UserRole {
   TEEN = 'TEEN',
   PARENT = 'PARENT',
@@ -8,16 +9,25 @@ export enum UserRole {
 export type LearningStyle = 'VISUAL' | 'AUDIO' | 'KINESTHETIC';
 
 export interface User {
-  id: string;
+  id: string; // Internal UUID
+  telegramId?: number; // Telegram User ID
+  username?: string; // Telegram Username
   name: string;
   role: UserRole;
   xp: number;
   level: number;
   avatarUrl: string;
   streak: number;
-  completedTaskIds: string[];
+  completedTaskIds: string[]; // Legacy local check
   learningStyle?: LearningStyle;
-  interest: string; // e.g., "Football", "Anime", "Gaming"
+  interest: string;
+}
+
+export interface TaskProgress {
+  userId: string;
+  taskId: string;
+  completedAt: string; // ISO Date
+  xpEarned: number;
 }
 
 export interface QuizQuestion {
@@ -31,7 +41,8 @@ export interface TaskContent {
   videoDuration?: string;
   questions?: QuizQuestion[];
   actionSteps?: string[];
-  adaptedText?: string; // AI generated text
+  topics?: string[];
+  adaptedText?: string;
 }
 
 export interface Task {
@@ -54,6 +65,7 @@ export interface Lecture {
   duration: string;
   description: string;
   thumbnail: string;
+  topics?: string[];
 }
 
 export interface Meditation {
@@ -68,8 +80,8 @@ export interface Soundscape {
   id: string;
   title: string;
   iconType: 'RAIN' | 'FOREST' | 'OCEAN' | 'FIRE' | 'WIND';
-  youtubeId: string; // Real audio source
   color: string;
+  youtubeId: string;
 }
 
 export interface Quote {
@@ -86,6 +98,7 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+// Used for Mock Data in constants.ts
 export interface StudentProgress {
   id: string;
   name: string;
@@ -96,4 +109,18 @@ export interface StudentProgress {
   status: 'active' | 'risk' | 'inactive';
   lastLogin: string;
   tasksCompleted: number;
+}
+
+// For Curator View
+export interface StudentStats {
+  id: string;
+  name: string;
+  avatar: string;
+  week1Progress: number; // 0-100
+  week2Progress: number;
+  week3Progress: number;
+  status: 'active' | 'risk' | 'inactive';
+  lastLogin: string;
+  totalXp: number;
+  tasksCompletedCount: number;
 }
