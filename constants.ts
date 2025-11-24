@@ -19,58 +19,65 @@ export const WEEKS = [1, 2, 3];
 // Positions are calculated for a vertical sine wave layout
 // x: 50 is center. < 50 left, > 50 right.
 export const TASKS: Task[] = [
-  // --- WEEK 1: ПРОБУЖДЕНИЕ (Awakening) ---
+  // --- WEEK 1: ДОФАМИНОВЫЙ ВЗЛОМ (Dopamine Hacking) ---
   {
     id: 't1',
     week: 1,
-    title: 'Старт Игры',
-    description: 'Твой первый шаг. Погнали?',
-    xpReward: 100,
+    title: 'Взлом Системы',
+    description: 'Почему твой мозг выбирает TikTok, а не мечту. Гайд по дофамину.',
+    xpReward: 150,
     type: 'VIDEO',
     learningStyle: 'VISUAL',
     position: { x: 50, y: 0 },
     content: {
-      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", 
-      videoDuration: "2:30",
-      topics: ["Правила игры", "Твоя роль", "Награда"]
+      videoUrl: "https://www.youtube.com/embed/qmMMq7Qc7n0", // Andrew Huberman / Dopamine inspired clip
+      videoDuration: "5:00",
+      topics: ["Дешевый дофамин vs Дорогой", "Почему нам скучно", "Как вернуть драйв"]
     }
   },
   {
     id: 't2',
     week: 1,
-    title: 'Суперсила',
-    description: 'Узнай свой класс персонажа.',
-    xpReward: 150,
-    type: 'QUIZ',
+    title: 'Аватар Будущего',
+    description: 'Создай персонажа, которым ты хочешь стать.',
+    xpReward: 200,
+    type: 'ACTION',
     learningStyle: 'KINESTHETIC',
     position: { x: 20, y: 0 }, 
     content: {
-      questions: [
-        {
-          question: "Твой стиль боя в жизни?",
-          options: ["Атака (Лидер)", "Защита (Друг)", "Магия (Креатив)", "Стелс (Наблюдатель)"],
-          correctIndex: 0
-        }
+      actionSteps: [
+        "Представь себя через 1 год на максималках.",
+        "Напиши 3 скилла, которые у тебя есть (Сила, Интеллект, Харизма).",
+        "Какую 'броню' (одежду/стиль) носит твой Аватар?"
       ]
     }
   },
   {
     id: 't3',
     week: 1,
-    title: 'Нейро-Хак',
-    description: 'Как работает твой процессор.',
+    title: 'Чит-код: 5 Секунд',
+    description: 'Механика запуска действий без участия силы воли.',
     xpReward: 150,
-    type: 'AUDIO',
+    type: 'QUIZ',
     learningStyle: 'AUDIO',
     position: { x: 80, y: 0 },
+    content: {
+      questions: [
+        {
+          question: "Ты лежишь на диване, надо встать. Что делаешь?",
+          options: ["Жду вдохновения", "Считаю 5-4-3-2-1 и ВСТАЮ", "Смотрю еще один рилс", "Планирую сделать это завтра"],
+          correctIndex: 1
+        }
+      ]
+    }
   },
   
-  // --- WEEK 2: ТРАНСФОРМАЦИЯ (Transformation) ---
+  // --- WEEK 2: ПРОТОКОЛ ДИСЦИПЛИНЫ (Discipline Protocol) ---
   {
     id: 't4',
     week: 2,
-    title: 'Босс: Лень',
-    description: 'Секретная техника победы.',
+    title: 'Босс: Прокрастинация',
+    description: 'Секретная техника "Помидоро" для уничтожения задач.',
     xpReward: 300,
     type: 'VIDEO',
     learningStyle: 'VISUAL',
@@ -79,8 +86,8 @@ export const TASKS: Task[] = [
   {
     id: 't5',
     week: 2,
-    title: 'Чит-коды',
-    description: 'Общение с родителями.',
+    title: 'База Данных: Сон',
+    description: 'Без энергии скиллы не работают. Оптимизация сна.',
     xpReward: 200,
     type: 'ACTION',
     learningStyle: 'KINESTHETIC',
@@ -91,8 +98,8 @@ export const TASKS: Task[] = [
   {
     id: 't6',
     week: 3,
-    title: 'Финал',
-    description: 'Создай свой проект.',
+    title: 'Финальный Проект',
+    description: 'Запусти свой личный челлендж на 7 дней.',
     xpReward: 500,
     type: 'UPLOAD',
     learningStyle: 'VISUAL',
@@ -191,17 +198,17 @@ export const SOUNDSCAPES: Soundscape[] = [
 
 export const QUOTES: Quote[] = [
   { 
+    text: "Дисциплина — это решение делать то, чего ты очень не хочешь делать, чтобы достичь того, чего ты очень хочешь достичь.", 
+    author: "Майк Тайсон", 
+    movie: "Спорт",
+    videoUrl: "" 
+  },
+  { 
     text: "Не слушай никого, кто скажет, будто ты чего-то не можешь.", 
     author: "Крис Гарднер", 
     movie: "В погоне за счастьем",
     videoUrl: "https://www.youtube.com/embed/Ucv8O7cOB7g" 
   },
-  { 
-    text: "Сила не в том, чтобы бить сильно. Сила в том, чтобы держать удар.", 
-    author: "Рокки Бальбоа", 
-    movie: "Рокки",
-    videoUrl: "https://www.youtube.com/embed/D_Vg4uyYwEk" 
-  }
 ];
 
 // Используем одно качественное фото для всех состояний, анимация будет через CSS
