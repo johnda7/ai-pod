@@ -122,7 +122,7 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({ isOpen, onClose, onCompl
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-400 mb-3 border border-indigo-500/20">
                     <Brain size={32} />
                 </div>
-                <h2 className="text-2xl font-black text-white uppercase tracking-tight">Нейро-Линк</h2>
+                <h2 className="text-2xl font-black text-white uppercase tracking-tight">Нейро-Связь</h2>
                 <p className="text-slate-400 text-sm">Повторяй сигналы системы</p>
             </div>
 
@@ -158,17 +158,17 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({ isOpen, onClose, onCompl
                 )}
 
                 {isShowingSequence && (
-                    <div className="text-indigo-400 font-mono animate-pulse">Прием сигнала...</div>
+                    <div className="text-indigo-400 font-mono animate-pulse font-bold">Прием сигнала...</div>
                 )}
 
                 {isPlaying && !isShowingSequence && (
-                    <div className="text-emerald-400 font-mono">Твой ход</div>
+                    <div className="text-emerald-400 font-mono font-bold">Твой ход</div>
                 )}
 
                 {gameOver && (
                      <div className="flex items-center gap-2 justify-center animate-in zoom-in duration-300">
                          <span className="text-rose-500 font-bold">Ошибка связи!</span>
-                         <button onClick={startGame} className="px-4 py-1 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20">
+                         <button onClick={startGame} className="px-4 py-2 bg-white/10 rounded-xl text-sm font-bold hover:bg-white/20">
                              Заново
                          </button>
                      </div>
@@ -180,7 +180,7 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({ isOpen, onClose, onCompl
                             <Trophy size={20} />
                             СИНХРОНИЗАЦИЯ 100%
                         </div>
-                        <p className="text-slate-400 text-xs">+100 XP получено</p>
+                        <p className="text-slate-400 text-xs font-bold">+100 XP ПОЛУЧЕНО</p>
                     </div>
                 )}
             </div>
