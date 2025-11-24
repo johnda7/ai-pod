@@ -1,5 +1,7 @@
 
 
+
+
 import { Task, TaskProgress, User, UserRole, StudentStats } from '../types';
 import { MOCK_USER, MOCK_STUDENTS, TASKS } from '../constants';
 import { supabase, isSupabaseEnabled } from './supabaseClient';
@@ -37,13 +39,16 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
             name: telegramUser.first_name || 'Student',
             role: UserRole.TEEN,
             xp: 0,
+            coins: 100, // Starting Bonus
             level: 1,
             hp: 5,
             maxHp: 5,
             avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + telegramUser.id,
             streak: 0,
             completedTaskIds: [],
-            interest: 'Гейминг'
+            interest: 'Гейминг',
+            inventory: [],
+            league: 'BRONZE'
         };
         await sheetsAPI.createUser(newUser);
         return newUser;
@@ -71,7 +76,10 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
         id: data.id,
         telegramId: data.telegram_id,
         avatarUrl: data.avatar_url,
-        completedTaskIds: progressData?.map((p: any) => p.task_id) || []
+        completedTaskIds: progressData?.map((p: any) => p.task_id) || [],
+        inventory: [], // Should load from DB in real app
+        coins: data.coins || 0,
+        league: 'BRONZE'
       } as User;
     }
 
@@ -81,6 +89,7 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
       name: telegramUser.first_name || 'Student',
       role: UserRole.TEEN,
       xp: 0,
+      coins: 100,
       level: 1,
       hp: 5,
       max_hp: 5,
@@ -102,7 +111,9 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
         id: createdUser.id,
         telegramId: createdUser.telegram_id,
         avatarUrl: createdUser.avatar_url,
-        completedTaskIds: []
+        completedTaskIds: [],
+        inventory: [],
+        league: 'BRONZE'
     } as User;
   }
 
@@ -120,6 +131,7 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
       name: telegramUser.first_name || 'Student',
       role: UserRole.TEEN,
       xp: 0,
+      coins: 100,
       level: 1,
       hp: 5,
       maxHp: 5,
@@ -127,6 +139,8 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
       streak: 0,
       completedTaskIds: [],
       interest: 'Гейминг',
+      inventory: [],
+      league: 'BRONZE'
     };
     saveUserToStorage(newUser);
     return newUser;
@@ -152,6 +166,7 @@ export const updateUserProfile = async (user: User): Promise<void> => {
         .update({ 
             interest: user.interest,
             xp: user.xp,
+            coins: user.coins,
             role: user.role 
         })
         .eq('id', user.id);
@@ -177,6 +192,7 @@ export const completeTask = async (userId: string, task: Task): Promise<void> =>
       if (!currentUser.completedTaskIds.includes(task.id)) {
         currentUser.completedTaskIds.push(task.id);
         currentUser.xp += task.xpReward;
+        currentUser.coins = (currentUser.coins || 0) + (task.coinsReward || 0); // Add Coins
         currentUser.level = Math.floor(currentUser.xp / 500) + 1;
         
         // Save to local storage immediately for UI responsiveness
@@ -203,9 +219,12 @@ export const completeTask = async (userId: string, task: Task): Promise<void> =>
             completed_at: new Date().toISOString()
         });
       
-      const { data: u } = await supabase.from('users').select('xp').eq('id', userId).single();
+      const { data: u } = await supabase.from('users').select('xp, coins').eq('id', userId).single();
       if (u) {
-          await supabase.from('users').update({ xp: u.xp + task.xpReward }).eq('id', userId);
+          await supabase.from('users').update({ 
+              xp: u.xp + task.xpReward,
+              coins: (u.coins || 0) + (task.coinsReward || 0)
+          }).eq('id', userId);
       }
       return;
   }
@@ -329,12 +348,15 @@ function mockStudentsAsUsers(): User[] {
     name: s.name,
     role: UserRole.TEEN,
     xp: s.tasksCompleted * 100,
+    coins: 100,
     level: 2,
     hp: 5,
     maxHp: 5,
     avatarUrl: s.avatar,
     streak: 5,
     completedTaskIds: [], 
-    interest: 'Гейминг'
+    interest: 'Гейминг',
+    inventory: [],
+    league: 'BRONZE'
   }));
 }

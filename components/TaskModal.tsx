@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Task, LessonSlide, SortingItem, PairItem } from '../types';
-import { X, Play, Trophy, ArrowRight, Star, Heart, ArrowLeft, RefreshCw, CheckCircle, AlertCircle, Sparkles, Skull } from 'lucide-react';
+import { X, Play, Trophy, ArrowRight, Star, Heart, ArrowLeft, RefreshCw, CheckCircle, AlertCircle, Sparkles, Skull, BarChart2 } from 'lucide-react';
 
 interface TaskModalProps {
   task: Task;
@@ -95,6 +95,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
       } else {
           handleWrong();
       }
+  };
+
+  const handlePollSubmit = (index: number) => {
+    if (feedbackStatus !== 'NONE' || currentSlide.type !== 'POLL') return;
+    setSelectedOption(index);
+    // Polls are always "correct" as they are opinions
+    handleCorrect();
   };
 
   const handleSorting = (item: SortingItem, direction: 'LEFT' | 'RIGHT') => {
@@ -204,6 +211,41 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
                   </div>
               );
           
+           case 'POLL':
+              return (
+                  <div className="flex flex-col h-full p-6 animate-in slide-in-from-right-10 duration-300">
+                      <div className="flex items-center justify-center mb-4">
+                          <div className="bg-indigo-500/10 text-indigo-400 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                              <BarChart2 size={14} /> Опрос
+                          </div>
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-8 text-center">{currentSlide.question}</h3>
+                      <div className="space-y-3">
+                          {currentSlide.options.map((opt, idx) => {
+                              const isSelected = selectedOption === idx;
+                              return (
+                                  <button
+                                      key={idx}
+                                      onClick={() => handlePollSubmit(idx)}
+                                      disabled={feedbackStatus !== 'NONE'}
+                                      className={`w-full p-5 rounded-2xl border-2 font-bold text-left transition-all active:scale-[0.98] flex justify-between items-center
+                                          ${isSelected 
+                                              ? 'bg-indigo-500/20 border-indigo-500 text-indigo-300' 
+                                              : 'bg-[#1E2332] border-white/10 text-slate-300 hover:bg-[#2A3042]'
+                                          }
+                                      `}
+                                  >
+                                      <span>{opt}</span>
+                                      {isSelected && <CheckCircle size={20} />}
+                                      {feedbackStatus !== 'NONE' && !isSelected && <span className="text-xs text-slate-500">12%</span>}
+                                      {feedbackStatus !== 'NONE' && isSelected && <span className="text-xs text-indigo-400 font-bold">You</span>}
+                                  </button>
+                              );
+                          })}
+                      </div>
+                  </div>
+              );
+
           case 'SORTING':
                const remainingItems = currentSlide.items.filter(i => !sortedItems.find(s => s.id === i.id));
                const currentItem = remainingItems[0];
@@ -371,9 +413,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
                     <CheckCircle size={28} />
                     <div>
                         <div className="text-lg">Отлично!</div>
-                        {currentSlide.type === 'QUIZ' && currentSlide.explanation && (
+                        {currentSlide.type === 'POLL' ? (
+                            <div className="text-xs text-green-300/80 font-normal mt-1">Спасибо за мнение!</div>
+                        ) : currentSlide.type === 'QUIZ' && currentSlide.explanation ? (
                             <div className="text-xs text-green-300/80 font-normal mt-1">{currentSlide.explanation}</div>
-                        )}
+                        ) : null}
                     </div>
                 </div>
             )}

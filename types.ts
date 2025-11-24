@@ -15,6 +15,7 @@ export interface User {
   name: string;
   role: UserRole;
   xp: number;
+  coins: number; // New Hard/Soft Currency
   level: number;
   hp: number; // Health Points (Lives)
   maxHp: number;
@@ -23,11 +24,13 @@ export interface User {
   completedTaskIds: string[]; 
   learningStyle?: LearningStyle;
   interest: string;
+  inventory: string[]; // Owned items IDs
+  league: 'BRONZE' | 'SILVER' | 'GOLD' | 'DIAMOND';
 }
 
 // --- NEW LESSON ENGINE TYPES ---
 
-export type SlideType = 'THEORY' | 'QUIZ' | 'SORTING' | 'PUZZLE' | 'VIDEO' | 'MATCHING' | 'INPUT';
+export type SlideType = 'THEORY' | 'QUIZ' | 'SORTING' | 'PUZZLE' | 'VIDEO' | 'MATCHING' | 'INPUT' | 'POLL';
 
 export interface BaseSlide {
   id: string;
@@ -55,6 +58,12 @@ export interface QuizSlide extends BaseSlide {
   options: string[];
   correctIndex: number;
   explanation?: string; // Shown after answer
+}
+
+export interface PollSlide extends BaseSlide {
+  type: 'POLL';
+  question: string;
+  options: string[]; // Just for selection, no right/wrong
 }
 
 export interface SortingItem {
@@ -98,7 +107,7 @@ export interface InputSlide extends BaseSlide {
   minLength?: number;
 }
 
-export type LessonSlide = TheorySlide | QuizSlide | SortingSlide | PuzzleSlide | VideoSlide | MatchingSlide | InputSlide;
+export type LessonSlide = TheorySlide | QuizSlide | SortingSlide | PuzzleSlide | VideoSlide | MatchingSlide | InputSlide | PollSlide;
 
 export interface Task {
   id: string;
@@ -106,9 +115,19 @@ export interface Task {
   title: string;
   description: string;
   xpReward: number;
+  coinsReward: number; // New Reward
   isLocked?: boolean;
   isBoss?: boolean; // New visual style for boss levels
   slides: LessonSlide[]; // The content flow
+}
+
+export interface ShopItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  icon: string;
+  type: 'POWERUP' | 'COSMETIC';
 }
 
 // --- LEGACY/OTHER TYPES ---
