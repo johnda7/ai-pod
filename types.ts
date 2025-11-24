@@ -27,7 +27,7 @@ export interface User {
 
 // --- NEW LESSON ENGINE TYPES ---
 
-export type SlideType = 'THEORY' | 'QUIZ' | 'SORTING' | 'PUZZLE' | 'VIDEO';
+export type SlideType = 'THEORY' | 'QUIZ' | 'SORTING' | 'PUZZLE' | 'VIDEO' | 'MATCHING' | 'INPUT';
 
 export interface BaseSlide {
   id: string;
@@ -79,7 +79,26 @@ export interface PuzzleSlide extends BaseSlide {
   distractorWords?: string[]; // Extra words to confuse
 }
 
-export type LessonSlide = TheorySlide | QuizSlide | SortingSlide | PuzzleSlide | VideoSlide;
+export interface PairItem {
+  id: string;
+  left: string;
+  right: string; // The matching pair
+}
+
+export interface MatchingSlide extends BaseSlide {
+  type: 'MATCHING';
+  question: string;
+  pairs: PairItem[];
+}
+
+export interface InputSlide extends BaseSlide {
+  type: 'INPUT';
+  question: string;
+  placeholder: string;
+  minLength?: number;
+}
+
+export type LessonSlide = TheorySlide | QuizSlide | SortingSlide | PuzzleSlide | VideoSlide | MatchingSlide | InputSlide;
 
 export interface Task {
   id: string;
@@ -88,7 +107,7 @@ export interface Task {
   description: string;
   xpReward: number;
   isLocked?: boolean;
-  position: { x: number; y: number }; 
+  isBoss?: boolean; // New visual style for boss levels
   slides: LessonSlide[]; // The content flow
 }
 

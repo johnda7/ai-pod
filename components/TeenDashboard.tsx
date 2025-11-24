@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { TASKS } from '../constants';
 import { Task, User } from '../types';
-import { Check, Lock, Star, LayoutGrid, User as UserIcon, Music, Database, Zap, Shield, Hexagon, Brain, Play, Sparkles, Heart } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, Music, Database, Zap, Shield, Hexagon, Brain, Play, Sparkles, Heart, Skull } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
 import { MemoryGame } from './MemoryGame';
@@ -45,7 +45,6 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
           description: 'Успешная калибровка',
           xpReward: xp,
           isLocked: false,
-          position: { x: 0, y: 0 },
           slides: []
       };
       onTaskComplete(gameTask);
@@ -122,46 +121,29 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                         </div>
                     </div>
                 </div>
-
-                {/* SETTINGS / INFO */}
-                <div className="bg-[#151925] border border-white/5 rounded-[2rem] p-6 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${isSupabaseEnabled ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-700/20 text-slate-500'}`}>
-                            <Hexagon size={24} />
-                        </div>
-                        <div>
-                            <div className="text-base font-bold text-white">Облако данных</div>
-                            <div className="text-xs text-slate-400 font-medium mt-0.5">
-                                {isSupabaseEnabled ? 'Синхронизация активна' : 'Локальный режим'}
-                            </div>
-                        </div>
-                    </div>
-                    <div className={`w-3 h-3 rounded-full ${isSupabaseEnabled ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-600'}`}></div>
-                </div>
                 
                 <div className="mt-8 text-center opacity-30">
-                   <p className="text-[10px] text-slate-500 font-mono uppercase">ID: {user.id.slice(0,8)} | VER 2.0.1</p>
+                   <p className="text-[10px] text-slate-500 font-mono uppercase">ID: {user.id.slice(0,8)} | VER 2.1.0</p>
                 </div>
             </div>
         );
     }
 
+    // --- GAME MAP LOGIC ---
+    // Generate a long path dynamically
+    const mapHeight = TASKS.length * 200 + 300; // 200px per task + padding
+
     return (
         <div className="relative pt-6 pb-40 px-4 min-h-screen overflow-x-hidden">
              
              {/* TOP BAR */}
-             <div className="flex justify-between items-center mb-10 relative z-20 px-2 pt-2">
+             <div className="flex justify-between items-center mb-10 relative z-20 px-2 pt-2 bg-[#020617]/80 backdrop-blur-md py-2 sticky top-0">
                  <div>
                     <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
                             КАРТА ПУТИ
                         </span>
                     </h1>
-                    <div className="flex items-center gap-2 mt-1">
-                        <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            Сезон 1: Дофамин
-                        </span>
-                    </div>
                  </div>
                  
                  <div className="flex gap-2 items-center">
@@ -182,143 +164,118 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                  </div>
              </div>
 
-             {/* GAME PATH */}
-             <div className="relative mx-auto max-w-sm">
+             {/* GAME PATH CONTAINER */}
+             <div className="relative mx-auto max-w-sm" style={{ height: mapHeight }}>
                 
-                {/* SVG Line */}
-                <svg className="absolute top-0 left-0 w-full h-[1200px] pointer-events-none z-0" overflow="visible">
-                    <defs>
-                        <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#6366f1" stopOpacity="0" />
-                            <stop offset="20%" stopColor="#6366f1" stopOpacity="0.8" />
-                            <stop offset="80%" stopColor="#a855f7" stopOpacity="0.8" />
-                            <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
-                        </linearGradient>
-                        <filter id="glow">
-                            <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
-                            <feMerge>
-                                <feMergeNode in="coloredBlur"/>
-                                <feMergeNode in="SourceGraphic"/>
-                            </feMerge>
-                        </filter>
-                    </defs>
-                    <path 
-                        d="M 192 40 C 192 100, 80 150, 80 250 C 80 350, 304 400, 304 500 C 304 600, 192 650, 192 750 C 192 850, 80 900, 80 1000"
-                        fill="none" 
-                        stroke="url(#pathGradient)" 
-                        strokeWidth="6"
-                        strokeLinecap="round"
-                        filter="url(#glow)"
-                        className="opacity-60"
-                    />
-                </svg>
-
-                {/* Start Marker */}
-                <div className="relative mb-16 text-center z-10">
-                    <div className="inline-block relative">
-                        <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-40"></div>
-                        <div className="relative z-10 bg-[#0A0F1C]/90 backdrop-blur-md border border-indigo-500/50 px-8 py-4 rounded-[1.5rem] shadow-2xl">
-                            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-[0.2em] block mb-1">Старт</span>
-                            <span className="text-lg font-black text-white tracking-wide">ПРОБУЖДЕНИЕ</span>
-                        </div>
+                {/* START MARKER */}
+                <div className="absolute top-10 left-1/2 -translate-x-1/2 z-10 text-center">
+                    <div className="inline-block px-6 py-2 rounded-full bg-indigo-600/20 border border-indigo-500/50 text-indigo-300 text-xs font-bold uppercase tracking-widest">
+                        Старт
                     </div>
                 </div>
 
-                <div className="relative h-[1100px]">
-                    {TASKS.map((task, index) => {
-                        const isCompleted = user.completedTaskIds.includes(task.id);
-                        const isLocked = index > 0 && !user.completedTaskIds.includes(TASKS[index-1].id);
-                        const isActive = !isCompleted && !isLocked;
+                {/* SVG Path (Zig Zag) */}
+                <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-0" overflow="visible">
+                    <path 
+                        d={`M 192 80 
+                           ${TASKS.map((_, i) => {
+                               const y = 200 + (i * 200);
+                               const x = i % 2 === 0 ? 300 : 80; // Zig Zag
+                               return `L ${x} ${y}`;
+                           }).join(" ")}
+                        `}
+                        fill="none" 
+                        stroke="url(#pathGradient)" 
+                        strokeWidth="8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="opacity-40"
+                    />
+                    <defs>
+                        <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#6366f1" />
+                            <stop offset="100%" stopColor="#a855f7" />
+                        </linearGradient>
+                    </defs>
+                </svg>
 
-                        let topPos = 40;
-                        let leftPos = '50%';
-                        let transform = 'translate(-50%, 0)';
+                {TASKS.map((task, index) => {
+                    const isCompleted = user.completedTaskIds.includes(task.id);
+                    // Unlock logic: First is open, others depend on previous
+                    const isLocked = index > 0 && !user.completedTaskIds.includes(TASKS[index-1].id);
+                    const isActive = !isCompleted && !isLocked;
 
-                        if (index === 0) { topPos = 40; leftPos = '50%'; }
-                        else if (index === 1) { topPos = 250; leftPos = '21%'; } 
-                        else if (index === 2) { topPos = 500; leftPos = '79%'; } 
-                        else if (index === 3) { topPos = 750; leftPos = '50%'; } 
-                        else if (index === 4) { topPos = 950; leftPos = '21%'; }
-                        else if (index === 5) { topPos = 1150; leftPos = '79%'; }
-
-                        return (
-                            <div 
-                                key={task.id}
-                                className="absolute flex flex-col items-center z-10 group"
-                                style={{ top: topPos, left: leftPos, transform }}
+                    const topPos = 200 + (index * 200);
+                    const leftPos = index % 2 === 0 ? '75%' : '25%'; // 75% right, 25% left
+                    
+                    return (
+                        <div 
+                            key={task.id}
+                            className="absolute flex flex-col items-center z-10 group"
+                            style={{ top: topPos, left: leftPos, transform: 'translate(-50%, -50%)' }}
+                        >
+                            <button
+                                onClick={() => handleTaskClick(task, isLocked)}
+                                disabled={isLocked}
+                                className={`
+                                    relative flex items-center justify-center transition-all duration-500
+                                    ${isLocked ? 'grayscale opacity-60 cursor-not-allowed scale-90' : 'cursor-pointer hover:scale-110 active:scale-95'}
+                                    ${task.isBoss ? 'w-28 h-28' : 'w-24 h-24'}
+                                `}
                             >
-                                <button
-                                    onClick={() => handleTaskClick(task, isLocked)}
-                                    disabled={isLocked}
-                                    className={`
-                                        relative flex items-center justify-center transition-all duration-500
-                                        ${isLocked ? 'grayscale opacity-40 cursor-not-allowed w-24 h-24' : 'cursor-pointer hover:scale-110 active:scale-95 w-32 h-32'}
-                                    `}
-                                >
-                                    {/* Active Rings */}
-                                    {!isLocked && !isCompleted && (
-                                        <>
-                                            <div className="absolute inset-0 border-2 border-indigo-400/50 rounded-[2rem] rotate-45 animate-[spin_8s_linear_infinite]"></div>
-                                            <div className="absolute inset-0 border-2 border-purple-400/30 rounded-[2rem] rotate-[22.5deg] scale-110"></div>
-                                        </>
-                                    )}
+                                {/* Boss Effect */}
+                                {task.isBoss && !isLocked && !isCompleted && (
+                                     <div className="absolute inset-0 bg-red-500 blur-2xl opacity-40 animate-pulse"></div>
+                                )}
 
-                                    {/* Glow */}
-                                    {!isLocked && (
-                                        <div className={`absolute inset-0 rounded-[2rem] blur-2xl ${isCompleted ? 'bg-emerald-500/40' : 'bg-indigo-500/60 animate-pulse'}`}></div>
-                                    )}
-
-                                    {/* Icon Container */}
-                                    <div className={`
-                                        w-full h-full rounded-[2rem] rotate-45 flex items-center justify-center border-2 shadow-2xl z-10 transition-all backdrop-blur-sm
-                                        ${isCompleted 
-                                            ? 'bg-[#1E2332] border-emerald-500' 
-                                            : isLocked 
-                                                ? 'bg-[#0A0F1C] border-white/10' 
-                                                : 'bg-gradient-to-br from-indigo-600 to-purple-700 border-indigo-300 shadow-[0_0_40px_rgba(79,70,229,0.5)]'
-                                        }
-                                    `}>
-                                         <div className="-rotate-45">
-                                            {isCompleted 
-                                                ? <Check size={40} strokeWidth={4} className="text-emerald-400 drop-shadow-md" /> 
-                                                : isLocked 
-                                                    ? <Lock size={28} className="text-slate-500" /> 
-                                                    : <div className="text-white drop-shadow-md font-black text-4xl font-mono">{index + 1}</div>
-                                            }
-                                         </div>
-                                    </div>
-                                </button>
-                                
-                                {/* Label Bubble */}
+                                {/* Main Circle */}
                                 <div className={`
-                                    mt-14 px-6 py-4 rounded-[1.5rem] backdrop-blur-xl border transition-all duration-300 text-center min-w-[180px] relative
-                                    ${isActive 
-                                        ? 'bg-[#0A0F1C]/90 border-indigo-400/50 text-white transform scale-100 opacity-100 shadow-[0_20px_40px_rgba(0,0,0,0.6)]' 
-                                        : isLocked
-                                            ? 'bg-[#0A0F1C]/80 border-white/5 text-slate-600 scale-90 opacity-0 group-hover:opacity-100 transition-opacity'
-                                            : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400'
+                                    w-full h-full rounded-[2.5rem] flex items-center justify-center border-b-8 shadow-xl transition-all
+                                    ${isCompleted 
+                                        ? 'bg-emerald-600 border-emerald-800' 
+                                        : isLocked 
+                                            ? 'bg-slate-800 border-slate-900' 
+                                            : task.isBoss 
+                                                ? 'bg-red-500 border-red-700' 
+                                                : 'bg-indigo-500 border-indigo-700'
                                     }
                                 `}>
-                                    {isActive && (
-                                        <>
-                                            <div className="absolute -top-1 -left-1 w-2 h-2 bg-indigo-400 rounded-full animate-ping"></div>
-                                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-400 rounded-full animate-ping delay-75"></div>
-                                            <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-indigo-400 rounded-full animate-ping delay-150"></div>
-                                            <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-indigo-400 rounded-full animate-ping delay-300"></div>
-                                        </>
-                                    )}
-
-                                    <span className="text-[10px] font-bold uppercase tracking-wider block mb-1 opacity-80">
-                                        {isCompleted ? "ДОСТУП РАЗРЕШЕН" : isLocked ? "ЗАБЛОКИРОВАНО" : "НОВАЯ МИССИЯ"}
-                                    </span>
-                                    <span className="text-sm font-bold whitespace-nowrap leading-tight block">
-                                        {task.title}
-                                    </span>
+                                     {isCompleted 
+                                        ? <Check size={32} strokeWidth={4} className="text-white drop-shadow-md" /> 
+                                        : isLocked 
+                                            ? <Lock size={24} className="text-slate-500" /> 
+                                            : task.isBoss
+                                                ? <Skull size={32} className="text-white animate-pulse" />
+                                                : <div className="text-white drop-shadow-md font-black text-3xl font-mono">{index + 1}</div>
+                                     }
                                 </div>
+                                
+                                {/* Stars for completed */}
+                                {isCompleted && (
+                                    <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 p-1.5 rounded-full border-2 border-white shadow-sm">
+                                        <Star size={12} fill="currentColor" />
+                                    </div>
+                                )}
+                            </button>
+                            
+                            {/* Label */}
+                            <div className={`
+                                mt-4 px-4 py-2 rounded-xl backdrop-blur-md border text-center min-w-[140px]
+                                ${isActive 
+                                    ? task.isBoss ? 'bg-red-950/80 border-red-500/50 text-white' : 'bg-indigo-950/80 border-indigo-500/50 text-white' 
+                                    : 'bg-[#0A0F1C]/80 border-white/5 text-slate-500'
+                                }
+                            `}>
+                                <span className="text-[10px] font-bold uppercase tracking-wider block opacity-70 mb-0.5">
+                                    Уровень {index + 1}
+                                </span>
+                                <span className={`text-xs font-bold leading-tight block ${task.isBoss ? 'text-red-300' : ''}`}>
+                                    {task.title}
+                                </span>
                             </div>
-                        );
-                    })}
-                </div>
+                        </div>
+                    );
+                })}
              </div>
         </div>
     );

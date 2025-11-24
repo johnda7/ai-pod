@@ -1,9 +1,8 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { Task, LessonSlide, SortingItem } from '../types';
-import { X, Play, Trophy, ArrowRight, Star, Heart, ArrowLeft, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
-import { adaptTaskContent } from '../services/geminiService';
+import { Task, LessonSlide, SortingItem, PairItem } from '../types';
+import { X, Play, Trophy, ArrowRight, Star, Heart, ArrowLeft, RefreshCw, CheckCircle, AlertCircle, Sparkles, Skull } from 'lucide-react';
 
 interface TaskModalProps {
   task: Task;
@@ -21,6 +20,14 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [sortedItems, setSortedItems] = useState<SortingItem[]>([]);
   const [puzzleWords, setPuzzleWords] = useState<string[]>([]);
+  
+  // Matching State
+  const [selectedPairId, setSelectedPairId] = useState<string | null>(null); // Currently selected LEft item
+  const [matchedPairs, setMatchedPairs] = useState<string[]>([]); // IDs of completed pairs
+  
+  // Input State
+  const [inputText, setInputText] = useState('');
+
   const [isShake, setIsShake] = useState(false);
 
   // If task has no slides (legacy), wrap description in theory slide
@@ -36,21 +43,27 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
         setLives(5);
         setCurrentSlideIndex(0);
         setFeedbackStatus('NONE');
+        resetSlideState();
     }
   }, [isOpen]);
 
-  // Init Puzzle/Sorting State when slide changes
   useEffect(() => {
-      setFeedbackStatus('NONE');
-      setSelectedOption(null);
-      setSortedItems([]);
+      resetSlideState();
       
       if (currentSlide.type === 'PUZZLE') {
-          // Shuffle words for puzzle
           const allWords = [...currentSlide.correctSentence, ...(currentSlide.distractorWords || [])];
           setPuzzleWords(allWords.sort(() => Math.random() - 0.5));
       }
   }, [currentSlideIndex, currentSlide]);
+
+  const resetSlideState = () => {
+      setFeedbackStatus('NONE');
+      setSelectedOption(null);
+      setSortedItems([]);
+      setSelectedPairId(null);
+      setMatchedPairs([]);
+      setInputText('');
+  };
 
   const handleNext = () => {
       if (currentSlideIndex < slides.length - 1) {
@@ -62,7 +75,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
 
   const handleCorrect = () => {
       setFeedbackStatus('CORRECT');
-      // Auto advance or show button? Duolingo shows button.
   };
 
   const handleWrong = () => {
@@ -88,7 +100,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
   const handleSorting = (item: SortingItem, direction: 'LEFT' | 'RIGHT') => {
       if (currentSlide.type !== 'SORTING') return;
       
-      // Visual only logic for now, or check immediately
       if (item.category === direction) {
           const newSorted = [...sortedItems, item];
           setSortedItems(newSorted);
@@ -101,9 +112,37 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
       }
   };
 
-  const handlePuzzleWordClick = (word: string) => {
-      // Simple toggle logic not implemented for brevity, assuming precise add
-      // Real app would have "Selected Words" area
+  const handleMatching = (item: PairItem, side: 'LEFT' | 'RIGHT') => {
+      if (currentSlide.type !== 'MATCHING') return;
+      
+      if (side === 'LEFT') {
+          setSelectedPairId(item.id);
+      } else {
+          // RIGHT side clicked
+          if (!selectedPairId) return; // Must pick left first
+          
+          if (selectedPairId === item.id) {
+              // Match found
+              const newMatched = [...matchedPairs, item.id];
+              setMatchedPairs(newMatched);
+              setSelectedPairId(null);
+
+              if (newMatched.length === currentSlide.pairs.length) {
+                  handleCorrect();
+              }
+          } else {
+              handleWrong();
+              setSelectedPairId(null);
+          }
+      }
+  };
+
+  const handleInputSubmit = () => {
+      if (currentSlide.type !== 'INPUT') return;
+      if (inputText.length < (currentSlide.minLength || 3)) return;
+      
+      // In a real app, save this input to DB/Context
+      handleCorrect();
   };
   
   const renderSlideContent = () => {
@@ -203,12 +242,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
                );
 
             case 'PUZZLE':
-                // Simplified Puzzle Visuals
                 return (
                     <div className="flex flex-col h-full p-6">
                         <h3 className="text-xl font-bold text-white mb-8">{currentSlide.question}</h3>
                         <div className="min-h-[100px] border-b-2 border-white/10 mb-8 flex flex-wrap gap-2 items-center">
-                             {/* Placeholder for dropped words */}
                              <span className="text-slate-500 italic text-sm">Нажми на слова ниже...</span>
                         </div>
                         <div className="flex flex-wrap gap-3 justify-center">
@@ -218,8 +255,69 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
                                 </button>
                             ))}
                         </div>
-                        {/* Fake logic bypass for demo */}
-                        <div className="mt-auto text-center text-xs text-slate-600">Нажми любое слово для теста</div>
+                    </div>
+                );
+
+            case 'MATCHING':
+                return (
+                    <div className="flex flex-col h-full p-6">
+                         <h3 className="text-xl font-bold text-white mb-6 text-center">{currentSlide.question}</h3>
+                         <div className="grid grid-cols-2 gap-4">
+                             <div className="space-y-3">
+                                 {currentSlide.pairs.map(pair => {
+                                     const isMatched = matchedPairs.includes(pair.id);
+                                     const isSelected = selectedPairId === pair.id;
+                                     return (
+                                         <button 
+                                            key={pair.id + '_left'}
+                                            disabled={isMatched}
+                                            onClick={() => handleMatching(pair, 'LEFT')}
+                                            className={`w-full p-4 rounded-xl border-2 text-sm font-bold transition-all ${
+                                                isMatched ? 'opacity-0 pointer-events-none' :
+                                                isSelected ? 'bg-indigo-600 border-indigo-400 text-white' : 'bg-[#1E2332] border-white/10 text-slate-300 hover:bg-[#2A3042]'
+                                            }`}
+                                         >
+                                             {pair.left}
+                                         </button>
+                                     );
+                                 })}
+                             </div>
+                             <div className="space-y-3">
+                                 {/* Shuffle rights ideally, but for now map directly */}
+                                 {currentSlide.pairs.map(pair => {
+                                     const isMatched = matchedPairs.includes(pair.id);
+                                     return (
+                                         <button 
+                                            key={pair.id + '_right'}
+                                            disabled={isMatched}
+                                            onClick={() => handleMatching(pair, 'RIGHT')}
+                                            className={`w-full p-4 rounded-xl border-2 text-sm font-bold transition-all ${
+                                                isMatched ? 'opacity-0 pointer-events-none' :
+                                                'bg-[#1E2332] border-white/10 text-slate-300 hover:bg-[#2A3042]'
+                                            }`}
+                                         >
+                                             {pair.right}
+                                         </button>
+                                     );
+                                 })}
+                             </div>
+                         </div>
+                    </div>
+                );
+
+            case 'INPUT':
+                return (
+                    <div className="flex flex-col h-full p-6">
+                        <h3 className="text-xl font-bold text-white mb-6">{currentSlide.question}</h3>
+                        <textarea 
+                            className="w-full h-40 bg-[#1E2332] border border-white/10 rounded-2xl p-4 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"
+                            placeholder={currentSlide.placeholder}
+                            value={inputText}
+                            onChange={(e) => setInputText(e.target.value)}
+                        />
+                        <p className="mt-4 text-xs text-slate-400 text-center">
+                            Напиши хотя бы {currentSlide.minLength || 3} символов, чтобы продолжить.
+                        </p>
                     </div>
                 );
 
@@ -237,7 +335,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
       <div className={`w-full h-full sm:max-w-md sm:h-[85vh] bg-[#0A0F1C] sm:rounded-[2.5rem] flex flex-col relative overflow-hidden ${isShake ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
         
         {/* HEADER */}
-        <div className="px-6 pt-6 pb-2 flex items-center gap-4">
+        <div className={`px-6 pt-6 pb-2 flex items-center gap-4 ${task.isBoss ? 'bg-red-950/20' : ''}`}>
             <button onClick={onClose} className="text-slate-400 hover:text-white">
                 <X size={24} />
             </button>
@@ -245,14 +343,14 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
             {/* Progress Bar */}
             <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden">
                 <div 
-                    className="h-full bg-green-500 rounded-full transition-all duration-500"
+                    className={`h-full rounded-full transition-all duration-500 ${task.isBoss ? 'bg-red-600' : 'bg-green-500'}`}
                     style={{ width: `${progress}%` }}
                 ></div>
             </div>
 
             {/* Lives */}
-            <div className="flex items-center gap-1.5 text-rose-500 font-bold font-mono text-lg">
-                <Heart fill="currentColor" size={20} className={lives === 0 ? 'animate-ping' : ''} />
+            <div className={`flex items-center gap-1.5 font-bold font-mono text-lg ${task.isBoss ? 'text-red-500' : 'text-rose-500'}`}>
+                {task.isBoss ? <Skull size={20} /> : <Heart fill="currentColor" size={20} />}
                 {lives}
             </div>
         </div>
@@ -262,13 +360,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
             {renderSlideContent()}
         </div>
 
-        {/* FOOTER ACTION AREA (Bottom Sheet Style) */}
+        {/* FOOTER */}
         <div className={`p-6 border-t border-white/5 bg-[#0A0F1C] transition-colors duration-300 
             ${feedbackStatus === 'CORRECT' ? 'bg-green-900/20 border-green-500/30' : ''} 
             ${feedbackStatus === 'WRONG' ? 'bg-red-900/20 border-red-500/30' : ''}
         `}>
             
-            {/* Feedback Message */}
             {feedbackStatus === 'CORRECT' && (
                 <div className="flex items-center gap-3 mb-4 text-green-400 font-bold animate-in slide-in-from-bottom-2">
                     <CheckCircle size={28} />
@@ -291,9 +388,18 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
                 </div>
             )}
 
-            {/* Main Button */}
+            {/* MAIN ACTION BUTTON */}
             {feedbackStatus === 'NONE' ? (
-                currentSlide.type === 'THEORY' || currentSlide.type === 'VIDEO' ? (
+                currentSlide.type === 'INPUT' ? (
+                    <button 
+                        onClick={handleInputSubmit}
+                        disabled={inputText.length < (currentSlide.minLength || 3)}
+                        className="w-full bg-indigo-600 disabled:bg-slate-800 disabled:text-slate-500 text-white font-bold py-4 rounded-2xl uppercase tracking-widest transition-all shadow-lg shadow-indigo-900/50"
+                    >
+                        ПРОВЕРИТЬ
+                    </button>
+                ) :
+                (currentSlide.type === 'THEORY' || currentSlide.type === 'VIDEO') ? (
                     <button 
                         onClick={handleNext}
                         className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-indigo-900/50"
