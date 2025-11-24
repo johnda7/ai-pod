@@ -1,18 +1,13 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// --- ВАЖНО: ВСТАВЬТЕ ВАШИ ДАННЫЕ НИЖЕ ---
+// --- НАСТРОЙКИ ПОДКЛЮЧЕНИЯ SUPABASE ---
 
-// 1. URL вашего проекта (Я ЕГО УЖЕ ВПИСАЛ):
+// 1. URL вашего проекта:
 const SUPABASE_URL = 'https://rnxqyltjbcwqwblnhuhm.supabase.co'; 
 
-// 2. Теперь найдите КЛЮЧ.
-//    Посмотрите на ваш скриншот:
-//    - В таблице справа есть ключ с именем "web".
-//    - Или чуть ниже есть поле "Publishable key".
-//    Скопируйте этот длинный ключ (начинается на sb_publishable... или eyJ...)
-//    И вставьте его внутрь кавычек ниже:
-const SUPABASE_KEY = ''; 
+// 2. Ваш публичный API ключ (anon key):
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJueHF5bHRqYmN3cXdibG5odWhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Njc2OTQsImV4cCI6MjA3OTU0MzY5NH0.fmyt1OPdu15FUMxr3FrlWEstGMTMXlWcE9clqDOov5o'; 
 
 // ----------------------------------------
 
@@ -24,7 +19,7 @@ export const isSupabaseEnabled = !!supabase;
 
 // Проверка в консоли для отладки
 if (isSupabaseEnabled) {
-  console.log('✅ Supabase подключена:', SUPABASE_URL);
+  console.log('✅ Supabase успешно подключена:', SUPABASE_URL);
 } else {
-  console.log('⚠️ Supabase НЕ подключена (отсутствует SUPABASE_KEY в services/supabaseClient.ts)');
+  console.log('⚠️ Supabase НЕ подключена (проверьте ключи)');
 }
