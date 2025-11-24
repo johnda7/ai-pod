@@ -1,20 +1,40 @@
-import React, { useState } from 'react';
-import { Search, Filter, AlertTriangle, Check, X, ChevronDown } from 'lucide-react';
-import { MOCK_STUDENTS } from '../constants';
+
+import React, { useState, useEffect } from 'react';
+import { Search, AlertTriangle, ChevronDown, RefreshCcw } from 'lucide-react';
+import { getAllStudentsStats } from '../services/db';
+import { StudentStats } from '../types';
 
 export const CuratorDashboard: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'risk'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [students, setStudents] = useState<StudentStats[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredStudents = MOCK_STUDENTS
+  const fetchData = async () => {
+      setLoading(true);
+      try {
+        const data = await getAllStudentsStats();
+        setStudents(data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const filteredStudents = students
     .filter(s => filter === 'all' || (s.status === 'risk' || s.status === 'inactive'))
     .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const stats = {
-      total: MOCK_STUDENTS.length,
-      risk: MOCK_STUDENTS.filter(s => s.status === 'risk').length,
-      inactive: MOCK_STUDENTS.filter(s => s.status === 'inactive').length,
-      active: MOCK_STUDENTS.filter(s => s.status === 'active').length
+      total: students.length,
+      risk: students.filter(s => s.status === 'risk').length,
+      inactive: students.filter(s => s.status === 'inactive').length,
+      active: students.filter(s => s.status === 'active').length
   };
 
   return (
@@ -23,9 +43,9 @@ export const CuratorDashboard: React.FC = () => {
       <div className="bg-white p-4 border-b border-slate-200 shadow-sm z-20">
          <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-slate-800">Группа "Поток 1"</h2>
-            <div className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-500 font-mono">
-                ID: 8472
-            </div>
+            <button onClick={fetchData} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors">
+                <RefreshCcw size={14} className={`text-slate-500 ${loading ? 'animate-spin' : ''}`} />
+            </button>
          </div>
 
          {/* Quick Stats Row */}
@@ -75,7 +95,7 @@ export const CuratorDashboard: React.FC = () => {
                           <th className="px-4 py-3">Ученик</th>
                           <th className="px-2 py-3 text-center">Прогресс</th>
                           <th className="px-2 py-3 text-center hidden sm:table-cell">Статус</th>
-                          <th className="px-2 py-3 text-right">Действие</th>
+                          <th className="px-2 py-3 text-right"></th>
                       </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -97,7 +117,7 @@ export const CuratorDashboard: React.FC = () => {
                                           <div style={{ width: `${student.week2Progress}%` }} className="bg-indigo-500"></div>
                                       </div>
                                       <div className="text-[10px] text-slate-400 text-center">
-                                          {student.tasksCompleted} заданий
+                                          {student.tasksCompletedCount} заданий
                                       </div>
                                   </div>
                               </td>
@@ -121,7 +141,7 @@ export const CuratorDashboard: React.FC = () => {
               
               {filteredStudents.length === 0 && (
                   <div className="p-8 text-center text-slate-400 text-sm">
-                      Никого не найдено
+                      {loading ? 'Загрузка...' : 'Никого не найдено'}
                   </div>
               )}
           </div>

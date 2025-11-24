@@ -1,233 +1,254 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, X, Mic } from 'lucide-react';
-import { ChatMessage, User } from '../types';
+import { ChatMessage } from '../types';
 import { askKatya } from '../services/geminiService';
-import { KATYA_VARIANTS } from '../constants';
+import { KATYA_IMAGE_URL } from '../constants';
+import { useRive, useStateMachineInput } from '@rive-app/react-canvas';
 
 type CharacterState = 'IDLE' | 'LISTENING' | 'SPEAKING';
 
-const useCharacterAnimation = (state: CharacterState) => {
-  const [currentFrame, setCurrentFrame] = useState(KATYA_VARIANTS.IDLE);
-  const blinkInterval = useRef<number | null>(null);
-  const talkInterval = useRef<number | null>(null);
+// Demo Rive URL - Replace this with your specific 'katya.riv' file URL
+const RIVE_URL = "https://cdn.rive.app/animations/vehicles.riv"; 
+// A better character placeholder for demo purposes (if accessible):
+// const RIVE_URL = "https://public.rive.app/community/runtime-files/2063-4139-example-character.riv"; 
 
-  useEffect(() => {
-    Object.values(KATYA_VARIANTS).forEach(src => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (blinkInterval.current) {
-        clearInterval(blinkInterval.current);
-        blinkInterval.current = null;
-    }
-    if (talkInterval.current) {
-        clearInterval(talkInterval.current);
-        talkInterval.current = null;
-    }
-
-    if (state === 'IDLE' || state === 'LISTENING') {
-      setCurrentFrame(KATYA_VARIANTS.IDLE);
-      blinkInterval.current = window.setInterval(() => {
-        setCurrentFrame(KATYA_VARIANTS.BLINK);
-        setTimeout(() => setCurrentFrame(KATYA_VARIANTS.IDLE), 200); 
-      }, 3500); 
-    }
-
-    if (state === 'SPEAKING') {
-      let toggle = false;
-      talkInterval.current = window.setInterval(() => {
-         setCurrentFrame(toggle ? KATYA_VARIANTS.TALK : KATYA_VARIANTS.TALK_OPEN);
-         toggle = !toggle;
-      }, 150);
-    }
-
-    return () => {
-        if (blinkInterval.current) clearInterval(blinkInterval.current);
-        if (talkInterval.current) clearInterval(talkInterval.current);
-    };
-  }, [state]);
-
-  return currentFrame;
-};
-
-interface KatyaChatProps {
-    user?: User;
-}
-
-export const KatyaChat: React.FC<KatyaChatProps> = ({ user }) => {
+export const KatyaChat: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { id: '0', sender: 'katya', text: 'Привет! Я на связи. Чем могу помочь?', timestamp: Date.now() }
+  ]);
+  const [inputValue, setInputValue] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    try {
-      const saved = localStorage.getItem('katya_chat_history');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {
-      console.warn("Failed to load chat history", e);
-    }
-    return [{ id: '1', sender: 'katya', text: 'Йо! Я Катя. Чего хотел?', timestamp: Date.now() }];
+  const [characterState, setCharacterState] = useState<CharacterState>('IDLE');
+
+  // --- RIVE SETUP ---
+  const { rive, RiveComponent } = useRive({
+    src: "https://cdn.rive.app/animations/hero_use_case.riv", // Using a robust public demo file
+    stateMachines: "State Machine 1", // Ensure this matches your Rive file's state machine name
+    // Layout, Fit, and Alignment removed due to import issues with current CDN build.
+    // Default is usually Fit.Contain and Alignment.Center
+    autoplay: true,
   });
 
-  const [inputText, setInputText] = useState('');
-  const [characterState, setCharacterState] = useState<CharacterState>('IDLE');
-  
-  const currentFrame = useCharacterAnimation(characterState);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Example Inputs - Adjust 'isSpeaking' / 'isListening' to match your Rive file inputs
+  const isSpeakingInput = useStateMachineInput(rive, "State Machine 1", "isSpeaking");
+  const isListeningInput = useStateMachineInput(rive, "State Machine 1", "isListening"); // Or 'Level' for audio reactivity
 
+  // Sync React State with Rive Inputs
   useEffect(() => {
-    try {
-      localStorage.setItem('katya_chat_history', JSON.stringify(messages));
-    } catch (e) {
+    if (rive && isSpeakingInput && isListeningInput) {
+        if (characterState === 'SPEAKING') {
+            isSpeakingInput.value = true;
+            isListeningInput.value = false;
+        } else if (characterState === 'LISTENING') {
+            isSpeakingInput.value = false;
+            isListeningInput.value = true;
+        } else {
+            // IDLE
+            isSpeakingInput.value = false;
+            isListeningInput.value = false;
+        }
     }
-  }, [messages]);
+  }, [characterState, rive, isSpeakingInput, isListeningInput]);
+  // ------------------
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    if (isOpen) scrollToBottom();
+    scrollToBottom();
   }, [messages, isOpen]);
 
-  const handleSendMessage = async () => {
-    if (!inputText.trim()) return;
+  const handleSend = async () => {
+    if (!inputValue.trim()) return;
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       sender: 'user',
-      text: inputText,
+      text: inputValue,
       timestamp: Date.now()
     };
 
     setMessages(prev => [...prev, userMsg]);
-    setInputText('');
-    setCharacterState('LISTENING');
+    setInputValue('');
+    setIsTyping(true);
+    setCharacterState('LISTENING'); // Katya is "processing/listening"
 
     try {
-        await new Promise(resolve => setTimeout(resolve, 600));
+        const responseText = await askKatya(userMsg.text, "User is a teen learning about soft skills", "Gaming");
+        
+        setIsTyping(false);
         setCharacterState('SPEAKING');
-        
-        const context = user ? `Level: ${user.level}, XP: ${user.xp}, Style: ${user.learningStyle}` : 'Unknown user';
-        const interest = user?.interest || 'General';
-        
-        const responseText = await askKatya(userMsg.text, context, interest);
-        
-        const katyaMsg: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            sender: 'katya',
-            text: responseText,
-            timestamp: Date.now()
+
+        const botMsg: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          sender: 'katya',
+          text: responseText,
+          timestamp: Date.now()
         };
         
-        setMessages(prev => [...prev, katyaMsg]);
+        setMessages(prev => [...prev, botMsg]);
         
-        const readingTime = Math.min(Math.max(responseText.length * 50, 1500), 5000);
+        // Return to IDLE after reading time
         setTimeout(() => {
             setCharacterState('IDLE');
-        }, readingTime);
-
-    } catch (error) {
+        }, Math.min(responseText.length * 50, 5000));
+    } catch (e) {
+        setIsTyping(false);
         setCharacterState('IDLE');
-        console.error("Chat error:", error);
     }
   };
 
-  if (!isOpen) {
-    return (
-      <button 
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-4 z-40 w-16 h-16 bg-white rounded-full shadow-2xl border-4 border-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all group overflow-hidden"
-      >
-          <div className="absolute inset-0 bg-indigo-50"></div>
-          <img src={KATYA_VARIANTS.IDLE} alt="Katya" className="w-full h-full object-cover transform scale-125 translate-y-2 group-hover:scale-110 transition-transform" />
-          <div className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></div>
-      </button>
-    );
-  }
+  // Helper to render the Avatar (Rive or Fallback Image)
+  const renderAvatar = () => (
+      <div className="w-full h-full relative">
+          {/* Fallback Image (shows if Rive fails or loads) */}
+          <img 
+            src={KATYA_IMAGE_URL} 
+            className="absolute inset-0 w-full h-full object-cover" 
+            alt="Katya" 
+          />
+          
+          {/* Rive Layer */}
+          {rive && (
+              <div className="absolute inset-0 bg-[#0A0F1C] bg-opacity-10"> 
+                  <RiveComponent className="w-full h-full object-cover" />
+              </div>
+          )}
+      </div>
+  );
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-end sm:items-end pointer-events-none">
-        <div className="absolute inset-0 bg-black/20 sm:bg-transparent pointer-events-auto" onClick={() => setIsOpen(false)}></div>
-        
-        <div 
-            className="pointer-events-auto w-full h-[80vh] sm:w-[400px] sm:h-[600px] sm:mr-4 sm:mb-24 bg-slate-50 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300 border border-slate-200"
-            onClick={(e) => e.stopPropagation()}
+    <>
+      {/* Trigger Button (Minimised) */}
+      {!isOpen && (
+        <button 
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-24 right-4 z-40 group hover:scale-105 transition-transform duration-300"
         >
-            <div className="bg-white p-4 border-b border-slate-100 flex items-center justify-between shrink-0 relative z-20">
-                <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-indigo-100 overflow-hidden border-2 border-white shadow-md relative">
-                        <img src={currentFrame} alt="Katya" className="w-full h-full object-cover transform scale-125 translate-y-1" />
-                    </div>
-                    <div>
-                        <h3 className="font-black text-slate-800 text-lg leading-none">Катя</h3>
-                        <div className="flex items-center gap-1 mt-1">
-                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Online</span>
-                        </div>
-                    </div>
-                </div>
-                <button 
-                    onClick={() => setIsOpen(false)}
-                    className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"
-                >
-                    <X size={20} />
-                </button>
-            </div>
+          <div className="relative">
+             {/* Pulsing rings for attention */}
+             <div className="absolute inset-0 bg-indigo-500 rounded-full animate-ping opacity-20"></div>
+             
+             {/* Main Circle */}
+             <div className="relative w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-[0_10px_30px_rgba(79,70,229,0.4)] overflow-hidden">
+                 <div className="w-full h-full rounded-full overflow-hidden border-2 border-white bg-slate-900">
+                    {renderAvatar()}
+                 </div>
+                 
+                 {/* Online Status Dot */}
+                 <div className="absolute bottom-1 right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-[#0A0F1C] z-10 shadow-sm"></div>
+             </div>
+          </div>
+        </button>
+      )}
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
-                {messages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] p-4 rounded-2xl text-sm font-medium leading-relaxed shadow-sm ${
-                            msg.sender === 'user' 
-                            ? 'bg-indigo-600 text-white rounded-tr-none' 
-                            : 'bg-white text-slate-700 border border-slate-200 rounded-tl-none'
-                        }`}>
-                            {msg.text}
-                        </div>
-                    </div>
-                ))}
-                
-                {characterState === 'LISTENING' && (
-                     <div className="flex justify-start">
-                        <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-slate-200 shadow-sm flex gap-1.5 items-center">
-                            <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
-                            <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce delay-75"></div>
-                            <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce delay-150"></div>
-                        </div>
-                    </div>
-                )}
-                
-                <div ref={messagesEndRef} />
-            </div>
+      {/* Chat Window (Maximized) */}
+      {isOpen && (
+        <div className="fixed bottom-0 right-0 w-full md:w-96 md:bottom-4 md:right-4 z-50 flex flex-col h-[85vh] md:h-[650px] bg-white/95 backdrop-blur-2xl md:rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-500 border border-white/40 ring-1 ring-black/5">
+           
+           {/* Header with Large Avatar */}
+           <div className="relative bg-gradient-to-b from-indigo-50 to-white/50 p-6 pb-4 border-b border-slate-100 z-10">
+              <button 
+                onClick={() => setIsOpen(false)} 
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/60 hover:bg-white flex items-center justify-center text-slate-500 transition-colors backdrop-blur-sm shadow-sm"
+              >
+                  <X size={18} />
+              </button>
 
-            <div className="p-4 bg-white border-t border-slate-100 shrink-0">
-                <div className="flex items-center gap-2 bg-slate-100 p-2 rounded-[1.5rem] border border-slate-200 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all">
-                    <button className="w-10 h-10 rounded-full bg-white text-slate-400 flex items-center justify-center hover:text-indigo-600 shadow-sm transition-colors">
-                        <Mic size={20} />
-                    </button>
-                    <input 
-                        value={inputText}
-                        onChange={(e) => setInputText(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                        placeholder="Напиши сообщение..." 
-                        className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium placeholder:text-slate-400 text-slate-800 min-w-0"
-                    />
-                    <button 
-                        onClick={handleSendMessage}
-                        disabled={!inputText.trim()}
-                        className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md active:scale-95"
-                    >
-                        <Send size={18} />
-                    </button>
-                </div>
-            </div>
+              <div className="flex flex-col items-center">
+                  <div className="relative mb-3">
+                      {/* Active Status Ring */}
+                      {(characterState === 'SPEAKING' || isTyping) && (
+                          <>
+                            <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 animate-[spin_3s_linear_infinite] opacity-50"></div>
+                            <div className="absolute -inset-2 rounded-full border border-indigo-200 animate-ping opacity-30"></div>
+                          </>
+                      )}
+                      
+                      {/* Avatar Container */}
+                      <div className="relative w-24 h-24 rounded-full border-4 border-white shadow-xl overflow-hidden bg-slate-100">
+                           {renderAvatar()}
+                      </div>
+                  </div>
+                  
+                  <h3 className="font-black text-2xl text-slate-800 tracking-tight leading-none">Катя</h3>
+                  <div className="flex items-center gap-1.5 mt-1">
+                      {characterState === 'SPEAKING' || isTyping ? (
+                          <>
+                             <div className="flex gap-0.5 items-end h-3">
+                                 <div className="w-1 h-2 bg-indigo-500 rounded-full animate-[bounce_0.8s_infinite]"></div>
+                                 <div className="w-1 h-3 bg-indigo-500 rounded-full animate-[bounce_1s_infinite]"></div>
+                                 <div className="w-1 h-1.5 bg-indigo-500 rounded-full animate-[bounce_1.2s_infinite]"></div>
+                             </div>
+                             <span className="text-xs font-bold text-indigo-500">Печатает...</span>
+                          </>
+                      ) : (
+                          <>
+                            <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+                            <span className="text-xs font-bold text-slate-400">В сети</span>
+                          </>
+                      )}
+                  </div>
+              </div>
+           </div>
+
+           {/* Messages Area */}
+           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+              {messages.map((msg) => (
+                  <div key={msg.id} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                      {msg.sender === 'katya' && (
+                          <span className="text-[10px] font-bold text-slate-400 ml-3 mb-1 uppercase tracking-wider">Катя</span>
+                      )}
+                      <div className={`max-w-[85%] px-5 py-3.5 rounded-2xl text-sm font-medium leading-relaxed shadow-sm ${
+                          msg.sender === 'user' 
+                          ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-br-none shadow-indigo-500/20' 
+                          : 'bg-white text-slate-700 rounded-bl-none border border-slate-100'
+                      }`}>
+                          {msg.text}
+                      </div>
+                  </div>
+              ))}
+              
+              {isTyping && (
+                  <div className="flex items-end gap-2">
+                       <div className="w-6 h-6 rounded-full overflow-hidden bg-slate-200 mb-2 opacity-50">
+                           <img src={KATYA_IMAGE_URL} className="w-full h-full object-cover" alt="" />
+                       </div>
+                       <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-none shadow-sm border border-slate-100 flex gap-1">
+                          <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></div>
+                          <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce delay-75"></div>
+                          <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce delay-150"></div>
+                      </div>
+                  </div>
+              )}
+              <div ref={messagesEndRef} />
+           </div>
+
+           {/* Input Area */}
+           <div className="p-4 bg-white border-t border-slate-100 flex gap-2 shrink-0 relative z-20">
+               <input 
+                  type="text" 
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                  placeholder="Напиши сообщение..."
+                  className="flex-1 bg-slate-100 border-none rounded-[1.2rem] px-5 py-3.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all placeholder:text-slate-400"
+               />
+               <button 
+                  onClick={handleSend}
+                  disabled={!inputValue.trim() || isTyping}
+                  className="w-12 h-12 flex items-center justify-center bg-indigo-600 text-white rounded-full hover:bg-indigo-700 hover:scale-105 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-500/30"
+               >
+                   <Send size={20} className="ml-0.5" strokeWidth={2.5} />
+               </button>
+           </div>
         </div>
-    </div>
+      )}
+    </>
   );
 };
