@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { TASKS, KATYA_IMAGE_URL } from '../constants';
+import { TASKS } from '../constants';
 import { Task, User } from '../types';
-import { Check, Lock, Star, LayoutGrid, User as UserIcon, Music, Database, Wifi, Zap, Shield, ChevronRight } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, Music, Database, Zap, Shield, QrCode } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
 import { isSupabaseEnabled } from '../services/supabaseClient';
@@ -50,51 +50,73 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
         return (
             <div className="px-6 pt-8 pb-32 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 
-                {/* HEADER CARD */}
-                <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#1E2332] to-[#0A0F1C] border border-white/10 p-6 shadow-2xl mb-6">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/20 blur-[80px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+                {/* HEADER CARD - ID STYLE */}
+                <div className="relative overflow-hidden rounded-3xl bg-[#151925] border border-white/10 p-6 shadow-2xl mb-6">
+                    {/* Decorative Background Elements */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/30 blur-[60px] rounded-full pointer-events-none"></div>
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-600/20 blur-[60px] rounded-full pointer-events-none"></div>
                     
-                    <div className="relative z-10 flex flex-col items-center">
-                        <div className="relative mb-4">
-                            <div className="w-28 h-28 rounded-full p-1 bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30">
-                                <img src={user.avatarUrl} className="w-full h-full rounded-full object-cover border-4 border-[#0A0F1C]" alt="Profile" />
+                    <div className="relative z-10 flex items-center gap-5">
+                        {/* Avatar */}
+                        <div className="relative">
+                            <div className="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20">
+                                <img src={user.avatarUrl} className="w-full h-full rounded-full object-cover border-2 border-[#151925]" alt="Profile" />
                             </div>
-                            <div className="absolute bottom-0 right-0 bg-[#0A0F1C] p-1 rounded-full">
-                                <div className="bg-emerald-500 w-4 h-4 rounded-full border-2 border-[#0A0F1C] animate-pulse"></div>
+                            <div className="absolute -bottom-1 -right-1 bg-[#151925] p-1 rounded-full">
+                                <div className="bg-emerald-500 w-3 h-3 rounded-full border-2 border-[#151925]"></div>
                             </div>
                         </div>
                         
-                        <h2 className="text-2xl font-black text-white tracking-tight mb-1">{user.name}</h2>
-                        <p className="text-slate-400 text-sm font-medium mb-6">{user.role === 'TEEN' ? 'Игрок' : user.role}</p>
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-2xl font-bold text-white tracking-tight truncate">{user.name}</h2>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="px-2 py-0.5 rounded-md bg-white/10 text-[10px] font-bold text-indigo-300 uppercase tracking-wider border border-white/5">
+                                    Уровень {user.level}
+                                </span>
+                                {user.telegramId && (
+                                    <span className="text-[10px] text-slate-500 font-mono truncate">
+                                        ID: {user.telegramId}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
 
-                        {/* LEVEL PROGRESS */}
-                        <div className="w-full bg-white/5 rounded-2xl p-4 border border-white/5 mb-4">
-                            <div className="flex justify-between items-end mb-2">
-                                <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">Уровень {user.level}</span>
-                                <span className="text-xs font-bold text-slate-400">{user.xp} / {nextLevelXp} XP</span>
-                            </div>
-                            <div className="w-full h-3 bg-[#0A0F1C] rounded-full overflow-hidden relative">
-                                <div 
-                                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out"
-                                    style={{ width: `${levelProgress}%` }}
-                                ></div>
-                            </div>
+                    {/* Level Progress Bar */}
+                    <div className="mt-6">
+                        <div className="flex justify-between items-end mb-2">
+                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Прогресс уровня</span>
+                             <span className="text-[10px] font-bold text-white">{Math.round(levelProgress)}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
+                            <div 
+                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                                style={{ width: `${levelProgress}%` }}
+                            ></div>
+                        </div>
+                        <div className="text-right mt-1">
+                             <span className="text-[10px] text-slate-600 font-medium">{user.xp} / {nextLevelXp} XP</span>
                         </div>
                     </div>
                 </div>
 
                 {/* STATS GRID */}
-                <h3 className="text-white font-bold text-lg mb-4 px-2">Статистика</h3>
+                <h3 className="text-white font-bold text-lg mb-4 px-1 flex items-center gap-2">
+                    <QrCode size={18} className="text-indigo-400" />
+                    Данные
+                </h3>
+                
                 <div className="grid grid-cols-2 gap-3 mb-6">
-                    <div className="bg-[#1E2332]/50 border border-white/5 p-4 rounded-3xl flex flex-col items-center justify-center gap-2">
-                        <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400 mb-1">
+                    <div className="bg-[#1E2332] border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-lg">
+                        <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 mb-1">
                             <Zap size={20} fill="currentColor" />
                         </div>
                         <div className="text-2xl font-black text-white">{user.streak}</div>
-                        <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Дней подряд</div>
+                        <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Серия дней</div>
                     </div>
-                    <div className="bg-[#1E2332]/50 border border-white/5 p-4 rounded-3xl flex flex-col items-center justify-center gap-2">
-                        <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 mb-1">
+                    <div className="bg-[#1E2332] border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-lg">
+                        <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 mb-1">
                             <Shield size={20} fill="currentColor" />
                         </div>
                         <div className="text-2xl font-black text-white">{user.completedTaskIds.length}</div>
@@ -102,26 +124,24 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                     </div>
                 </div>
 
-                {/* SYSTEM STATUS (Compact) */}
-                <div className="bg-[#1E2332]/30 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
+                {/* CLOUD STATUS */}
+                <div className="bg-[#151925] border border-white/5 rounded-2xl p-4 flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isSupabaseEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700/50 text-slate-500'}`}>
-                            <Database size={14} />
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isSupabaseEnabled ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-700/20 text-slate-500'}`}>
+                            <Database size={18} />
                         </div>
                         <div>
-                            <div className="text-xs font-bold text-white">Supabase Cloud</div>
-                            <div className="text-[10px] text-slate-500 font-medium">
-                                {isSupabaseEnabled ? 'Connected' : 'Offline Mode'}
+                            <div className="text-sm font-bold text-white">Синхронизация</div>
+                            <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                                {isSupabaseEnabled ? 'Облако подключено' : 'Локальный режим'}
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                         <div className={`w-2 h-2 rounded-full ${isSupabaseEnabled ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-slate-600'}`}></div>
-                    </div>
+                    <div className={`w-2 h-2 rounded-full ${isSupabaseEnabled ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]' : 'bg-slate-600'}`}></div>
                 </div>
                 
-                <div className="text-center mt-6">
-                    <p className="text-[10px] text-slate-600 uppercase tracking-widest opacity-50">ID: {user.id.slice(0, 6)}</p>
+                <div className="flex justify-center">
+                   <p className="text-[10px] text-slate-700 font-mono">v1.0.2 • Build 492</p>
                 </div>
             </div>
         );
