@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { TASKS } from '../constants';
 import { Task, User } from '../types';
-import { Check, Lock, Star, LayoutGrid, User as UserIcon, Music, Database, Zap, Shield, QrCode } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, Music, Database, Zap, Shield, QrCode, Brain, Play } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
+import { MemoryGame } from './MemoryGame';
 import { isSupabaseEnabled } from '../services/supabaseClient';
 
 interface TeenDashboardProps {
@@ -17,6 +18,7 @@ type Tab = 'LEARN' | 'RELAX' | 'PROFILE';
 export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComplete }) => {
   const [activeTab, setActiveTab] = useState<Tab>('LEARN'); 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isGameOpen, setIsGameOpen] = useState(false);
   
   // Animation state for XP update
   const [prevXp, setPrevXp] = useState(user.xp);
@@ -34,6 +36,21 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
   const handleTaskClick = (task: Task, isLocked: boolean) => {
       if (isLocked) return; 
       setSelectedTask(task);
+  };
+
+  const handleGameComplete = (xp: number) => {
+      // Create a dummy task for the game completion
+      const gameTask: Task = {
+          id: `game_${Date.now()}`,
+          week: 0,
+          title: 'Нейро-Тренировка',
+          description: 'Успешная калибровка',
+          xpReward: xp,
+          type: 'ACTION',
+          learningStyle: 'VISUAL',
+          position: { x: 0, y: 0 }
+      };
+      onTaskComplete(gameTask);
   };
 
   // Calculate Level Progress
@@ -141,7 +158,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                 </div>
                 
                 <div className="flex justify-center">
-                   <p className="text-[10px] text-slate-700 font-mono">v1.0.2 • Build 492</p>
+                   <p className="text-[10px] text-slate-700 font-mono">v1.0.3 • Motivation Edition</p>
                 </div>
             </div>
         );
@@ -151,17 +168,27 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
     return (
         <div className="relative pt-6 pb-40 px-4 min-h-screen">
              
-             {/* Top Bar: Just XP */}
+             {/* Top Bar: XP and Daily Challenge */}
              <div className="flex justify-between items-center mb-8 relative z-20 px-2">
                  <div>
                     <h1 className="text-xl font-black text-white tracking-tight">Мой Путь</h1>
-                    <p className="text-xs text-indigo-300 font-medium uppercase tracking-wider">Сезон 1</p>
+                    <p className="text-xs text-indigo-300 font-medium uppercase tracking-wider">Сезон 1: Мотивация</p>
                  </div>
                  
-                 <div className="glass-panel px-4 py-2 rounded-full flex items-center gap-2 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
-                     <Star size={16} fill="currentColor" className="text-yellow-400" />
-                     <div className={`text-lg font-black ${isXpAnimating ? 'text-yellow-400 scale-110' : 'text-white'} transition-all duration-300`}>
-                         {user.xp}
+                 <div className="flex gap-2">
+                     {/* Mini Game Button */}
+                     <button 
+                        onClick={() => setIsGameOpen(true)}
+                        className="w-10 h-10 rounded-full bg-gradient-to-tr from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/30 hover:scale-105 transition-transform animate-pulse"
+                     >
+                         <Brain size={20} className="text-white" />
+                     </button>
+
+                     <div className="glass-panel px-4 py-2 rounded-full flex items-center gap-2 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
+                         <Star size={16} fill="currentColor" className="text-yellow-400" />
+                         <div className={`text-lg font-black ${isXpAnimating ? 'text-yellow-400 scale-110' : 'text-white'} transition-all duration-300`}>
+                             {user.xp}
+                         </div>
                      </div>
                  </div>
              </div>
@@ -216,7 +243,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                     <div className="inline-block relative">
                         <div className="absolute inset-0 bg-indigo-500 blur-lg opacity-40"></div>
                         <span className="relative z-10 bg-[#0A0F1C] text-indigo-300 border border-indigo-500/50 px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] shadow-xl">
-                            Start • Пробуждение
+                            Chapter 1 • Dopamine
                         </span>
                     </div>
                 </div>
@@ -250,7 +277,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                                     disabled={isLocked}
                                     className={`
                                         relative flex items-center justify-center transition-all duration-500
-                                        ${isLocked ? 'grayscale opacity-60 cursor-not-allowed w-16 h-16' : 'cursor-pointer hover:scale-110 w-20 h-20'}
+                                        ${isLocked ? 'grayscale opacity-60 cursor-not-allowed w-16 h-16' : 'cursor-pointer hover:scale-110 w-24 h-24'}
                                     `}
                                 >
                                     {/* Glow behind active/completed */}
@@ -271,10 +298,11 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                                          {/* Icon (Counter-rotated) */}
                                          <div className="-rotate-45">
                                             {isCompleted 
-                                                ? <Check size={28} strokeWidth={4} className="text-emerald-400 drop-shadow-md" /> 
+                                                ? <Check size={32} strokeWidth={4} className="text-emerald-400 drop-shadow-md" /> 
                                                 : isLocked 
                                                     ? <Lock size={20} className="text-slate-500" /> 
-                                                    : <div className="text-white drop-shadow-md font-black text-lg">{index + 1}</div>
+                                                    : task.type === 'VIDEO' ? <Play size={28} className="text-white fill-white" />
+                                                    : <div className="text-white drop-shadow-md font-black text-xl">{index + 1}</div>
                                             }
                                          </div>
                                     </div>
@@ -282,7 +310,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                                 
                                 {/* Label */}
                                 <div className={`
-                                    mt-6 px-4 py-2 rounded-xl backdrop-blur-md border transition-all duration-300 text-center min-w-[100px]
+                                    mt-8 px-4 py-2 rounded-xl backdrop-blur-md border transition-all duration-300 text-center min-w-[120px]
                                     ${isActive 
                                         ? 'bg-white/10 border-white/30 text-white transform scale-100 opacity-100 shadow-lg' 
                                         : isLocked
@@ -291,9 +319,9 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                                     }
                                 `}>
                                     <span className="text-[10px] font-bold uppercase tracking-wider block mb-0.5">
-                                        {isCompleted ? "Выполнено" : isLocked ? "Закрыто" : "Текущее"}
+                                        {isCompleted ? "Взломано" : isLocked ? "Закрыто" : "Доступно"}
                                     </span>
-                                    <span className="text-sm font-bold whitespace-nowrap">
+                                    <span className="text-sm font-bold whitespace-nowrap leading-tight">
                                         {task.title}
                                     </span>
                                 </div>
@@ -362,6 +390,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
         </div>
       </div>
 
+      {/* MODALS */}
       {selectedTask && (
         <TaskModal 
             task={selectedTask} 
@@ -374,6 +403,14 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                 setSelectedTask(null);
             }} 
         />
+      )}
+
+      {isGameOpen && (
+          <MemoryGame 
+            isOpen={isGameOpen}
+            onClose={() => setIsGameOpen(false)}
+            onComplete={handleGameComplete}
+          />
       )}
     </div>
   );
