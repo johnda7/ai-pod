@@ -1,5 +1,4 @@
 
-
 export enum UserRole {
   TEEN = 'TEEN',
   PARENT = 'PARENT',
@@ -15,27 +14,27 @@ export interface User {
   name: string;
   role: UserRole;
   xp: number;
-  coins: number; // New Hard/Soft Currency
+  coins: number; 
   level: number;
-  hp: number; // Health Points (Lives)
+  hp: number; 
   maxHp: number;
   avatarUrl: string;
   streak: number;
   completedTaskIds: string[]; 
   learningStyle?: LearningStyle;
   interest: string;
-  inventory: string[]; // Owned items IDs
+  inventory: string[]; 
   league: 'BRONZE' | 'SILVER' | 'GOLD' | 'DIAMOND';
 }
 
 // --- NEW LESSON ENGINE TYPES ---
 
-export type SlideType = 'THEORY' | 'QUIZ' | 'SORTING' | 'PUZZLE' | 'VIDEO' | 'MATCHING' | 'INPUT' | 'POLL';
+export type SlideType = 'THEORY' | 'QUIZ' | 'SORTING' | 'PUZZLE' | 'VIDEO' | 'MATCHING' | 'INPUT' | 'POLL' | 'GAME';
 
 export interface BaseSlide {
   id: string;
   type: SlideType;
-  title?: string; // Optional header
+  title?: string; 
 }
 
 export interface TheorySlide extends BaseSlide {
@@ -57,20 +56,20 @@ export interface QuizSlide extends BaseSlide {
   question: string;
   options: string[];
   correctIndex: number;
-  explanation?: string; // Shown after answer
+  explanation?: string; 
 }
 
 export interface PollSlide extends BaseSlide {
   type: 'POLL';
   question: string;
-  options: string[]; // Just for selection, no right/wrong
+  options: string[]; 
 }
 
 export interface SortingItem {
   id: string;
   text: string;
   emoji: string;
-  category: 'LEFT' | 'RIGHT'; // e.g., 'BAD' | 'GOOD'
+  category: 'LEFT' | 'RIGHT'; 
 }
 
 export interface SortingSlide extends BaseSlide {
@@ -84,14 +83,14 @@ export interface SortingSlide extends BaseSlide {
 export interface PuzzleSlide extends BaseSlide {
   type: 'PUZZLE';
   question: string;
-  correctSentence: string[]; // Array of words in order
-  distractorWords?: string[]; // Extra words to confuse
+  correctSentence: string[]; 
+  distractorWords?: string[]; 
 }
 
 export interface PairItem {
   id: string;
   left: string;
-  right: string; // The matching pair
+  right: string; 
 }
 
 export interface MatchingSlide extends BaseSlide {
@@ -107,7 +106,15 @@ export interface InputSlide extends BaseSlide {
   minLength?: number;
 }
 
-export type LessonSlide = TheorySlide | QuizSlide | SortingSlide | PuzzleSlide | VideoSlide | MatchingSlide | InputSlide | PollSlide;
+export interface GameSlide extends BaseSlide {
+  type: 'GAME';
+  gameType: 'FOCUS_DEFENDER' | 'NEURO_MATCH';
+  instructions: string;
+  durationSeconds?: number; // For timed games
+  targetScore?: number;
+}
+
+export type LessonSlide = TheorySlide | QuizSlide | SortingSlide | PuzzleSlide | VideoSlide | MatchingSlide | InputSlide | PollSlide | GameSlide;
 
 export interface Task {
   id: string;
@@ -115,10 +122,10 @@ export interface Task {
   title: string;
   description: string;
   xpReward: number;
-  coinsReward: number; // New Reward
+  coinsReward: number; 
   isLocked?: boolean;
-  isBoss?: boolean; // New visual style for boss levels
-  slides: LessonSlide[]; // The content flow
+  isBoss?: boolean; 
+  slides: LessonSlide[]; 
 }
 
 export interface ShopItem {
