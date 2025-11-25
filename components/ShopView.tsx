@@ -24,8 +24,8 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy }) => {
   return (
     <div className="min-h-screen bg-[#020617] pb-40 animate-in fade-in duration-500 text-white">
       
-      {/* HEADER - Increased PT to 16 */}
-      <div className="sticky top-0 z-20 bg-[#020617]/80 backdrop-blur-xl border-b border-white/5 px-6 pt-16 pb-6 shadow-xl">
+      {/* HEADER - Updated pt-20 to avoid overlap with badges */}
+      <div className="sticky top-0 z-20 bg-[#020617]/90 backdrop-blur-xl border-b border-white/5 px-6 pt-20 pb-6 shadow-xl">
          <div className="flex justify-between items-center">
              <div>
                  <h1 className="text-3xl font-black text-white tracking-tight">Магазин</h1>
@@ -47,13 +47,15 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy }) => {
              const isDisabled = !canAfford || isHpFull || isOwned;
 
              return (
-               <div key={item.id} className="bg-[#151925] rounded-[2rem] p-6 border border-white/5 relative group overflow-hidden">
+               <div key={item.id} className="bg-[#151925] rounded-[2rem] p-6 border border-white/5 relative group overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
                    {/* Hover Effect */}
                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
                    <div className="relative z-10 flex flex-col items-center text-center gap-4">
-                       <div className="w-20 h-20 rounded-full bg-[#0A0F1C] border border-white/5 flex items-center justify-center shadow-lg text-4xl mb-2 group-hover:scale-110 transition-transform duration-300">
-                           {getIcon(item.id)}
+                       <div className="w-20 h-20 rounded-full bg-[#0A0F1C] border border-white/5 flex items-center justify-center shadow-lg text-4xl mb-2 group-hover:scale-110 transition-transform duration-300 relative">
+                           {/* Glow behind icon */}
+                           <div className="absolute inset-0 bg-indigo-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                           <div className="relative z-10">{getIcon(item.id)}</div>
                        </div>
                        
                        <div>
@@ -95,14 +97,14 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy }) => {
 
       {/* BANNER */}
       <div className="px-6 mt-4">
-          <div className="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-[2rem] p-6 relative overflow-hidden border border-white/10">
+          <div className="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-[2rem] p-6 relative overflow-hidden border border-white/10 shadow-2xl">
               <div className="absolute -right-10 -top-10 w-40 h-40 bg-purple-500/30 blur-[50px] rounded-full"></div>
               <div className="relative z-10 flex items-center justify-between">
                   <div>
                       <h3 className="text-xl font-black text-white mb-1">Премиум доступ</h3>
                       <p className="text-purple-200 text-xs font-bold">Открой все скины и бесконечные жизни</p>
                   </div>
-                  <button className="px-4 py-2 bg-white text-purple-900 font-black text-xs uppercase rounded-xl hover:bg-purple-50">
+                  <button className="px-4 py-2 bg-white text-purple-900 font-black text-xs uppercase rounded-xl hover:bg-purple-50 transition-colors shadow-lg">
                       Скоро
                   </button>
               </div>
