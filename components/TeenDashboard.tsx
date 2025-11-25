@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { TASKS, SHOP_ITEMS } from '../constants';
 import { Task, User, ShopItem } from '../types';
-import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Trophy, Heart, Zap, Shield, Skull, Coins, Target, MapPin, Settings, Bell, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Share2, Sparkles, Gift } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Trophy, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
 import { MemoryGame } from './MemoryGame';
@@ -67,7 +67,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
 
     if (activeTab === 'PROFILE') {
         return (
-            <div className="px-5 pt-14 pb-32 animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-screen relative">
+            <div className="px-5 pt-24 pb-32 animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-screen relative">
                 
                 {/* 1. HERO IDENTITY CARD (Liquid Glass) */}
                 <div className="relative w-full rounded-[3rem] overflow-hidden p-8 flex flex-col items-center text-center shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-white/10 mb-8 group">
@@ -180,9 +180,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                 {/* 3. SETTINGS MENU */}
                 <div className="space-y-3 animate-in slide-in-from-bottom-8 duration-700 delay-200">
                      {[
-                         { icon: Settings, label: 'Настройки аккаунта', badge: null },
-                         { icon: Bell, label: 'Уведомления', badge: '3' },
-                         { icon: ShieldCheck, label: 'Приватность', badge: null },
+                         { icon: ShieldCheck, label: 'Настройки аккаунта', badge: null },
                          { icon: HelpCircle, label: 'Поддержка', badge: null },
                      ].map((item, idx) => (
                          <button 
@@ -208,10 +206,6 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                          <LogOut size={18} />
                          Выйти из аккаунта
                      </button>
-                     
-                     <div className="text-center mt-8 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                         AI Teenager v1.0.4 • Build 240
-                     </div>
                 </div>
 
             </div>
@@ -219,7 +213,6 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
     }
 
     // --- GAME MAP LOGIC ---
-    // Spacing calculations
     const ITEM_SPACING = 140; 
     const START_PADDING = 150;
     const END_PADDING = 250;
@@ -228,8 +221,8 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
     return (
         <div className="relative pt-2 pb-40 px-4 min-h-screen overflow-x-hidden">
              
-             {/* TOP BAR - Increased PT to avoid badge overlap */}
-             <div className="flex justify-between items-center mb-6 relative z-40 pt-14 backdrop-blur-xl sticky top-0 pb-4 -mx-4 px-6 bg-[#020617]/95 border-b border-white/5 shadow-lg">
+             {/* TOP BAR - UPDATED PADDING TO pt-20 */}
+             <div className="flex justify-between items-center mb-6 relative z-40 pt-20 backdrop-blur-xl sticky top-0 pb-4 -mx-4 px-6 bg-[#020617]/95 border-b border-white/5 shadow-lg">
                  <div className="flex items-center gap-2">
                     {/* HP */}
                     <div className="flex flex-col items-center">
@@ -425,12 +418,12 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
          {renderContent()}
       </div>
 
-      {/* DOCK BAR */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-[380px] animate-in slide-in-from-bottom-20 duration-700 delay-200">
+      {/* DOCK BAR - REDESIGNED */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-[400px] animate-in slide-in-from-bottom-20 duration-700 delay-200">
         <div className="relative group">
-            <div className="absolute -inset-1 bg-indigo-500/20 blur-2xl rounded-[3rem] opacity-70"></div>
+            <div className="absolute -inset-1 bg-indigo-500/10 blur-xl rounded-[3rem] opacity-70 pointer-events-none"></div>
             
-            <div className="relative flex items-center justify-between gap-1 p-1.5 bg-[#151925]/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-2xl ring-1 ring-white/5">
+            <div className="relative flex items-center justify-between gap-2 p-2 bg-[#151925]/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-2xl ring-1 ring-white/5">
                 
                 {[
                   { id: 'LEARN', icon: LayoutGrid, label: 'Путь' },
@@ -446,14 +439,19 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as Tab)}
                             className={`
-                            h-12 flex-1 rounded-[1.8rem] flex flex-col items-center justify-center gap-0.5 transition-all duration-300 relative overflow-hidden
+                            h-14 flex-1 rounded-[2rem] flex flex-col items-center justify-center gap-1 transition-all duration-300 relative overflow-hidden group
                             ${isActive 
-                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40' 
-                                : 'text-slate-400 hover:text-white hover:bg-white/5 active:scale-95'}
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 translate-y-[-4px]' 
+                                : 'text-slate-500 hover:text-indigo-300 hover:bg-white/5 active:scale-95'}
                             `}
                         >
-                            <Icon size={18} strokeWidth={isActive ? 3 : 2.5} />
-                            {isActive && <span className="text-[8px] font-black uppercase tracking-wide">{tab.label}</span>}
+                            {/* Glow Effect for active */}
+                            {isActive && <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-50"></div>}
+                            
+                            <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className="relative z-10 transition-transform group-hover:scale-110" />
+                            
+                            {isActive && <span className="text-[9px] font-black uppercase tracking-wide relative z-10 animate-in slide-in-from-bottom-2 fade-in duration-300">{tab.label}</span>}
+                            {!isActive && <div className="w-1 h-1 rounded-full bg-slate-700 mt-1 opacity-0 group-hover:opacity-100 transition-opacity"></div>}
                         </button>
                     );
                 })}

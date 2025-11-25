@@ -24,8 +24,8 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ currentUser })
   return (
     <div className="min-h-screen bg-[#020617] pb-40 animate-in fade-in duration-500 text-white">
        
-       {/* LEAGUE HEADER - Increased PT */}
-       <div className="bg-gradient-to-b from-indigo-900/40 to-[#020617] px-6 pt-16 pb-10 text-center relative overflow-hidden border-b border-white/5">
+       {/* LEAGUE HEADER - Updated pt-20 */}
+       <div className="bg-gradient-to-b from-indigo-900/40 to-[#020617] px-6 pt-24 pb-10 text-center relative overflow-hidden border-b border-white/5">
            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-60 bg-indigo-600/20 blur-[80px] rounded-full pointer-events-none"></div>
            
            <div className="relative z-10 flex flex-col items-center">
@@ -37,7 +37,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ currentUser })
                <h1 className="text-3xl font-black text-white tracking-tight uppercase mb-1">Серебряная Лига</h1>
                <p className="text-indigo-300 text-xs font-bold uppercase tracking-widest">Топ 10 переходят в Золото</p>
 
-               <div className="mt-6 bg-white/10 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2">
+               <div className="mt-6 bg-white/10 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 border border-white/5 backdrop-blur-md">
                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
                    До конца сезона: 2 дня 14ч
                </div>
@@ -57,7 +57,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ currentUser })
                         key={u.id} 
                         className={`
                             flex items-center gap-4 p-4 border-b border-white/5 transition-colors
-                            ${isMe ? 'bg-indigo-600/20' : 'hover:bg-white/5'}
+                            ${isMe ? 'bg-indigo-600/20 border-l-4 border-l-indigo-500' : 'hover:bg-white/5 border-l-4 border-l-transparent'}
                         `}
                        >
                            {/* Rank */}
@@ -98,7 +98,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ currentUser })
                    );
                })}
                
-               <div className="p-4 text-center text-xs text-slate-500 font-bold uppercase tracking-widest border-t border-white/5 hover:bg-white/5 cursor-pointer">
+               <div className="p-4 text-center text-xs text-slate-500 font-bold uppercase tracking-widest border-t border-white/5 hover:bg-white/5 cursor-pointer transition-colors">
                    Показать остальных
                </div>
            </div>
