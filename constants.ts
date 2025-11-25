@@ -1,4 +1,5 @@
 
+
 import { Lecture, Task, User, UserRole, StudentProgress, Meditation, Soundscape, Quote, ShopItem } from "./types";
 
 export const KATYA_IMAGE_URL = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Katya&hair=long&clothing=hoodie';
@@ -39,7 +40,7 @@ export const TASKS: Task[] = [
       { id: 's1_poll', type: 'POLL', question: 'Как думаешь, твой мозг сейчас:', options: ['В режиме суперкомпьютера', 'Требует апгрейда', 'Глючит и лагает', 'В спящем режиме'] },
       { id: 's1_game', type: 'GAME', gameType: 'NEURO_MATCH', instructions: 'Разомнем нейроны! Найди пары понятий за 30 секунд.', targetScore: 4 },
       { id: 's1_quiz', type: 'QUIZ', question: 'Что происходит, когда ты учишься новому?', options: ['Мозг увеличивается в весе', 'Создаются новые связи', 'Старые клетки умирают'], correctIndex: 1, explanation: 'Твой мозг перепрошивает сам себя. Ты — архитектор своего разума.' },
-      { id: 's1_sort', type: 'SORTING', question: 'Что качает мозг, а что тормозит?', leftCategoryLabel: 'Тормоз', rightCategoryLabel: 'Буст', items: [
+      { id: 's1_sort', type: 'SORTING', question: 'Что качает мозг, а что тормозит?', leftCategoryLabel: 'Тормоз (Смахни влево)', rightCategoryLabel: 'Буст (Смахни вправо)', items: [
           { id: 'i1', text: 'Скроллинг ленты', emoji: '📱', category: 'LEFT' },
           { id: 'i2', text: 'Изучение языка', emoji: '🗣️', category: 'RIGHT' },
           { id: 'i3', text: 'Недосып', emoji: '😴', category: 'LEFT' },

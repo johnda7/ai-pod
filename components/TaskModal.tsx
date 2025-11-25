@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Task, LessonSlide, SortingItem, PairItem } from '../types';
-import { X, Play, Trophy, CheckCircle, AlertCircle, Skull, BarChart2, Heart, ArrowRight, RotateCcw, Sparkles, MoveRight, MoveLeft } from 'lucide-react';
+import { X, Play, Trophy, CheckCircle, AlertCircle, Skull, BarChart2, Heart, ArrowRight, RotateCcw, Sparkles, MoveRight, MoveLeft, Hand } from 'lucide-react';
 import { FocusDefender, EmbeddedMemoryGame } from './MiniGames';
 
 interface TaskModalProps {
@@ -21,6 +21,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
   // Slide Specific States
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [sortedItems, setSortedItems] = useState<SortingItem[]>([]);
+  const [swipeDirection, setSwipeDirection] = useState<'LEFT' | 'RIGHT' | null>(null); // For animation
   
   // Puzzle State
   const [puzzleWordBank, setPuzzleWordBank] = useState<string[]>([]);
@@ -37,6 +38,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
   const [gameScore, setGameScore] = useState<number | null>(null);
 
   const [isShake, setIsShake] = useState(false);
+
+  // Touch handling for Swipe
+  const touchStartX = useRef<number | null>(null);
 
   const slides: LessonSlide[] = task.slides && task.slides.length > 0 ? task.slides : [
       { id: 'legacy', type: 'THEORY', title: task.title, content: task.description, buttonText: 'Завершить' }
@@ -69,6 +73,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
       setFeedbackStatus('NONE');
       setSelectedOption(null);
       setSortedItems([]);
+      setSwipeDirection(null);
       setSelectedPairId(null);
       setMatchedPairs([]);
       setInputText('');
@@ -114,18 +119,47 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
     handleCorrect();
   };
 
+  // --- SORTING (SWIPE) LOGIC ---
   const handleSorting = (item: SortingItem, direction: 'LEFT' | 'RIGHT') => {
       if (currentSlide.type !== 'SORTING') return;
-      
-      if (item.category === direction) {
-          const newSorted = [...sortedItems, item];
-          setSortedItems(newSorted);
-          if (newSorted.length === currentSlide.items.length) {
-              handleCorrect();
+      if (swipeDirection) return; // Wait for animation
+
+      // Trigger animation
+      setSwipeDirection(direction);
+
+      setTimeout(() => {
+          if (item.category === direction) {
+              const newSorted = [...sortedItems, item];
+              setSortedItems(newSorted);
+              setSwipeDirection(null); // Reset for next card
+              
+              if (newSorted.length === currentSlide.items.length) {
+                  handleCorrect();
+              }
+          } else {
+              handleWrong();
+              setSwipeDirection(null); // Reset
           }
-      } else {
-          handleWrong();
+      }, 300); // Wait for animation to finish
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+      touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+      if (!touchStartX.current) return;
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchEndX - touchStartX.current;
+      
+      const currentItem = currentSlide.type === 'SORTING' 
+        ? currentSlide.items.filter(i => !sortedItems.find(s => s.id === i.id))[0] 
+        : null;
+
+      if (currentItem && Math.abs(diff) > 50) {
+          handleSorting(currentItem, diff > 0 ? 'RIGHT' : 'LEFT');
       }
+      touchStartX.current = null;
   };
 
   // --- PUZZLE LOGIC ---
@@ -133,7 +167,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
       if (feedbackStatus !== 'NONE') return;
 
       if (fromBank) {
-          // Move from Bank to Sentence
           setPuzzleWordBank(prev => {
               const idx = prev.indexOf(word);
               if (idx > -1) {
@@ -145,7 +178,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
           });
           setConstructedSentence(prev => [...prev, word]);
       } else {
-          // Move from Sentence to Bank
           setConstructedSentence(prev => {
               const idx = prev.indexOf(word);
               if (idx > -1) {
@@ -324,57 +356,90 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
           case 'SORTING':
                const remainingItems = currentSlide.items.filter(i => !sortedItems.find(s => s.id === i.id));
                const currentItem = remainingItems[0];
+               const nextItem = remainingItems[1];
+
+               // Calculate dynamic styles for the swipe animation
+               let cardStyle = {};
+               if (swipeDirection === 'LEFT') {
+                   cardStyle = { transform: 'translateX(-150%) rotate(-20deg)', opacity: 0 };
+               } else if (swipeDirection === 'RIGHT') {
+                   cardStyle = { transform: 'translateX(150%) rotate(20deg)', opacity: 0 };
+               }
 
                return (
-                   <div className="flex flex-col h-full p-6 items-center justify-center animate-in zoom-in-95 duration-500 relative">
-                       {/* Labels Top */}
-                       <div className="w-full flex justify-between px-2 mb-4 absolute top-4 left-0">
-                           <div className="glass-panel px-3 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 backdrop-blur-md">
+                   <div className="flex flex-col h-full p-4 items-center justify-center relative overflow-hidden">
+                       <h3 className="text-lg font-bold text-white mb-4 text-center absolute top-4 z-20 w-full drop-shadow-md">{currentSlide.question}</h3>
+                       
+                       {/* Background Split */}
+                       <div className="absolute inset-0 flex z-0">
+                           <div className={`w-1/2 h-full transition-colors duration-500 ${swipeDirection === 'LEFT' ? 'bg-rose-500/10' : 'bg-transparent'}`}></div>
+                           <div className={`w-1/2 h-full transition-colors duration-500 ${swipeDirection === 'RIGHT' ? 'bg-emerald-500/10' : 'bg-transparent'}`}></div>
+                       </div>
+
+                       {/* Categories overlay */}
+                       <div className="absolute top-16 w-full flex justify-between px-6 z-20">
+                           <div className="glass-panel px-4 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 backdrop-blur-md shadow-lg transform -rotate-2">
                                <div className="text-[10px] font-black uppercase tracking-widest text-rose-300">{currentSlide.leftCategoryLabel}</div>
                            </div>
-                           <div className="glass-panel px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-md">
+                           <div className="glass-panel px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-md shadow-lg transform rotate-2">
                                <div className="text-[10px] font-black uppercase tracking-widest text-emerald-300">{currentSlide.rightCategoryLabel}</div>
                            </div>
                        </div>
 
                        {currentItem ? (
-                           <div className="relative w-full max-w-[300px] aspect-[3/4] mt-8">
-                               {/* Background Cards for depth */}
-                               <div className="absolute top-4 left-4 right-[-10px] bottom-[-10px] bg-white/5 rounded-[2.5rem] border border-white/5 z-0 transform rotate-3"></div>
-                               <div className="absolute top-2 left-2 right-[-5px] bottom-[-5px] bg-white/5 rounded-[2.5rem] border border-white/5 z-0 transform rotate-1"></div>
+                           <div 
+                                className="relative w-full max-w-[320px] aspect-[3/4] mt-12 z-10 touch-none"
+                                onTouchStart={onTouchStart}
+                                onTouchEnd={onTouchEnd}
+                           >
+                               {/* Next Card (Visual Placeholder) */}
+                               {nextItem && (
+                                   <div className="absolute top-0 left-0 w-full h-full bg-[#1E2332] border border-white/5 rounded-[2.5rem] transform scale-95 translate-y-4 opacity-50 z-0"></div>
+                               )}
                                
                                {/* Active Card */}
-                               <div className="absolute inset-0 bg-gradient-to-b from-[#1E2332]/90 to-[#0f172a]/90 border border-white/20 rounded-[2.5rem] flex flex-col items-center justify-center shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-10 backdrop-blur-3xl">
+                               <div 
+                                    className="absolute inset-0 bg-[#1E2332]/90 border border-white/20 rounded-[2.5rem] flex flex-col items-center justify-center shadow-[0_30px_80px_rgba(0,0,0,0.6)] z-10 backdrop-blur-3xl transition-all duration-300 ease-out"
+                                    style={cardStyle}
+                               >
                                    <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent rounded-[2.5rem] pointer-events-none"></div>
                                    
-                                   <div className="text-9xl mb-8 drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] transform hover:scale-110 transition-transform cursor-pointer">{currentItem.emoji}</div>
-                                   <div className="text-2xl font-black text-center px-6 leading-tight text-white drop-shadow-md">{currentItem.text}</div>
+                                   <div className="text-8xl mb-8 drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">{currentItem.emoji}</div>
+                                   <div className="text-2xl font-black text-center px-8 leading-tight text-white drop-shadow-md">{currentItem.text}</div>
+                                   
+                                   <div className="absolute bottom-8 text-slate-500 flex items-center gap-2 text-xs font-bold uppercase tracking-widest opacity-60">
+                                       <Hand size={14} /> Смахни карту
+                                   </div>
                                </div>
                            </div>
                        ) : (
-                           <div className="text-center animate-in zoom-in duration-500">
+                           <div className="text-center animate-in zoom-in duration-500 z-20">
                                <div className="w-32 h-32 bg-gradient-to-tr from-green-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_50px_rgba(16,185,129,0.5)]">
                                    <CheckCircle size={64} className="text-white" />
                                </div>
-                               <h2 className="text-3xl font-black text-white">Супер!</h2>
+                               <h2 className="text-3xl font-black text-white">Все рассортировано!</h2>
                            </div>
                        )}
 
                        {/* CONTROLS */}
                        {currentItem && (
-                        <div className="w-full max-w-[320px] flex justify-between items-center mt-10 gap-6">
+                        <div className="w-full max-w-[340px] flex justify-between items-center mt-10 gap-6 z-20">
                             <button 
                                 onClick={() => handleSorting(currentItem, 'LEFT')}
-                                className="flex-1 h-20 rounded-[2rem] bg-rose-500/10 border-2 border-rose-500 text-rose-400 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all shadow-[0_0_30px_rgba(244,63,94,0.2)] active:scale-95 group backdrop-blur-md"
+                                className="w-20 h-20 rounded-full bg-[#151925]/80 border-2 border-rose-500/50 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all shadow-lg active:scale-95 group backdrop-blur-md"
                             >
-                                <MoveLeft className="group-hover:-translate-x-1 transition-transform" size={32} strokeWidth={3} />
+                                <X className="group-hover:scale-125 transition-transform" size={32} strokeWidth={3} />
                             </button>
+
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">
+                                {sortedItems.length} / {currentSlide.items.length}
+                            </div>
 
                             <button 
                                 onClick={() => handleSorting(currentItem, 'RIGHT')}
-                                className="flex-1 h-20 rounded-[2rem] bg-emerald-500/10 border-2 border-emerald-500 text-emerald-400 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-[0_0_30px_rgba(16,185,129,0.2)] active:scale-95 group backdrop-blur-md"
+                                className="w-20 h-20 rounded-full bg-[#151925]/80 border-2 border-emerald-500/50 text-emerald-500 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-lg active:scale-95 group backdrop-blur-md"
                             >
-                                <MoveRight className="group-hover:translate-x-1 transition-transform" size={32} strokeWidth={3} />
+                                <ArrowRight className="group-hover:scale-125 transition-transform" size={32} strokeWidth={3} />
                             </button>
                         </div>
                        )}
@@ -543,7 +608,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
                 }
                 return (
                     <div className="flex flex-col h-full p-2 rounded-[2.5rem] overflow-hidden relative">
-                         {/* Game Container styling handled in MiniGames.tsx now */}
                         {currentSlide.gameType === 'FOCUS_DEFENDER' && <FocusDefender config={currentSlide} onComplete={handleGameComplete} />}
                         {currentSlide.gameType === 'NEURO_MATCH' && <EmbeddedMemoryGame config={currentSlide} onComplete={handleGameComplete} />}
                     </div>
@@ -648,6 +712,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
                 ) :
                 currentSlide.type === 'PUZZLE' ? (
                      // Button is rendered inside puzzle content for better UX
+                     null
+                ) :
+                currentSlide.type === 'SORTING' ? (
+                     // Button handled inside sorting content
                      null
                 ) :
                 (currentSlide.type === 'THEORY' || currentSlide.type === 'VIDEO') ? (
