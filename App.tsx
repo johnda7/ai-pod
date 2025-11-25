@@ -7,7 +7,8 @@ import { CuratorDashboard } from './components/CuratorDashboard';
 import { initTelegramApp, getTelegramUser } from './services/telegramService';
 import { getOrCreateUser, completeTask } from './services/db';
 import { KatyaChat } from './components/KatyaChat';
-import { Terminal, Zap, ShieldCheck, Wifi } from 'lucide-react';
+import { Terminal, Zap, ShieldCheck, Wifi, User as UserIcon, AlertCircle, RefreshCw } from 'lucide-react';
+import { isSupabaseEnabled } from './services/supabaseClient';
 
 // --- BOOT SEQUENCE COMPONENT ---
 const BootSequence = ({ onComplete }: { onComplete: () => void }) => {
@@ -16,9 +17,9 @@ const BootSequence = ({ onComplete }: { onComplete: () => void }) => {
 
   const bootLines = [
     "ЗАГРУЗКА НЕЙРОСЕТИ...",
-    "СКАНИРОВАНИЕ БИОРИТМОВ...",
-    "УСТАНОВКА ЗАЩИЩЕННОГО СОЕДИНЕНИЯ...",
-    "ЗАГРУЗКА ПРОТОКОЛОВ МОТИВАЦИИ...",
+    "ПОИСК TELEGRAM ID...",
+    "ПОДКЛЮЧЕНИЕ К SUPABASE...",
+    "СИНХРОНИЗАЦИЯ ПРОФИЛЯ...",
     "ДОСТУП РАЗРЕШЕН."
   ];
 
@@ -32,7 +33,7 @@ const BootSequence = ({ onComplete }: { onComplete: () => void }) => {
         clearInterval(lineInterval);
         setTimeout(onComplete, 500);
       }
-    }, 600);
+    }, 400);
 
     const progressInterval = setInterval(() => {
       setProgress(prev => {
@@ -40,7 +41,7 @@ const BootSequence = ({ onComplete }: { onComplete: () => void }) => {
           clearInterval(progressInterval);
           return 100;
         }
-        return prev + 2;
+        return prev + 5;
       });
     }, 30);
 
@@ -52,7 +53,6 @@ const BootSequence = ({ onComplete }: { onComplete: () => void }) => {
 
   return (
     <div className="h-screen w-screen bg-[#020617] flex flex-col items-center justify-center text-indigo-500 font-mono p-8 relative overflow-hidden">
-      {/* Grid Background */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
       
       <div className="z-10 w-full max-w-xs">
@@ -71,26 +71,11 @@ const BootSequence = ({ onComplete }: { onComplete: () => void }) => {
             <div className="w-2 h-4 bg-emerald-500 animate-pulse inline-block ml-2"></div>
          </div>
 
-         {/* Loading Bar */}
          <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-white/5">
             <div 
               className="h-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.8)] transition-all duration-100 ease-out"
               style={{ width: `${progress}%` }}
             ></div>
-         </div>
-         <div className="flex justify-between mt-3 text-[10px] text-indigo-400/60 uppercase tracking-widest font-bold">
-            <span>Система v2.0</span>
-            <span>{progress}%</span>
-         </div>
-      </div>
-      
-      {/* Footer Stats */}
-      <div className="absolute bottom-10 flex gap-8 text-slate-600">
-         <div className="flex items-center gap-2">
-            <ShieldCheck size={16} /> <span className="text-[10px] font-bold tracking-widest">ЗАЩИЩЕНО</span>
-         </div>
-         <div className="flex items-center gap-2">
-            <Wifi size={16} /> <span className="text-[10px] font-bold tracking-widest">В СЕТИ</span>
          </div>
       </div>
     </div>
@@ -105,21 +90,24 @@ const App: React.FC = () => {
   // --- INITIALIZATION ---
   useEffect(() => {
     const init = async () => {
-      // 1. Tell Telegram we are ready
+      // 1. Initialize Telegram
       initTelegramApp();
       
-      // 2. Get Telegram User Data (if available)
-      const tgUser = getTelegramUser();
-      
-      // 3. Load User from "Database"
-      try {
-        const user = await getOrCreateUser(tgUser);
-        setCurrentUser(user);
-      } catch (e) {
-        console.error("Failed to load user", e);
-      } finally {
-        setIsLoadingData(false);
-      }
+      // 2. Get User (Delay slightly to ensure TG is ready)
+      setTimeout(async () => {
+          const tgUser = getTelegramUser();
+          
+          try {
+            console.log("App Init: Fetching user...");
+            const user = await getOrCreateUser(tgUser);
+            console.log("App Init: User loaded:", user);
+            setCurrentUser(user);
+          } catch (e) {
+            console.error("Failed to load user", e);
+          } finally {
+            setIsLoadingData(false);
+          }
+      }, 500);
     };
     
     init();
@@ -129,19 +117,17 @@ const App: React.FC = () => {
     if (!currentUser) return;
     if (currentUser.completedTaskIds.includes(task.id)) return;
 
-    // Optimistic Update (UI updates immediately)
+    // Optimistic Update
     setCurrentUser(prev => prev ? ({
       ...prev,
       xp: prev.xp + task.xpReward,
-      completedTaskIds: [...prev.completedTaskIds, task.id]
+      coins: (prev.coins || 0) + (task.coinsReward || 0),
+      completedTaskIds: [...prev.completedTaskIds, task.id],
+      level: Math.floor((prev.xp + task.xpReward) / 500) + 1
     }) : null);
 
-    // DB Update
-    try {
-       await completeTask(currentUser.id, task);
-    } catch (e) {
-       console.error("Sync error", e);
-    }
+    // Sync DB
+    await completeTask(currentUser.id, task);
   };
 
   if (isBooting) {
@@ -149,16 +135,41 @@ const App: React.FC = () => {
   }
 
   if (isLoadingData || !currentUser) {
-    // Fallback simple loader just in case data takes longer than boot animation
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#020617] text-white">
-        <Zap className="animate-bounce text-yellow-400 mb-4" size={40} />
+        <RefreshCw className="animate-spin text-indigo-500 mb-4" size={40} />
+        <p className="text-xs font-mono text-slate-500">Синхронизация...</p>
       </div>
     );
   }
 
+  // Debug Info
+  const isGuest = currentUser.id.startsWith('guest_');
+
   return (
     <div className="flex flex-col h-full bg-slate-50 relative overflow-hidden animate-in fade-in duration-700">
+      
+      {/* CONNECTION STATUS & IDENTITY INDICATOR */}
+      <div className="absolute top-2 left-2 z-50 flex flex-col gap-1 pointer-events-none opacity-80">
+        <div className="flex gap-2">
+            {isSupabaseEnabled ? (
+                 <div className="flex items-center gap-1 bg-black/60 backdrop-blur px-2 py-1 rounded-full text-[8px] text-green-400 font-bold border border-green-500/20">
+                    <Wifi size={8} /> CLOUD
+                 </div>
+            ) : (
+                <div className="flex items-center gap-1 bg-black/60 backdrop-blur px-2 py-1 rounded-full text-[8px] text-yellow-400 font-bold border border-yellow-500/20">
+                    <AlertCircle size={8} /> LOCAL
+                 </div>
+            )}
+        </div>
+        
+        {/* IDENTITY BADGE */}
+        <div className={`flex items-center gap-1 bg-black/60 backdrop-blur px-2 py-1 rounded-full text-[8px] font-bold border ${isGuest ? 'text-slate-300 border-white/10' : 'text-blue-300 border-blue-500/30'}`}>
+            <UserIcon size={8} /> 
+            {isGuest ? 'GUEST MODE' : `TG: ${currentUser.name}`}
+        </div>
+      </div>
+
       {/* Top Bar - Only for Non-Teen Roles */}
       {currentUser.role !== UserRole.TEEN && (
          <header className="flex-none bg-white px-4 py-3 flex items-center justify-between border-b border-slate-100 shadow-sm z-30">
@@ -185,10 +196,4 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* AI Assistant (Only for Teen) */}
-      {currentUser.role === UserRole.TEEN && <KatyaChat />}
-    </div>
-  );
-};
-
-export default App;
+      {/* AI
