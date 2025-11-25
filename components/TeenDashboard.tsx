@@ -8,6 +8,7 @@ import { TaskModal } from './TaskModal';
 import { MemoryGame } from './MemoryGame';
 import { ShopView } from './ShopView';
 import { LeaderboardView } from './LeaderboardView';
+import { purchaseItem } from '../services/db'; // Import real purchase logic
 import { isSupabaseEnabled } from '../services/supabaseClient';
 
 interface TeenDashboardProps {
@@ -17,13 +18,19 @@ interface TeenDashboardProps {
 
 type Tab = 'LEARN' | 'RELAX' | 'SHOP' | 'LEADERBOARD' | 'PROFILE';
 
-export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComplete }) => {
+export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser, onTaskComplete }) => {
+  const [user, setUser] = useState<User>(initialUser); // Local user state to reflect changes immediately
   const [activeTab, setActiveTab] = useState<Tab>('LEARN'); 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isGameOpen, setIsGameOpen] = useState(false);
   const [prevXp, setPrevXp] = useState(user.xp);
   const [isXpAnimating, setIsXpAnimating] = useState(false);
   
+  // Sync local state if prop changes (e.g. from parent refresh)
+  useEffect(() => {
+      setUser(initialUser);
+  }, [initialUser]);
+
   // Daily Quests State (Mock for now)
   const [dailyQuests, setDailyQuests] = useState([
       { id: 1, text: 'Закончи 1 урок', completed: user.completedTaskIds.length > 0, reward: 50 },
@@ -46,12 +53,30 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
   };
 
   const handleGameComplete = (xp: number) => {
-      // Legacy standalone game support
       setIsGameOpen(false);
   };
 
-  const handleBuyItem = (item: ShopItem) => {
-      alert(`Куплено: ${item.name}! (В демо-режиме монеты не списываются)`);
+  // REAL PURCHASE LOGIC
+  const handleBuyItem = async (item: ShopItem) => {
+      const success = await purchaseItem(user.id, item);
+      
+      if (success) {
+          // Optimistic Update
+          const updatedUser = { ...user };
+          updatedUser.coins -= item.price;
+          
+          if (item.type === 'COSMETIC') {
+              updatedUser.inventory = [...updatedUser.inventory, item.id];
+          } else if (item.id === 'hp_potion') {
+              updatedUser.hp = Math.min(updatedUser.hp + 1, updatedUser.maxHp);
+          }
+          
+          setUser(updatedUser);
+          // Force update parent if needed or rely on next fetch
+      } else {
+          // Fallback if validation failed inside purchaseItem
+          alert("Недостаточно монет или предмет уже куплен!");
+      }
   };
 
   const nextLevelXp = user.level * 500;
