@@ -24,8 +24,8 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy }) => {
   return (
     <div className="min-h-screen bg-[#020617] pb-40 animate-in fade-in duration-500 text-white">
       
-      {/* HEADER - Updated pt-20 to avoid overlap with badges */}
-      <div className="sticky top-0 z-20 bg-[#020617]/90 backdrop-blur-xl border-b border-white/5 px-6 pt-20 pb-6 shadow-xl">
+      {/* HEADER - Updated pt-28 to avoid overlap with Telegram badges */}
+      <div className="sticky top-0 z-20 bg-[#020617]/90 backdrop-blur-xl border-b border-white/5 px-6 pt-28 pb-6 shadow-xl">
          <div className="flex justify-between items-center">
              <div>
                  <h1 className="text-3xl font-black text-white tracking-tight">Магазин</h1>

@@ -67,7 +67,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
 
     if (activeTab === 'PROFILE') {
         return (
-            <div className="px-5 pt-24 pb-32 animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-screen relative">
+            <div className="px-5 pt-28 pb-32 animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-screen relative">
                 
                 {/* 1. HERO IDENTITY CARD (Liquid Glass) */}
                 <div className="relative w-full rounded-[3rem] overflow-hidden p-8 flex flex-col items-center text-center shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-white/10 mb-8 group">
@@ -221,8 +221,8 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user, onTaskComple
     return (
         <div className="relative pt-2 pb-40 px-4 min-h-screen overflow-x-hidden">
              
-             {/* TOP BAR - UPDATED PADDING TO pt-20 */}
-             <div className="flex justify-between items-center mb-6 relative z-40 pt-20 backdrop-blur-xl sticky top-0 pb-4 -mx-4 px-6 bg-[#020617]/95 border-b border-white/5 shadow-lg">
+             {/* TOP BAR - UPDATED PADDING TO pt-28 (approx 110px) to clear Telegram header */}
+             <div className="flex justify-between items-center mb-6 relative z-40 pt-28 backdrop-blur-xl sticky top-0 pb-4 -mx-4 px-6 bg-[#020617]/95 border-b border-white/5 shadow-lg transition-all duration-300">
                  <div className="flex items-center gap-2">
                     {/* HP */}
                     <div className="flex flex-col items-center">

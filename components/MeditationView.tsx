@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { MEDITATIONS, SOUNDSCAPES, QUOTES } from '../constants';
 import { Play, Wind, CloudRain, Trees, Waves, Flame, Zap, Moon, Pause, X, Headphones, Activity, Heart, ArrowRight, Volume2, Maximize2, SkipForward } from 'lucide-react';
@@ -115,8 +116,8 @@ export const MeditationView: React.FC = () => {
       
       {showBreathing && <BreathingOverlay />}
 
-      {/* 1. HEADER */}
-      <div className="px-6 pt-20 pb-6 relative z-10">
+      {/* 1. HEADER - Updated pt-28 to avoid overlap */}
+      <div className="px-6 pt-28 pb-6 relative z-10">
           <div className="flex justify-between items-center mb-8">
              <div>
                 <h1 className="text-4xl font-medium text-white tracking-tight mb-1 font-serif">Релакс</h1>
