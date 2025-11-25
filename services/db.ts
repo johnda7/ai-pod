@@ -27,12 +27,15 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
   } else {
     // Fallback only if absolutely necessary (Dev mode outside TG)
     isGuest = true;
+    // Check if we already have a stored guest ID to PERSIST progress across refreshes
     const storedId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
     if (storedId && storedId.startsWith('guest_')) {
       userId = storedId;
+      console.log("DB: Recovered Guest ID:", userId);
     } else {
       userId = 'guest_' + Date.now();
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, userId);
+      console.log("DB: Generated New Guest ID:", userId);
     }
   }
 
@@ -263,7 +266,8 @@ export const purchaseItem = async (userId: string, item: any): Promise<boolean> 
             
             if (error) {
                 console.error("Supabase Purchase Error:", error);
-                return true; // Return true anyway because local update succeeded
+                // We could return false here, but local update succeeded, so we proceed optimistically
+                // return true; 
             }
         } catch(e) {
             console.error("Purchase Sync Failed", e);
