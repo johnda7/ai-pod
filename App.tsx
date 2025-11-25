@@ -16,11 +16,11 @@ const BootSequence = ({ onComplete }: { onComplete: () => void }) => {
   const [progress, setProgress] = useState(0);
 
   const bootLines = [
-    "ЗАГРУЗКА НЕЙРОСЕТИ...",
+    "ЗАГРУЗКА СИСТЕМЫ...",
     "ПОИСК TELEGRAM ID...",
-    "ПОДКЛЮЧЕНИЕ К SUPABASE...",
+    "ПОДКЛЮЧЕНИЕ К БАЗЕ...",
     "СИНХРОНИЗАЦИЯ ПРОФИЛЯ...",
-    "ДОСТУП РАЗРЕШЕН."
+    "ГОТОВО."
   ];
 
   useEffect(() => {
@@ -138,7 +138,7 @@ const App: React.FC = () => {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#020617] text-white">
         <RefreshCw className="animate-spin text-indigo-500 mb-4" size={40} />
-        <p className="text-xs font-mono text-slate-500">Синхронизация...</p>
+        <p className="text-xs font-mono text-slate-500">Синхронизация с Telegram...</p>
       </div>
     );
   }
@@ -154,11 +154,11 @@ const App: React.FC = () => {
         <div className="flex gap-2">
             {isSupabaseEnabled ? (
                  <div className="flex items-center gap-1 bg-black/60 backdrop-blur px-2 py-1 rounded-full text-[8px] text-green-400 font-bold border border-green-500/20">
-                    <Wifi size={8} /> CLOUD
+                    <Wifi size={8} /> ОНЛАЙН
                  </div>
             ) : (
                 <div className="flex items-center gap-1 bg-black/60 backdrop-blur px-2 py-1 rounded-full text-[8px] text-yellow-400 font-bold border border-yellow-500/20">
-                    <AlertCircle size={8} /> LOCAL
+                    <AlertCircle size={8} /> ОФФЛАЙН
                  </div>
             )}
         </div>
@@ -166,7 +166,7 @@ const App: React.FC = () => {
         {/* IDENTITY BADGE */}
         <div className={`flex items-center gap-1 bg-black/60 backdrop-blur px-2 py-1 rounded-full text-[8px] font-bold border ${isGuest ? 'text-slate-300 border-white/10' : 'text-blue-300 border-blue-500/30'}`}>
             <UserIcon size={8} /> 
-            {isGuest ? 'GUEST MODE' : `TG: ${currentUser.name}`}
+            {isGuest ? 'ГОСТЕВОЙ РЕЖИМ' : `TG: ${currentUser.name}`}
         </div>
       </div>
 
@@ -196,4 +196,10 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* AI
+      {/* AI Assistant (Only for Teen) */}
+      {currentUser.role === UserRole.TEEN && <KatyaChat />}
+    </div>
+  );
+};
+
+export default App;

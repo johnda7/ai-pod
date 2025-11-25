@@ -24,8 +24,8 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ currentUser })
   return (
     <div className="min-h-screen bg-[#020617] pb-40 animate-in fade-in duration-500 text-white">
        
-       {/* LEAGUE HEADER */}
-       <div className="bg-gradient-to-b from-indigo-900/40 to-[#020617] px-6 pt-12 pb-10 text-center relative overflow-hidden border-b border-white/5">
+       {/* LEAGUE HEADER - Increased PT */}
+       <div className="bg-gradient-to-b from-indigo-900/40 to-[#020617] px-6 pt-16 pb-10 text-center relative overflow-hidden border-b border-white/5">
            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-60 bg-indigo-600/20 blur-[80px] rounded-full pointer-events-none"></div>
            
            <div className="relative z-10 flex flex-col items-center">
