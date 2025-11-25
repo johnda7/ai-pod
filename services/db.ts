@@ -1,3 +1,4 @@
+
 import { Task, User, UserRole, StudentStats } from '../types';
 import { MOCK_USER, MOCK_STUDENTS, TASKS } from '../constants';
 import { supabase, isSupabaseEnabled } from './supabaseClient';
@@ -56,28 +57,61 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
     league: 'BRONZE'
   };
 
+  // CHECK LOCAL STORAGE FIRST (To save progress made before DB connection)
+  const users = getUsersFromStorage();
+  let localUser = users.find(u => u.telegramId?.toString() === userId || u.id === userId);
+
   // 2. SUPABASE FLOW (PRIORITY)
-  if (isSupabaseEnabled && !isGuest) {
+  if (isSupabaseEnabled) {
     try {
       console.log("DB: Checking Supabase for TG ID:", userId);
       
-      // Try to get user by Telegram ID
-      const { data: existingUser, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('telegram_id', userId)
-        .single();
+      // Try to get user by Telegram ID (or string ID if guest was saved previously)
+      // Note: Guest IDs are strings, but telegram_id is bigint.
+      // We primarily check by telegram_id if not guest.
+      let query = supabase.from('users').select('*');
+      
+      if (!isGuest) {
+          query = query.eq('telegram_id', userId);
+      } else {
+          // If guest, we can't easily check unless we stored UUID in local storage.
+          // For guests, we might rely on local storage mostly, or create a new row.
+          // But if we want to sync browser guest to cloud:
+          // We'll assume for now guests just create new rows if ID matches UUID format,
+          // but our guest IDs are 'guest_...'.
+          // So we skip cloud fetch for 'guest_' IDs to avoid 500 errors on bigint columns.
+      }
+
+      const { data: existingUser, error } = !isGuest ? await query.single() : { data: null, error: null };
 
       if (existingUser) {
         console.log('✅ Found User in Supabase:', existingUser.name, 'XP:', existingUser.xp);
         
-        // Fetch progress
+        // SYNC LOGIC: If Local has MORE progress than Cloud (e.g. just connected DB), push Local to Cloud
+        if (localUser && (localUser.xp > (existingUser.xp || 0))) {
+             console.log('🔄 Syncing Local Progress to Cloud...');
+             await supabase.from('users').update({
+                 xp: localUser.xp,
+                 coins: localUser.coins,
+                 level: localUser.level,
+                 streak: localUser.streak
+             }).eq('id', existingUser.id);
+             
+             // Sync completed tasks would require more complex logic, omitting for simplicity in this MVP step
+             // but at least XP/Coins will be saved.
+             return {
+                 ...localUser,
+                 id: existingUser.id // Ensure we use the UUID from DB
+             };
+        }
+        
+        // Fetch progress details
         const { data: progressData } = await supabase
           .from('progress')
           .select('task_id')
           .eq('user_id', existingUser.id);
 
-        // Return merged data
+        // Return merged data from Cloud
         return {
           ...newUserTemplate,
           id: existingUser.id, // Use Supabase UUID
@@ -94,19 +128,22 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
         // User doesn't exist in Supabase -> CREATE THEM
         console.log('✨ Creating new user in Supabase for TG ID:', userId);
         
+        // Use Local User data if available to initialize Cloud User
+        const initData = localUser || newUserTemplate;
+
         const dbUserPayload = {
-          telegram_id: userId, // Store the TG ID string
-          username: newUserTemplate.username,
-          name: newUserTemplate.name,
-          role: newUserTemplate.role,
-          xp: newUserTemplate.xp,
-          coins: newUserTemplate.coins,
-          level: newUserTemplate.level,
-          hp: newUserTemplate.hp,
-          max_hp: newUserTemplate.maxHp,
-          avatar_url: newUserTemplate.avatarUrl,
-          streak: newUserTemplate.streak,
-          interest: newUserTemplate.interest
+          telegram_id: !isGuest ? userId : null, // Only set TG ID if real
+          username: initData.username,
+          name: initData.name,
+          role: initData.role,
+          xp: initData.xp,
+          coins: initData.coins,
+          level: initData.level,
+          hp: initData.hp,
+          max_hp: initData.maxHp,
+          avatar_url: initData.avatarUrl,
+          streak: initData.streak,
+          interest: initData.interest
         };
 
         const { data: createdUser, error: createError } = await supabase
@@ -117,21 +154,18 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
         
         if (createError) {
             console.error("Supabase Create Failed:", createError);
-            throw createError;
+            // Fallback to local if create fails
+            return localUser || newUserTemplate; 
         }
 
-        return { ...newUserTemplate, id: createdUser.id };
+        return { ...initData, id: createdUser.id };
       }
     } catch (e) {
       console.error("Supabase Error (Fallback to Local):", e);
-      // Fallback to local storage if Supabase fails (offline)
     }
   }
 
   // 3. LOCAL STORAGE FLOW (FALLBACK OR GUEST)
-  const users = getUsersFromStorage();
-  let localUser = users.find(u => u.telegramId?.toString() === userId || u.id === userId);
-
   if (!localUser) {
     localUser = newUserTemplate;
     saveUserToStorage(localUser);
@@ -154,7 +188,13 @@ export const completeTask = async (userId: string, task: Task): Promise<void> =>
 
   // 1. UPDATE LOCAL STORAGE (Optimistic UI & Backup)
   const users = getUsersFromStorage();
-  const userIndex = users.findIndex(u => u.id === userId);
+  // We might need to find by UUID or TG ID. Since `userId` passed here comes from `currentUser.id`, 
+  // it should match what's in memory.
+  // However, if we switched from TG ID to UUID, local storage might be out of sync.
+  // For simplicity, we update the object in memory if we can find it, or ignore local storage if we are fully cloud.
+  
+  // Let's just update the current object in the array if found by any ID match
+  const userIndex = users.findIndex(u => u.id === userId || u.telegramId?.toString() === userId);
   
   if (userIndex !== -1) {
       const u = users[userIndex];
