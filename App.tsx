@@ -118,13 +118,15 @@ const App: React.FC = () => {
     if (currentUser.completedTaskIds.includes(task.id)) return;
 
     // Optimistic Update
-    setCurrentUser(prev => prev ? ({
-      ...prev,
-      xp: prev.xp + task.xpReward,
-      coins: (prev.coins || 0) + (task.coinsReward || 0),
-      completedTaskIds: [...prev.completedTaskIds, task.id],
-      level: Math.floor((prev.xp + task.xpReward) / 500) + 1
-    }) : null);
+    const updatedUser = {
+      ...currentUser,
+      xp: currentUser.xp + task.xpReward,
+      coins: (currentUser.coins || 0) + (task.coinsReward || 0),
+      completedTaskIds: [...currentUser.completedTaskIds, task.id],
+      level: Math.floor((currentUser.xp + task.xpReward) / 500) + 1
+    };
+    
+    setCurrentUser(updatedUser);
 
     // Sync DB
     await completeTask(currentUser.id, task);
@@ -143,30 +145,26 @@ const App: React.FC = () => {
     );
   }
 
-  // Debug Info
-  const isGuest = currentUser.id.startsWith('guest_');
+  const telegramId = currentUser.telegramId ? currentUser.telegramId.toString() : 'Guest';
 
   return (
     <div className="flex flex-col h-full bg-slate-50 relative overflow-hidden animate-in fade-in duration-700">
       
       {/* CONNECTION STATUS & IDENTITY INDICATOR */}
-      <div className="absolute top-2 left-2 z-50 flex flex-col gap-1 pointer-events-none opacity-80">
+      <div className="absolute top-14 left-4 z-50 flex flex-col gap-1 pointer-events-none opacity-60 hover:opacity-100 transition-opacity">
         <div className="flex gap-2">
             {isSupabaseEnabled ? (
-                 <div className="flex items-center gap-1 bg-black/60 backdrop-blur px-2 py-1 rounded-full text-[8px] text-green-400 font-bold border border-green-500/20">
-                    <Wifi size={8} /> ОНЛАЙН
+                 <div className="flex items-center gap-1 bg-black/40 backdrop-blur px-2 py-0.5 rounded-md text-[8px] text-green-400 font-bold border border-green-500/20">
+                    <Wifi size={8} /> DB
                  </div>
             ) : (
-                <div className="flex items-center gap-1 bg-black/60 backdrop-blur px-2 py-1 rounded-full text-[8px] text-yellow-400 font-bold border border-yellow-500/20">
-                    <AlertCircle size={8} /> ОФФЛАЙН
+                <div className="flex items-center gap-1 bg-black/40 backdrop-blur px-2 py-0.5 rounded-md text-[8px] text-yellow-400 font-bold border border-yellow-500/20">
+                    <AlertCircle size={8} /> OFF
                  </div>
             )}
-        </div>
-        
-        {/* IDENTITY BADGE */}
-        <div className={`flex items-center gap-1 bg-black/60 backdrop-blur px-2 py-1 rounded-full text-[8px] font-bold border ${isGuest ? 'text-slate-300 border-white/10' : 'text-blue-300 border-blue-500/30'}`}>
-            <UserIcon size={8} /> 
-            {isGuest ? 'ГОСТЕВОЙ РЕЖИМ' : `TG: ${currentUser.name}`}
+            <div className="flex items-center gap-1 bg-black/40 backdrop-blur px-2 py-0.5 rounded-md text-[8px] text-blue-300 font-bold border border-blue-500/20">
+               ID: {telegramId}
+            </div>
         </div>
       </div>
 

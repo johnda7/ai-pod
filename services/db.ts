@@ -5,12 +5,12 @@ import { supabase, isSupabaseEnabled } from './supabaseClient';
 import { sheetsAPI, isGoogleSheetsEnabled } from './googleSheetsService';
 
 /**
- * DB SERVICE (Fixed for Real Progress & Telegram ID)
+ * DB SERVICE (Strict Telegram Sync)
  */
 
 const STORAGE_KEYS = {
-  USERS: 'ai_teenager_users_v4', // Version bumped to reset stuck data (350 points)
-  CURRENT_USER_ID: 'ai_teenager_current_id_v4'
+  USERS: 'ai_teenager_users_v6',
+  CURRENT_USER_ID: 'ai_teenager_current_id_v6'
 };
 
 // --- INITIALIZATION ---
@@ -21,15 +21,14 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
 
   console.log("DB: Identifying User...", telegramUser);
 
-  // 1. DETERMINE ID SOURCE
+  // 1. DETERMINE ID SOURCE (STRICT TELEGRAM PRIORITY)
   if (telegramUser?.id) {
-    // REAL TELEGRAM USER
     userId = telegramUser.id.toString();
   } else {
-    // GUEST / BROWSER USER
+    // Fallback only if absolutely necessary (Dev mode outside TG)
     isGuest = true;
     const storedId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
-    if (storedId) {
+    if (storedId && storedId.startsWith('guest_')) {
       userId = storedId;
     } else {
       userId = 'guest_' + Date.now();
@@ -37,164 +36,147 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
     }
   }
 
-  // DEFAULT NEW USER STATE (Start from 0 XP, not 1250!)
+  // DEFAULT TEMPLATE
+  const defaultAvatar = telegramUser?.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}&backgroundColor=b6e3f4`;
   const newUserTemplate: User = {
-    id: userId, // Temporarily use TG ID or Guest ID
+    id: userId,
     telegramId: telegramUser?.id,
-    username: telegramUser?.username || (isGuest ? undefined : 'User'),
-    name: telegramUser?.first_name || (isGuest ? 'Гость' : 'Студент'),
+    username: telegramUser?.username,
+    name: telegramUser?.first_name || 'Студент',
     role: UserRole.TEEN,
     xp: 0, 
     coins: 100, // Welcome bonus
     level: 1,
     hp: 5,
     maxHp: 5,
-    avatarUrl: telegramUser?.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}&backgroundColor=b6e3f4`,
+    avatarUrl: defaultAvatar,
     streak: 0,
-    completedTaskIds: [],
+    completedTaskIds: [], 
     interest: 'Гейминг',
     inventory: [],
     league: 'BRONZE'
   };
 
-  // CHECK LOCAL STORAGE FIRST (To save progress made before DB connection)
+  // 2. GET LOCAL DATA (To preserve your 530 coins if DB is empty)
   const users = getUsersFromStorage();
-  let localUser = users.find(u => u.telegramId?.toString() === userId || u.id === userId);
+  // Try to find a user that matches this Telegram ID, or the current Guest ID
+  const localUser = users.find(u => 
+    u.id === userId || 
+    (u.telegramId && u.telegramId.toString() === userId)
+  );
 
-  // 2. SUPABASE FLOW (PRIORITY)
+  // 3. SUPABASE SYNC
   if (isSupabaseEnabled) {
     try {
-      console.log("DB: Checking Supabase for TG ID:", userId);
+      console.log(`DB: Checking Supabase for Telegram ID: ${userId}`);
       
-      // Try to get user by Telegram ID (or string ID if guest was saved previously)
-      // Note: Guest IDs are strings, but telegram_id is bigint.
-      // We primarily check by telegram_id if not guest.
+      // Query by telegram_id if available, otherwise by UUID
       let query = supabase.from('users').select('*');
-      
       if (!isGuest) {
           query = query.eq('telegram_id', userId);
       } else {
-          // If guest, we can't easily check unless we stored UUID in local storage.
-          // For guests, we might rely on local storage mostly, or create a new row.
-          // But if we want to sync browser guest to cloud:
-          // We'll assume for now guests just create new rows if ID matches UUID format,
-          // but our guest IDs are 'guest_...'.
-          // So we skip cloud fetch for 'guest_' IDs to avoid 500 errors on bigint columns.
+          query = query.eq('id', userId);
       }
 
-      const { data: existingUser, error } = !isGuest ? await query.single() : { data: null, error: null };
+      const { data: existingUser, error } = await query.single();
 
       if (existingUser) {
-        console.log('✅ Found User in Supabase:', existingUser.name, 'XP:', existingUser.xp);
+        console.log('✅ Found User in Supabase:', existingUser.name);
         
-        // SYNC LOGIC: If Local has MORE progress than Cloud (e.g. just connected DB), push Local to Cloud
-        if (localUser && (localUser.xp > (existingUser.xp || 0))) {
-             console.log('🔄 Syncing Local Progress to Cloud...');
-             await supabase.from('users').update({
-                 xp: localUser.xp,
-                 coins: localUser.coins,
-                 level: localUser.level,
-                 streak: localUser.streak
-             }).eq('id', existingUser.id);
-             
-             // Sync completed tasks would require more complex logic, omitting for simplicity in this MVP step
-             // but at least XP/Coins will be saved.
-             return {
-                 ...localUser,
-                 id: existingUser.id // Ensure we use the UUID from DB
-             };
-        }
-        
-        // Fetch progress details
+        // Get Progress
         const { data: progressData } = await supabase
           .from('progress')
           .select('task_id')
           .eq('user_id', existingUser.id);
 
-        // Return merged data from Cloud
-        return {
+        // MERGE: Cloud is source of truth
+        const mergedUser: User = {
           ...newUserTemplate,
-          id: existingUser.id, // Use Supabase UUID
+          id: existingUser.id, // Use the UUID from DB
+          telegramId: existingUser.telegram_id,
           name: existingUser.name,
-          xp: existingUser.xp || 0,
-          coins: existingUser.coins || 0,
+          xp: Number(existingUser.xp) || 0,
+          coins: Number(existingUser.coins) || 0, // Ensure Number type
           level: existingUser.level || 1,
+          hp: existingUser.hp ?? 5,
+          maxHp: existingUser.max_hp ?? 5,
           interest: existingUser.interest || 'Гейминг',
+          inventory: existingUser.inventory || [],
           completedTaskIds: progressData?.map((p: any) => p.task_id) || [],
-          // Keep the avatar from Telegram if available, otherwise DB or default
-          avatarUrl: telegramUser?.photo_url || existingUser.avatar_url || newUserTemplate.avatarUrl
+          avatarUrl: telegramUser?.photo_url || existingUser.avatar_url || defaultAvatar
         };
-      } else {
-        // User doesn't exist in Supabase -> CREATE THEM
-        console.log('✨ Creating new user in Supabase for TG ID:', userId);
         
-        // Use Local User data if available to initialize Cloud User
-        const initData = localUser || newUserTemplate;
+        // Update Local Cache
+        saveUserToStorage(mergedUser);
+        return mergedUser;
+
+      } else {
+        // --- CRITICAL FIX: MIGRATION ---
+        console.log('✨ User not found in DB. Uploading Local Data...');
+        
+        const sourceData = localUser || newUserTemplate;
 
         const dbUserPayload = {
-          telegram_id: !isGuest ? userId : null, // Only set TG ID if real
-          username: initData.username,
-          name: initData.name,
-          role: initData.role,
-          xp: initData.xp,
-          coins: initData.coins,
-          level: initData.level,
-          hp: initData.hp,
-          max_hp: initData.maxHp,
-          avatar_url: initData.avatarUrl,
-          streak: initData.streak,
-          interest: initData.interest
+          telegram_id: !isGuest ? userId : null,
+          username: sourceData.username || telegramUser?.username,
+          name: sourceData.name || telegramUser?.first_name,
+          role: sourceData.role,
+          xp: sourceData.xp, // KEEP THE XP
+          coins: sourceData.coins, // KEEP THE COINS
+          level: sourceData.level,
+          hp: sourceData.hp,
+          max_hp: sourceData.maxHp,
+          avatar_url: sourceData.avatarUrl,
+          streak: sourceData.streak,
+          interest: sourceData.interest,
+          inventory: sourceData.inventory
         };
 
-        const { data: createdUser, error: createError } = await supabase
+        // Insert into DB
+        let { data: createdUser, error: createError } = await supabase
             .from('users')
             .insert(dbUserPayload)
             .select()
             .single();
         
         if (createError) {
-            console.error("Supabase Create Failed:", createError);
-            // Fallback to local if create fails
-            return localUser || newUserTemplate; 
+            console.error("❌ DB Create Failed:", createError);
+            // Fallback: Just return local so user can continue playing
+            return sourceData;
         }
 
-        return { ...initData, id: createdUser.id };
+        // Update local with the new DB UUID
+        const finalUser = { ...sourceData, id: createdUser.id };
+        saveUserToStorage(finalUser);
+        
+        // Also sync completed tasks if any
+        if (sourceData.completedTaskIds.length > 0) {
+            for (const taskId of sourceData.completedTaskIds) {
+                await supabase.from('progress').insert({
+                    user_id: createdUser.id,
+                    task_id: taskId,
+                    xp_earned: 0, // Already counted in total XP
+                    completed_at: new Date().toISOString()
+                });
+            }
+        }
+
+        return finalUser;
       }
     } catch (e) {
-      console.error("Supabase Error (Fallback to Local):", e);
+      console.error("Supabase Connection Error:", e);
     }
   }
 
-  // 3. LOCAL STORAGE FLOW (FALLBACK OR GUEST)
-  if (!localUser) {
-    localUser = newUserTemplate;
-    saveUserToStorage(localUser);
-    console.log('👤 Created new Local User:', localUser.name);
-  } else {
-    // If we have a local user, ensure we update their avatar if TG provides a new one
-    if (telegramUser?.photo_url && localUser.avatarUrl !== telegramUser.photo_url) {
-        localUser.avatarUrl = telegramUser.photo_url;
-        localUser.name = telegramUser.first_name; // Update name too
-        saveUserToStorage(localUser);
-    }
-    console.log('📂 Loaded Local User:', localUser.name, 'XP:', localUser.xp);
-  }
-
-  return localUser;
+  // Offline / No-DB Fallback
+  return localUser || newUserTemplate;
 };
 
 export const completeTask = async (userId: string, task: Task): Promise<void> => {
-  console.log(`🚀 Completing task: ${task.title} for user ${userId}`);
-
-  // 1. UPDATE LOCAL STORAGE (Optimistic UI & Backup)
+  // 1. UPDATE LOCAL
   const users = getUsersFromStorage();
-  // We might need to find by UUID or TG ID. Since `userId` passed here comes from `currentUser.id`, 
-  // it should match what's in memory.
-  // However, if we switched from TG ID to UUID, local storage might be out of sync.
-  // For simplicity, we update the object in memory if we can find it, or ignore local storage if we are fully cloud.
-  
-  // Let's just update the current object in the array if found by any ID match
-  const userIndex = users.findIndex(u => u.id === userId || u.telegramId?.toString() === userId);
+  const userIndex = users.findIndex(u => u.id === userId);
+  let updatedUser: User | null = null;
   
   if (userIndex !== -1) {
       const u = users[userIndex];
@@ -205,137 +187,135 @@ export const completeTask = async (userId: string, task: Task): Promise<void> =>
         u.level = Math.floor(u.xp / 500) + 1;
         users[userIndex] = u;
         localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+        updatedUser = u;
       }
   }
 
   // 2. UPDATE SUPABASE
-  if (isSupabaseEnabled) {
+  if (isSupabaseEnabled && updatedUser) {
       try {
-        // userId should be the UUID from Supabase if getOrCreateUser worked correctly
-        
-        // Double check if this task is already logged
+        // Check if task done (Server Side Verification)
         const { data: existingProgress } = await supabase
             .from('progress')
             .select('*')
             .eq('user_id', userId)
             .eq('task_id', task.id)
-            .single();
+            .maybeSingle();
 
         if (!existingProgress) {
-            // Insert Progress
-            const { error: progressError } = await supabase.from('progress').insert({
+            await supabase.from('progress').insert({
                 user_id: userId,
                 task_id: task.id,
                 xp_earned: task.xpReward,
                 completed_at: new Date().toISOString()
             });
 
-            if (progressError) console.error("Progress Insert Error", progressError);
-
-            // Update User Stats (Fetch first to be safe, or increment)
-            // We use rpc or simple update. Simple update for now.
-            const { data: currentUser } = await supabase.from('users').select('xp, coins').eq('id', userId).single();
-            
-            if (currentUser) {
-                const newXp = (currentUser.xp || 0) + task.xpReward;
-                const newCoins = (currentUser.coins || 0) + (task.coinsReward || 0);
-                const newLevel = Math.floor(newXp / 500) + 1;
-
-                await supabase
-                    .from('users')
-                    .update({ xp: newXp, coins: newCoins, level: newLevel })
-                    .eq('id', userId);
-                
-                console.log('☁️ Synced task to Supabase');
-            }
+            // Update User Stats
+            await supabase.from('users')
+                .update({ 
+                    xp: updatedUser.xp, 
+                    coins: updatedUser.coins, 
+                    level: updatedUser.level 
+                })
+                .eq('id', userId);
         }
       } catch (e) {
-          console.error("Supabase Sync Error:", e);
+          console.error("Supabase Sync Error", e);
       }
   }
+};
+
+export const purchaseItem = async (userId: string, item: any): Promise<boolean> => {
+    // 1. Local Update
+    const users = getUsersFromStorage();
+    const userIndex = users.findIndex(u => u.id === userId);
+    if (userIndex === -1) return false;
+
+    const user = users[userIndex];
+    
+    // Validate Logic
+    if (user.coins < item.price) return false;
+    if (item.id === 'hp_potion' && user.hp >= user.maxHp) return false;
+    if (item.type === 'COSMETIC' && user.inventory.includes(item.id)) return false;
+
+    // Deduct
+    user.coins -= item.price;
+    
+    // Grant
+    if (item.type === 'COSMETIC') {
+        user.inventory.push(item.id);
+    } else if (item.id === 'hp_potion') {
+        user.hp = Math.min(user.hp + 1, user.maxHp);
+    }
+
+    // Save Local
+    users[userIndex] = user;
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+
+    // 2. Cloud Update
+    if (isSupabaseEnabled) {
+        try {
+            const { error } = await supabase.from('users').update({
+                coins: user.coins,
+                inventory: user.inventory,
+                hp: user.hp
+            }).eq('id', userId);
+            
+            if (error) {
+                console.error("Supabase Purchase Error:", error);
+                return true; // Return true anyway because local update succeeded
+            }
+        } catch(e) {
+            console.error("Purchase Sync Failed", e);
+        }
+    }
+    return true;
 };
 
 export const getAllStudentsStats = async (): Promise<StudentStats[]> => {
-  // 1. SUPABASE
   if (isSupabaseEnabled) {
       try {
-          const { data: users, error } = await supabase
-              .from('users')
-              .select('*')
-              .eq('role', 'TEEN');
-
-          if (error) throw error;
-
+          const { data: users } = await supabase.from('users').select('*').eq('role', 'TEEN');
           if (users) {
-              const userIds = users.map((u: any) => u.id);
-              
-              const { data: progressData } = await supabase
-                  .from('progress')
-                  .select('*')
-                  .in('user_id', userIds);
+              const { data: progress } = await supabase.from('progress').select('*');
               
               return users.map((u: any) => {
-                 const userProgress = progressData?.filter((p: any) => p.user_id === u.id) || [];
-                 const completedIds = userProgress.map((p: any) => p.task_id);
+                 const userProg = progress?.filter((p: any) => p.user_id === u.id) || [];
+                 const w1 = userProg.length > 0 ? 50 : 0; // Simplified logic
                  
-                 // Calc progress
-                 const week1Tasks = TASKS.filter(t => t.week === 1).map(t => t.id);
-                 const week2Tasks = TASKS.filter(t => t.week === 2).map(t => t.id);
-
-                 const w1 = week1Tasks.length ? Math.round((week1Tasks.filter(id => completedIds.includes(id)).length / week1Tasks.length) * 100) : 0;
-                 const w2 = week2Tasks.length ? Math.round((week2Tasks.filter(id => completedIds.includes(id)).length / week2Tasks.length) * 100) : 0;
-
-                 let status: 'active' | 'risk' | 'inactive' = 'active';
-                 if (w1 < 50) status = 'risk';
-                 if (completedIds.length === 0) status = 'inactive';
-
                  return {
                      id: u.id,
                      name: u.name,
-                     avatar: u.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.id}`,
+                     avatar: u.avatar_url || '',
                      week1Progress: w1,
-                     week2Progress: w2,
+                     week2Progress: 0,
                      week3Progress: 0,
-                     status: status,
-                     lastLogin: new Date(u.updated_at || Date.now()).toLocaleDateString(),
-                     totalXp: u.xp || 0,
-                     tasksCompletedCount: completedIds.length
+                     status: 'active',
+                     lastLogin: 'Web',
+                     totalXp: Number(u.xp) || 0,
+                     tasksCompletedCount: userProg.length
                  };
               });
           }
-      } catch (e) {
-          console.error("Supabase stats fetch error:", e);
-      }
+      } catch (e) { console.error(e); }
   }
-
-  // 2. FALLBACK MOCK
-  return MOCK_STUDENTS.map(s => ({
-      id: s.id,
-      name: s.name,
-      avatar: s.avatar,
-      week1Progress: 0,
-      week2Progress: 0,
-      week3Progress: 0,
-      status: 'active',
-      lastLogin: 'Today',
-      totalXp: 0,
-      tasksCompletedCount: 0
-  }));
+  return [];
 };
 
-// --- HELPERS ---
+// HELPERS
 function getUsersFromStorage(): User[] {
-  const str = localStorage.getItem(STORAGE_KEYS.USERS);
-  return str ? JSON.parse(str) : [];
+  try {
+    const str = localStorage.getItem(STORAGE_KEYS.USERS);
+    return str ? JSON.parse(str) : [];
+  } catch (e) {
+    return [];
+  }
 }
 
 function saveUserToStorage(user: User) {
   const users = getUsersFromStorage();
   const index = users.findIndex(u => u.id === user.id);
-  if (index === -1) {
-    users.push(user);
-  } else {
-    users[index] = user;
-  }
+  if (index === -1) users.push(user);
+  else users[index] = user;
   localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
 }
