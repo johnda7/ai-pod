@@ -99,8 +99,8 @@ export const MeditationView: React.FC = () => {
 
       {showBreathing && <BreathingOverlay />}
 
-      {/* 1. HEADER & QUOTE */}
-      <div className="px-6 pt-12 pb-6">
+      {/* 1. HEADER & QUOTE - Increased PT */}
+      <div className="px-6 pt-16 pb-6">
           <div className="flex justify-between items-end mb-8">
              <div>
                 <h1 className="text-3xl font-black text-white tracking-tight mb-1">Восстановление</h1>

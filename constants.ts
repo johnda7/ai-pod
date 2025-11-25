@@ -1,20 +1,20 @@
 
-
 import { Lecture, Task, User, UserRole, StudentProgress, Meditation, Soundscape, Quote, ShopItem } from "./types";
 
 export const KATYA_IMAGE_URL = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Katya&hair=long&clothing=hoodie';
 
+// MOCK_USER теперь имеет 0 XP и 0 монет, чтобы не путать пользователя старыми данными
 export const MOCK_USER: User = {
-  id: 'u1',
-  name: 'Алекс',
+  id: 'guest_default',
+  name: 'Гость',
   role: UserRole.TEEN,
-  xp: 1250,
-  coins: 350,
-  level: 5,
-  hp: 4, 
+  xp: 0,
+  coins: 0,
+  level: 1,
+  hp: 5, 
   maxHp: 5,
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
-  streak: 12,
+  avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest',
+  streak: 0,
   completedTaskIds: [], 
   interest: 'Гейминг',
   inventory: [],
