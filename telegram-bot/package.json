@@ -1,0 +1,26 @@
+{
+  "name": "ai-pod-telegram-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot for AI Pod - gamified learning platform for teenagers",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "dotenv": "^16.3.1"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "education",
+    "gamification"
+  ],
+  "author": "",
+  "license": "MIT"
+}
+
+
+
