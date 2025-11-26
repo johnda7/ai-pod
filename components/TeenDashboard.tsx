@@ -2,15 +2,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TASKS, SHOP_ITEMS, ACHIEVEMENTS } from '../constants';
 import { Task, User, ShopItem } from '../types';
-import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Trophy, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info, Award, Flame, Gamepad2 } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info, Award, Flame, Wrench } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
 import { MemoryGame } from './MemoryGame';
 import { ShopView } from './ShopView';
-import { LeaderboardView } from './LeaderboardView';
 import { AchievementsView } from './AchievementsView';
-import { GameSystem } from './GameSystem';
-import { purchaseItem } from '../services/db'; // Import real purchase logic
+import { ToolsView } from './ToolsView';
+import { purchaseItem } from '../services/db';
 import { isSupabaseEnabled } from '../services/supabaseClient';
 import { GameTutorial } from './GameTutorial';
 
@@ -20,7 +19,7 @@ interface TeenDashboardProps {
   onUserUpdate?: (user: User) => void; // Callback to update parent
 }
 
-type Tab = 'LEARN' | 'RELAX' | 'SHOP' | 'LEADERBOARD' | 'PROFILE' | 'GAMES';
+type Tab = 'LEARN' | 'TOOLS' | 'RELAX' | 'SHOP' | 'PROFILE';
 
 export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser, onTaskComplete, onUserUpdate }) => {
   const [user, setUser] = useState<User>(initialUser); // Local user state to reflect changes immediately
@@ -133,16 +132,9 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   };
 
   const renderContent = () => {
+    if (activeTab === 'TOOLS') return <ToolsView user={user} onXpEarned={handleGameReward} />;
     if (activeTab === 'RELAX') return <MeditationView />;
     if (activeTab === 'SHOP') return <ShopView user={user} onBuy={handleBuyItem} onRefreshUser={refreshUserData} />;
-    if (activeTab === 'LEADERBOARD') return <LeaderboardView currentUser={user} />;
-    if (activeTab === 'GAMES') return (
-      <GameSystem 
-        userId={user.id} 
-        onReward={handleGameReward}
-        onClose={() => setActiveTab('LEARN')}
-      />
-    );
 
     if (activeTab === 'PROFILE') {
         return (
@@ -245,7 +237,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                           >
                             <div className="text-2xl font-black text-white">{stat.value}</div>
                             <div className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-1">{stat.label}</div>
-                          </div>
+                        </div>
                         ))}
                     </div>
 
@@ -900,11 +892,9 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         >
                 {[
                   { id: 'LEARN', icon: LayoutGrid, label: 'Путь' },
-                  { id: 'GAMES', icon: Gamepad2, label: 'Игры' },
-                  { id: 'LEADERBOARD', icon: Trophy, label: 'Топ' },
-                  { id: 'SHOP', icon: ShoppingBag, label: 'Магаз' },
+                  { id: 'TOOLS', icon: Wrench, label: 'Полезное' },
                   { id: 'RELAX', icon: Star, label: 'Чилл' },
-                  { id: 'PROFILE', icon: UserIcon, label: 'Я' },
+                  { id: 'PROFILE', icon: UserIcon, label: 'Профиль' },
                 ].map((tab) => {
                     const isActive = activeTab === tab.id;
                     const Icon = tab.icon;
