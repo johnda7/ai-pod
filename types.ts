@@ -167,7 +167,7 @@ export interface Meditation {
 export interface Soundscape {
   id: string;
   title: string;
-  iconType: 'RAIN' | 'FOREST' | 'OCEAN' | 'FIRE' | 'WIND' | 'CAFE';
+  iconType: 'RAIN' | 'FOREST' | 'OCEAN' | 'FIRE' | 'WIND' | 'CAFE' | 'THUNDER' | 'NIGHT';
   color: string;
   youtubeId: string;
 }

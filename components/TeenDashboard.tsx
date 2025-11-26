@@ -643,44 +643,49 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
          {renderContent()}
       </div>
 
-      {/* DOCK BAR - REDESIGNED */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-[400px] animate-in slide-in-from-bottom-20 duration-700 delay-200">
-        <div className="relative group">
-            <div className="absolute -inset-1 bg-indigo-500/10 blur-xl rounded-[3rem] opacity-70 pointer-events-none"></div>
-            
-            <div className="relative flex items-center justify-between gap-2 p-2 bg-[#151925]/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-2xl ring-1 ring-white/5">
-                
-                {[
-                  { id: 'LEARN', icon: LayoutGrid, label: 'Путь' },
-                  { id: 'LEADERBOARD', icon: Trophy, label: 'Топ' },
-                  { id: 'SHOP', icon: ShoppingBag, label: 'Магазин' },
-                  { id: 'RELAX', icon: Star, label: 'Релакс' },
-                  { id: 'PROFILE', icon: UserIcon, label: 'Я' },
-                ].map((tab) => {
-                    const isActive = activeTab === tab.id;
-                    const Icon = tab.icon;
-                    return (
-                        <button 
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as Tab)}
-                            className={`
-                            h-14 flex-1 rounded-[2rem] flex flex-col items-center justify-center gap-1 transition-all duration-300 relative overflow-hidden group
-                            ${isActive 
-                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 translate-y-[-4px]' 
-                                : 'text-slate-500 hover:text-indigo-300 hover:bg-white/5 active:scale-95'}
-                            `}
-                        >
-                            {/* Glow Effect for active */}
-                            {isActive && <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-50"></div>}
-                            
-                            <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className="relative z-10 transition-transform group-hover:scale-110" />
-                            
-                            {isActive && <span className="text-[9px] font-black uppercase tracking-wide relative z-10 animate-in slide-in-from-bottom-2 fade-in duration-300">{tab.label}</span>}
-                            {!isActive && <div className="w-1 h-1 rounded-full bg-slate-700 mt-1 opacity-0 group-hover:opacity-100 transition-opacity"></div>}
-                        </button>
-                    );
-                })}
-            </div>
+      {/* DOCK BAR - iOS 26 LIQUID GLASS STYLE */}
+      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[380px] animate-in slide-in-from-bottom-20 duration-700 delay-200">
+        <div 
+          className="relative flex items-center justify-between p-1.5 rounded-[2rem]"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 100%)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+            border: '1px solid rgba(255,255,255,0.18)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.1)',
+          }}
+        >
+          {[
+            { id: 'LEARN', icon: LayoutGrid, label: 'Путь' },
+            { id: 'LEADERBOARD', icon: Trophy, label: 'Топ' },
+            { id: 'SHOP', icon: ShoppingBag, label: 'Магазин' },
+            { id: 'RELAX', icon: Star, label: 'Релакс' },
+            { id: 'PROFILE', icon: UserIcon, label: 'Я' },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            const Icon = tab.icon;
+            return (
+              <button 
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as Tab)}
+                className={`
+                  h-12 flex-1 rounded-[1.5rem] flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden
+                  ${isActive ? 'text-white' : 'text-white/50 hover:text-white/70 active:scale-95'}
+                `}
+                style={isActive ? {
+                  background: 'linear-gradient(135deg, rgba(99,102,241,0.9) 0%, rgba(139,92,246,0.9) 100%)',
+                  boxShadow: '0 4px 20px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
+                } : {}}
+              >
+                <Icon size={20} strokeWidth={isActive ? 2.5 : 1.5} className="relative z-10" />
+                {isActive && (
+                  <span className="text-[8px] font-bold uppercase tracking-wider mt-0.5 relative z-10 animate-in fade-in slide-in-from-bottom-1 duration-200">
+                    {tab.label}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
