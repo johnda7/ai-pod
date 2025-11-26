@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TASKS, SHOP_ITEMS, ACHIEVEMENTS } from '../constants';
 import { Task, User, ShopItem } from '../types';
-import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info, Award, Flame, Wrench } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info, Award, Flame, Wrench, Trophy } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
 import { MemoryGame } from './MemoryGame';
