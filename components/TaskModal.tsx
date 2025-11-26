@@ -7,6 +7,7 @@ import { FocusDefender, EmbeddedMemoryGame, ReactionGame } from './MiniGames';
 import { AnimatedBrain, AnimatedDopamine, AnimatedFocus, AnimatedBattery, AnimatedSleep, AnimatedBoss, AnimatedReward } from './AnimatedSlides';
 import { KatyaCharacter } from './KatyaCharacter';
 import { BubblePopGame, EmotionMatchGame, BreathSyncGame } from './ImprovedGames';
+import { RiveKatya } from './RiveKatya';
 
 interface TaskModalProps {
   task: Task;
@@ -260,6 +261,20 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
         return <AnimatedBoss defeated={true} />;
       case 'reward':
         return <AnimatedReward amount={50} />;
+      // Rive персонаж Кати с разными состояниями
+      case 'katya':
+      case 'katya_idle':
+        return <RiveKatya state="idle" size="lg" />;
+      case 'katya_talking':
+        return <RiveKatya state="talking" size="lg" message="Привет! 👋" />;
+      case 'katya_happy':
+        return <RiveKatya state="happy" size="lg" message="Молодец! 🎉" />;
+      case 'katya_thinking':
+        return <RiveKatya state="thinking" size="lg" />;
+      case 'katya_waving':
+        return <RiveKatya state="waving" size="lg" message="Привет!" />;
+      case 'katya_encouraging':
+        return <RiveKatya state="encouraging" size="lg" message="Ты справишься! 💪" />;
       default:
         return null;
     }
