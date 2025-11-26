@@ -362,6 +362,7 @@ export const purchaseItem = async (userId: string, item: any): Promise<boolean> 
         
         if (isValidUUID) {
             try {
+                // First, get the latest user data from Supabase to ensure we have the correct coin balance
                 const { data: dbUser } = await supabase
                     .from('users')
                     .select('*')
@@ -369,36 +370,46 @@ export const purchaseItem = async (userId: string, item: any): Promise<boolean> 
                     .single();
                 
                 if (dbUser) {
-                    // Get progress to build full user object
-                    const { data: progressData } = await supabase
-                        .from('progress')
-                        .select('task_id')
-                        .eq('user_id', userId);
+                    // Update local user with latest balance from DB (source of truth for currency)
+                    // We prioritize DB coins here to prevent client-side manipulation or desync
+                    // BUT if local coins are higher (e.g. just earned), we keep local
+                    const dbCoins = Number(dbUser.coins) || 0;
                     
-                    user = {
-                        id: dbUser.id,
-                        telegramId: dbUser.telegram_id,
-                        username: dbUser.username,
-                        name: dbUser.name,
-                        role: dbUser.role as UserRole,
-                        xp: Number(dbUser.xp) || 0,
-                        coins: Number(dbUser.coins) || 0,
-                        level: dbUser.level || 1,
-                        hp: dbUser.hp ?? 5,
-                        maxHp: dbUser.max_hp ?? 5,
-                        avatarUrl: dbUser.avatar_url || '',
-                        streak: dbUser.streak || 0,
-                        completedTaskIds: progressData?.map((p: any) => p.task_id) || [],
-                        interest: dbUser.interest || 'Гейминг',
-                        inventory: dbUser.inventory || [],
-                        league: dbUser.league || 'BRONZE'
-                    };
+                    // Create user object if it didn't exist
+                    if (!user) {
+                        user = {
+                            id: dbUser.id,
+                            telegramId: dbUser.telegram_id,
+                            username: dbUser.username,
+                            name: dbUser.name,
+                            role: dbUser.role as UserRole,
+                            xp: Number(dbUser.xp) || 0,
+                            coins: dbCoins,
+                            level: dbUser.level || 1,
+                            hp: dbUser.hp ?? 5,
+                            maxHp: dbUser.max_hp ?? 5,
+                            avatarUrl: dbUser.avatar_url || '',
+                            streak: dbUser.streak || 0,
+                            completedTaskIds: [], // Will need to fetch progress
+                            interest: dbUser.interest || 'Гейминг',
+                            inventory: dbUser.inventory || [],
+                            league: dbUser.league || 'BRONZE'
+                        };
+                    } else if (dbCoins > (user.coins || 0)) {
+                        user.coins = dbCoins;
+                        // Also update inventory if needed
+                        if (dbUser.inventory && Array.isArray(dbUser.inventory)) {
+                             // Merge inventories
+                             const newInventory = [...new Set([...user.inventory, ...dbUser.inventory])];
+                             user.inventory = newInventory;
+                        }
+                    }
                     
-                    // Save to local storage for future use
+                    // Save updated state
                     saveUserToStorage(user);
                 }
             } catch (e) {
-                console.error("Failed to fetch user from Supabase:", e);
+                console.error("Failed to sync before purchase:", e);
             }
         }
     }
@@ -409,16 +420,18 @@ export const purchaseItem = async (userId: string, item: any): Promise<boolean> 
     }
     
     // 2. Validate Logic
+    // Double check if item is already owned after sync
+    if (item.type === 'COSMETIC' && user.inventory.includes(item.id)) {
+        console.log("Item already owned (checked after sync):", item.id);
+        return false;
+    }
+
     if (user.coins < item.price) {
         console.log("Insufficient coins:", user.coins, "<", item.price);
         return false;
     }
     if (item.id === 'hp_potion' && user.hp >= user.maxHp) {
         console.log("HP already full:", user.hp, ">=", user.maxHp);
-        return false;
-    }
-    if (item.type === 'COSMETIC' && user.inventory.includes(item.id)) {
-        console.log("Item already owned:", item.id);
         return false;
     }
 
