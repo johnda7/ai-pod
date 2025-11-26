@@ -559,7 +559,8 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
 
                 {TASKS.map((task, index) => {
                     const isCompleted = user.completedTaskIds.includes(task.id);
-                    const isLocked = index > 0 && !user.completedTaskIds.includes(TASKS[index-1].id);
+                    // ВРЕМЕННО: Все уроки открыты для просмотра (убрать после тестирования)
+                    const isLocked = false; // index > 0 && !user.completedTaskIds.includes(TASKS[index-1].id);
                     const isActive = !isCompleted && !isLocked;
 
                    const topPos = START_PADDING + (index * ITEM_SPACING) - 50;
