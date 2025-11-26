@@ -339,73 +339,119 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
     return (
         <div className="relative pt-2 pb-40 px-4 min-h-screen overflow-x-hidden">
              
-             {/* TOP BAR - PREMIUM DESIGN */}
-             <div className="flex justify-between items-center mb-6 relative z-40 pt-28 backdrop-blur-xl sticky top-0 pb-4 -mx-4 px-5 bg-gradient-to-b from-[#020617] via-[#020617]/95 to-transparent transition-all duration-300">
+             {/* TOP BAR - iOS 26 LIQUID GLASS */}
+             <div className="flex justify-between items-center mb-6 relative z-40 pt-28 sticky top-0 pb-4 -mx-4 px-5 transition-all duration-300">
+                 {/* Glass background */}
+                 <div 
+                   className="absolute inset-0 -top-20"
+                   style={{
+                     background: 'linear-gradient(to bottom, rgba(2,6,23,1) 0%, rgba(2,6,23,0.95) 60%, transparent 100%)',
+                   }}
+                 />
+                 
                  {/* Left side - HP & Streak */}
-                 <div className="flex items-center gap-2">
-                    {/* HP with animation */}
-                    <div className="relative group">
-                        <div className="absolute inset-0 bg-rose-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div className="relative px-3 py-2 rounded-2xl flex items-center gap-2 border border-rose-500/30 bg-rose-950/50 shadow-lg backdrop-blur-md">
-                            <div className="flex gap-0.5">
-                                {[...Array(5)].map((_, i) => (
-                                    <Heart 
-                                        key={i} 
-                                        size={14} 
-                                        fill={i < (user.hp || 5) ? "currentColor" : "none"}
-                                        className={`${i < (user.hp || 5) ? 'text-rose-500 drop-shadow-[0_0_6px_rgba(244,63,94,0.8)]' : 'text-slate-700'} transition-all`}
-                                    />
-                                ))}
-                            </div>
+                 <div className="flex items-center gap-2 relative z-10">
+                    {/* HP - Liquid Glass */}
+                    <div 
+                      className="px-3 py-2 rounded-2xl flex items-center gap-2"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(244,63,94,0.15) 0%, rgba(244,63,94,0.05) 100%)',
+                        backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(244,63,94,0.2)',
+                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)',
+                      }}
+                    >
+                      <div className="flex gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Heart 
+                            key={i} 
+                            size={12} 
+                            fill={i < (user.hp || 5) ? "currentColor" : "none"}
+                            className={`${i < (user.hp || 5) ? 'text-rose-400' : 'text-slate-600'} transition-all`}
+                          />
+                        ))}
                         </div>
                     </div>
                     
                     {/* Streak */}
                     {user.streak > 0 && (
-                        <div className="px-3 py-2 rounded-2xl flex items-center gap-1.5 border border-orange-500/30 bg-orange-950/50 backdrop-blur-md">
-                            <span className="text-lg">🔥</span>
-                            <span className="text-white font-black text-sm">{user.streak}</span>
-                        </div>
+                      <div 
+                        className="px-3 py-2 rounded-2xl flex items-center gap-1.5"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(249,115,22,0.15) 0%, rgba(249,115,22,0.05) 100%)',
+                          backdropFilter: 'blur(20px)',
+                          border: '1px solid rgba(249,115,22,0.2)',
+                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)',
+                        }}
+                      >
+                        <span className="text-base">🔥</span>
+                        <span className="text-white font-bold text-sm">{user.streak}</span>
+                      </div>
                     )}
                  </div>
                  
                  {/* Right side - Coins & XP */}
-                 <div className="flex gap-2 items-center">
-                     {/* XP Badge */}
-                     <div className="px-3 py-2 rounded-2xl flex items-center gap-2 border border-purple-500/30 bg-purple-950/50 backdrop-blur-md">
-                         <Star size={14} fill="currentColor" className="text-purple-400" />
-                         <span className={`text-sm font-black text-white ${isXpAnimating ? 'animate-pulse text-purple-300' : ''}`}>
-                             {user.xp}
-                         </span>
+                 <div className="flex gap-2 items-center relative z-10">
+                     {/* XP - Liquid Glass */}
+                     <div 
+                       className="px-3 py-2 rounded-2xl flex items-center gap-2"
+                       style={{
+                         background: 'linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(168,85,247,0.05) 100%)',
+                         backdropFilter: 'blur(20px)',
+                         border: '1px solid rgba(168,85,247,0.2)',
+                         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)',
+                       }}
+                     >
+                       <Star size={12} fill="currentColor" className="text-purple-400" />
+                       <span className={`text-sm font-bold text-white ${isXpAnimating ? 'animate-pulse text-purple-300' : ''}`}>
+                         {user.xp}
+                       </span>
                      </div>
                      
-                     {/* COINS - Clickable */}
+                     {/* COINS - Clickable Liquid Glass */}
                      <button 
-                         onClick={() => setActiveTab('SHOP')}
-                         className="relative group px-3 py-2 rounded-2xl flex items-center gap-2 border border-yellow-500/30 bg-yellow-950/50 backdrop-blur-md hover:bg-yellow-900/50 transition-all active:scale-95"
+                       onClick={() => setActiveTab('SHOP')}
+                       className="px-3 py-2 rounded-2xl flex items-center gap-2 transition-all active:scale-95 hover:brightness-110"
+                       style={{
+                         background: 'linear-gradient(135deg, rgba(234,179,8,0.2) 0%, rgba(234,179,8,0.08) 100%)',
+                         backdropFilter: 'blur(20px)',
+                         border: '1px solid rgba(234,179,8,0.25)',
+                         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)',
+                       }}
                      >
-                         <div className="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                         <Coins size={14} fill="currentColor" className="text-yellow-400 relative z-10" />
-                         <span className="text-sm font-black text-white relative z-10">{user.coins || 0}</span>
+                       <Coins size={12} fill="currentColor" className="text-yellow-400" />
+                       <span className="text-sm font-bold text-white">{user.coins || 0}</span>
                      </button>
                  </div>
              </div>
 
-             {/* WELCOME MESSAGE - For new users */}
+             {/* WELCOME MESSAGE - For new users - LIQUID GLASS */}
              {user.completedTaskIds.length === 0 && (
                  <div className="mb-6 mx-auto max-w-sm animate-in fade-in slide-in-from-top-4 duration-500">
-                     <div className="relative overflow-hidden rounded-3xl p-5 border border-indigo-500/30 bg-gradient-to-br from-indigo-950/80 to-purple-950/80 backdrop-blur-md">
+                     <div 
+                       className="relative overflow-hidden rounded-3xl p-5"
+                       style={{
+                         background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.08) 100%)',
+                         backdropFilter: 'blur(40px)',
+                         border: '1px solid rgba(99,102,241,0.2)',
+                         boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+                       }}
+                     >
                          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-3xl"></div>
                          <div className="relative z-10">
-                             <h3 className="text-white font-black text-lg mb-2 flex items-center gap-2">
+                             <h3 className="text-white font-bold text-lg mb-2 flex items-center gap-2">
                                  <span className="text-2xl">👋</span> Привет, {user.name}!
                              </h3>
-                             <p className="text-indigo-200 text-sm leading-relaxed">
-                                 Начни своё путешествие с первого урока. Прокачай свой мозг и стань лучшей версией себя!
+                             <p className="text-white/70 text-sm leading-relaxed">
+                                 С тобой всё нормально. Начни своё путешествие и стань лучшей версией себя!
                              </p>
                              <button 
                                  onClick={() => setShowTutorial(true)}
-                                 className="mt-4 px-4 py-2 rounded-xl bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-400 transition-colors flex items-center gap-2"
+                                 className="mt-4 px-4 py-2 rounded-xl text-white text-sm font-bold transition-all active:scale-95 flex items-center gap-2"
+                                 style={{
+                                   background: 'linear-gradient(135deg, rgba(99,102,241,0.8) 0%, rgba(139,92,246,0.8) 100%)',
+                                   boxShadow: '0 4px 15px rgba(99,102,241,0.3)',
+                                 }}
                              >
                                  <Info size={16} /> Как играть?
                              </button>
@@ -414,9 +460,17 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                  </div>
              )}
 
-             {/* DAILY QUESTS WIDGET - IMPROVED */}
+             {/* DAILY QUESTS WIDGET - LIQUID GLASS */}
              <div className="mb-6 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-                 <div className="relative overflow-hidden rounded-3xl p-5 border border-white/5 bg-[#151925]/90 backdrop-blur-md shadow-2xl">
+                 <div 
+                   className="relative overflow-hidden rounded-3xl p-5"
+                   style={{
+                     background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                     backdropFilter: 'blur(40px)',
+                     border: '1px solid rgba(255,255,255,0.1)',
+                     boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+                   }}
+                 >
                      {/* Background decoration */}
                      <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 blur-2xl"></div>
                      
@@ -659,16 +713,16 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
             { id: 'LEARN', icon: LayoutGrid, label: 'Путь' },
             { id: 'LEADERBOARD', icon: Trophy, label: 'Топ' },
             { id: 'SHOP', icon: ShoppingBag, label: 'Магазин' },
-            { id: 'RELAX', icon: Star, label: 'Релакс' },
+            { id: 'RELAX', icon: Star, label: 'Чилл' },
             { id: 'PROFILE', icon: UserIcon, label: 'Я' },
           ].map((tab) => {
-            const isActive = activeTab === tab.id;
-            const Icon = tab.icon;
-            return (
-              <button 
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as Tab)}
-                className={`
+                    const isActive = activeTab === tab.id;
+                    const Icon = tab.icon;
+                    return (
+                        <button 
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as Tab)}
+                            className={`
                   h-12 flex-1 rounded-[1.5rem] flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden
                   ${isActive ? 'text-white' : 'text-white/50 hover:text-white/70 active:scale-95'}
                 `}
@@ -683,9 +737,9 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                     {tab.label}
                   </span>
                 )}
-              </button>
-            );
-          })}
+                        </button>
+                    );
+                })}
         </div>
       </div>
 

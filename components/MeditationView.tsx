@@ -4,28 +4,43 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MEDITATIONS, SOUNDSCAPES, QUOTES } from '../constants';
 import { 
   Play, Wind, CloudRain, Trees, Waves, Flame, Zap, Moon, Pause, X, 
-  Volume2, Coffee, Sparkles, Battery, Clock, Star, Leaf, Music2, Sun,
-  Users, Heart
+  Coffee, Leaf, Music2, Sun, Gamepad2, Brain, Sparkles, Heart
 } from 'lucide-react';
 
-// Calm-style images for soundscapes
+// Unique images for each soundscape
 const SOUNDSCAPE_IMAGES: Record<string, string> = {
-  'RAIN': 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&h=300&fit=crop',
-  'FOREST': 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=300&fit=crop',
-  'OCEAN': 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&h=300&fit=crop',
-  'FIRE': 'https://images.unsplash.com/photo-1475552113915-6fcb52652ba2?w=400&h=300&fit=crop',
-  'WIND': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
-  'CAFE': 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&h=300&fit=crop',
-  'THUNDER': 'https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?w=400&h=300&fit=crop',
-  'NIGHT': 'https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=400&h=300&fit=crop',
+  'RAIN': 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&h=500&fit=crop',
+  'FOREST': 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=500&fit=crop',
+  'OCEAN': 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&h=500&fit=crop',
+  'FIRE': 'https://images.unsplash.com/photo-1475552113915-6fcb52652ba2?w=400&h=500&fit=crop',
+  'WIND': 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=500&fit=crop',
+  'CAFE': 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=400&h=500&fit=crop',
+  'THUNDER': 'https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?w=400&h=500&fit=crop',
+  'NIGHT': 'https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?w=400&h=500&fit=crop',
 };
 
-// Meditation category images
-const MEDITATION_IMAGES: Record<string, string> = {
-  'SLEEP': 'https://images.unsplash.com/photo-1531353826977-0941b4779a1c?w=400&h=300&fit=crop',
-  'FOCUS': 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=300&fit=crop',
-  'ANXIETY': 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400&h=300&fit=crop',
-  'ENERGY': 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&h=300&fit=crop',
+// UNIQUE images for EACH meditation
+const MEDITATION_UNIQUE_IMAGES: Record<string, string> = {
+  // Сон
+  'm1': 'https://images.unsplash.com/photo-1531353826977-0941b4779a1c?w=400&h=400&fit=crop', // Быстрый сон - clouds
+  'm2': 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=400&fit=crop', // Глубокий отдых - dark cinema
+  'm3': 'https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=400&h=400&fit=crop', // Ночные мысли - stars
+  'm4': 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400&h=400&fit=crop', // Сонное царство - moon
+  // Фокус  
+  'm5': 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=400&fit=crop', // Фокус перед экзаменом - meditation
+  'm6': 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&h=400&fit=crop', // Утренняя ясность - sunrise
+  'm7': 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&h=400&fit=crop', // Практика тишины - calm water
+  'm8': 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400&h=400&fit=crop', // Ясный ум - clear sky
+  // Спокойствие
+  'm9': 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400&h=400&fit=crop', // Снять тревогу - zen
+  'm10': 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=400&h=400&fit=crop', // Заземление - nature
+  'm11': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop', // Отпустить страх - freedom
+  'm12': 'https://images.unsplash.com/photo-1528722828814-77b9b83aafb2?w=400&h=400&fit=crop', // Внутренний покой - sky
+  // Энергия
+  'm13': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=400&fit=crop', // Заряд энергии - vibrant
+  'm14': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&h=400&fit=crop', // Перезагрузка - workout
+  'm15': 'https://images.unsplash.com/photo-1476611338391-6f395a0ebc7b?w=400&h=400&fit=crop', // Утренний буст - coffee sunrise
+  'm16': 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=400&h=400&fit=crop', // Сила момента - tree power
 };
 
 export const MeditationView: React.FC = () => {
@@ -36,7 +51,6 @@ export const MeditationView: React.FC = () => {
 
   const activeSound = SOUNDSCAPES.find(s => s.id === activeSoundId);
   
-  // Random daily quote
   const dailyQuote = useMemo(() => {
     const today = new Date();
     const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
@@ -61,20 +75,6 @@ export const MeditationView: React.FC = () => {
       setActiveSoundId(id);
       setIsPlaying(true);
     }
-  };
-
-  const getSoundIcon = (type: string, size = 20) => {
-    const icons: Record<string, React.ReactNode> = {
-      'RAIN': <CloudRain size={size} />,
-      'FOREST': <Trees size={size} />,
-      'OCEAN': <Waves size={size} />,
-      'FIRE': <Flame size={size} />,
-      'WIND': <Wind size={size} />,
-      'CAFE': <Coffee size={size} />,
-      'THUNDER': <CloudRain size={size} />,
-      'NIGHT': <Moon size={size} />,
-    };
-    return icons[type] || <Music2 size={size} />;
   };
 
   // 4-7-8 Breathing
@@ -106,7 +106,6 @@ export const MeditationView: React.FC = () => {
       >
         <div className="absolute inset-0 bg-gradient-to-b from-indigo-950 via-slate-950 to-slate-950" />
         
-        {/* Ambient orbs */}
         <motion.div 
           className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-[120px]"
           animate={{ 
@@ -190,7 +189,10 @@ export const MeditationView: React.FC = () => {
       {/* Header */}
       <div className="px-5 pt-28 pb-4 relative z-10">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-semibold text-white">Релакс</h1>
+          <div>
+            <h1 className="text-3xl font-semibold text-white">Чилл-зона</h1>
+            <p className="text-white/50 text-sm mt-1">Отдыхай с пользой</p>
+          </div>
           <button 
             onClick={() => setShowBreathing(true)}
             className="px-4 py-2 rounded-full text-sm font-medium text-white/80 hover:text-white transition-all"
@@ -216,17 +218,24 @@ export const MeditationView: React.FC = () => {
             border: '1px solid rgba(255,255,255,0.12)',
           }}
         >
-          <p className="text-white/90 text-base font-light leading-relaxed italic mb-2">
-            "{dailyQuote.text}"
-          </p>
-          <p className="text-white/40 text-xs">— {dailyQuote.author}</p>
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+              <Sparkles size={18} className="text-white" />
+            </div>
+            <div>
+              <p className="text-white/90 text-sm font-light leading-relaxed italic mb-2">
+                "{dailyQuote.text}"
+              </p>
+              <p className="text-white/40 text-xs">— {dailyQuote.author}</p>
+            </div>
+          </div>
         </motion.div>
       </div>
 
-      {/* Soundscapes Section - Calm Style Cards */}
+      {/* Soundscapes Section */}
       <div className="px-5 mb-8 relative z-10">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-white font-semibold text-lg">Звуки</h2>
+          <h2 className="text-white font-semibold text-lg">🎧 Звуки для фона</h2>
           {activeSoundId && (
             <button 
               onClick={() => { setActiveSoundId(null); setIsPlaying(false); }}
@@ -237,36 +246,30 @@ export const MeditationView: React.FC = () => {
           )}
         </div>
         
-        {/* Horizontal scroll cards like Calm */}
+        {/* Horizontal scroll cards */}
         <div className="flex gap-3 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide">
           {SOUNDSCAPES.map((sound) => {
             const isActive = activeSoundId === sound.id && isPlaying;
-            const imageKey = sound.iconType === 'RAIN' && sound.title === 'Гроза' ? 'THUNDER' : sound.iconType;
             
             return (
               <motion.button
                 key={sound.id}
                 onClick={() => handleSoundClick(sound.id)}
                 whileTap={{ scale: 0.98 }}
-                className="relative flex-shrink-0 w-36 rounded-2xl overflow-hidden group"
-                style={{ aspectRatio: '3/4' }}
+                className="relative flex-shrink-0 w-32 h-44 rounded-2xl overflow-hidden group"
               >
-                {/* Background Image */}
                 <img 
-                  src={SOUNDSCAPE_IMAGES[imageKey] || SOUNDSCAPE_IMAGES['FOREST']}
+                  src={SOUNDSCAPE_IMAGES[sound.iconType]}
                   alt={sound.title}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 
-                {/* Active state glow */}
                 {isActive && (
-                  <div className="absolute inset-0 bg-blue-500/20 animate-pulse" />
+                  <div className="absolute inset-0 bg-blue-500/20" />
                 )}
                 
-                {/* Play indicator */}
                 <div className="absolute top-3 left-3">
                   <div 
                     className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
@@ -285,7 +288,6 @@ export const MeditationView: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Title */}
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                   <h3 className="text-white font-semibold text-sm">{sound.title}</h3>
                 </div>
@@ -295,8 +297,9 @@ export const MeditationView: React.FC = () => {
         </div>
       </div>
 
-      {/* Category Filter Pills - Glass Style */}
+      {/* Category Filter Pills */}
       <div className="px-5 mb-6 relative z-10">
+        <h2 className="text-white font-semibold text-lg mb-4">🧘 Медитации</h2>
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <button
             onClick={() => setSelectedCategory(null)}
@@ -337,58 +340,48 @@ export const MeditationView: React.FC = () => {
         </div>
       </div>
 
-      {/* Meditations Section - Calm Style */}
+      {/* Meditations Grid - UNIQUE IMAGES */}
       <div className="px-5 relative z-10 pb-8">
-        <h2 className="text-white font-semibold text-lg mb-4">Медитации</h2>
-        
         <div className="grid grid-cols-2 gap-3">
           <AnimatePresence mode="popLayout">
-            {filteredMeditations.map((meditation, idx) => {
-              const categoryInfo = categories.find(c => c.id === meditation.category);
-              
-              return (
-                <motion.button
-                  key={meditation.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2, delay: idx * 0.02 }}
-                  className="relative overflow-hidden rounded-2xl group text-left"
-                  style={{ aspectRatio: '1' }}
-                >
-                  {/* Background Image */}
-                  <img 
-                    src={MEDITATION_IMAGES[meditation.category]}
-                    alt={meditation.title}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  
-                  {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                  
-                  {/* Play button */}
-                  <div className="absolute top-3 left-3">
-                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                      <Play size={12} fill="white" className="text-white ml-0.5" />
-                    </div>
+            {filteredMeditations.map((meditation, idx) => (
+              <motion.button
+                key={meditation.id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2, delay: idx * 0.02 }}
+                className="relative overflow-hidden rounded-2xl group text-left aspect-square"
+              >
+                {/* UNIQUE image for each meditation */}
+                <img 
+                  src={MEDITATION_UNIQUE_IMAGES[meditation.id]}
+                  alt={meditation.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                
+                <div className="absolute top-3 left-3">
+                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                    <Play size={12} fill="white" className="text-white ml-0.5" />
                   </div>
-                  
-                  {/* Content */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <h3 className="text-white font-semibold text-sm mb-0.5 leading-tight">
-                      {meditation.title}
-                    </h3>
-                    <p className="text-white/60 text-xs">{meditation.duration}</p>
-                  </div>
-                </motion.button>
-              );
-            })}
+                </div>
+                
+                <div className="absolute bottom-0 left-0 right-0 p-3">
+                  <h3 className="text-white font-semibold text-sm mb-0.5 leading-tight">
+                    {meditation.title}
+                  </h3>
+                  <p className="text-white/60 text-xs">{meditation.duration}</p>
+                </div>
+              </motion.button>
+            ))}
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Mini Player - Floating Glass */}
+      {/* Mini Player */}
       <AnimatePresence>
         {activeSoundId && (
           <motion.div 
@@ -401,13 +394,12 @@ export const MeditationView: React.FC = () => {
             <div 
               className="rounded-2xl p-3 flex items-center gap-3"
               style={{
-                background: 'rgba(15,23,42,0.85)',
+                background: 'rgba(15,23,42,0.9)',
                 backdropFilter: 'blur(40px)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
               }}
             >
-              {/* Thumbnail */}
               <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
                 <img 
                   src={SOUNDSCAPE_IMAGES[activeSound?.iconType || 'FOREST']}
@@ -416,7 +408,6 @@ export const MeditationView: React.FC = () => {
                 />
               </div>
               
-              {/* Info */}
               <div className="flex-1 min-w-0">
                 <h4 className="text-white font-medium text-sm truncate">{activeSound?.title}</h4>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -433,7 +424,6 @@ export const MeditationView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Controls */}
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => setIsPlaying(!isPlaying)}
