@@ -1,9 +1,23 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { User } from '../types';
-import { Trophy, Shield, ChevronUp, Medal, Crown, Flame, Star, Zap, Users } from 'lucide-react';
+import { Trophy, Shield, ChevronUp, Medal, Crown, Flame, Star, Zap, Users, Gift, Coins, Percent, Sparkles } from 'lucide-react';
 import { supabase, isSupabaseEnabled } from '../services/supabaseClient';
+
+// Призы для топ-10
+const PRIZES = [
+  { place: 1, coins: 500, discount: 20, badge: '🏆', title: 'Чемпион', color: 'from-yellow-400 to-amber-500' },
+  { place: 2, coins: 300, discount: 15, badge: '🥈', title: 'Серебро', color: 'from-slate-300 to-slate-400' },
+  { place: 3, coins: 200, discount: 10, badge: '🥉', title: 'Бронза', color: 'from-amber-600 to-orange-600' },
+  { place: 4, coins: 100, discount: 5, badge: '⭐', title: 'Топ-5', color: 'from-indigo-400 to-purple-500' },
+  { place: 5, coins: 100, discount: 5, badge: '⭐', title: 'Топ-5', color: 'from-indigo-400 to-purple-500' },
+  { place: 6, coins: 50, discount: 0, badge: '✨', title: 'Топ-10', color: 'from-slate-500 to-slate-600' },
+  { place: 7, coins: 50, discount: 0, badge: '✨', title: 'Топ-10', color: 'from-slate-500 to-slate-600' },
+  { place: 8, coins: 50, discount: 0, badge: '✨', title: 'Топ-10', color: 'from-slate-500 to-slate-600' },
+  { place: 9, coins: 50, discount: 0, badge: '✨', title: 'Топ-10', color: 'from-slate-500 to-slate-600' },
+  { place: 10, coins: 50, discount: 0, badge: '✨', title: 'Топ-10', color: 'from-slate-500 to-slate-600' },
+];
 
 interface LeaderboardViewProps {
   currentUser: User;
@@ -32,6 +46,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ currentUser })
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'all'>('week');
+  const [showPrizes, setShowPrizes] = useState(false);
 
   // Fetch leaderboard from Supabase
   useEffect(() => {
@@ -159,8 +174,108 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ currentUser })
                    </button>
                  ))}
                </div>
+
+               {/* Prizes button */}
+               <motion.button
+                 onClick={() => setShowPrizes(true)}
+                 className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full text-sm font-bold text-black shadow-lg hover:scale-105 transition-transform"
+                 whileHover={{ scale: 1.05 }}
+                 whileTap={{ scale: 0.95 }}
+               >
+                 <Gift size={16} />
+                 Призы недели
+                 <Sparkles size={14} />
+               </motion.button>
            </motion.div>
        </div>
+
+       {/* Prizes Modal */}
+       <AnimatePresence>
+         {showPrizes && (
+           <motion.div
+             className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             exit={{ opacity: 0 }}
+             onClick={() => setShowPrizes(false)}
+           >
+             <motion.div
+               className="bg-[#151925] border border-white/10 rounded-3xl p-6 max-w-sm w-full max-h-[80vh] overflow-y-auto"
+               initial={{ scale: 0.9, y: 20 }}
+               animate={{ scale: 1, y: 0 }}
+               exit={{ scale: 0.9, y: 20 }}
+               onClick={e => e.stopPropagation()}
+             >
+               <div className="text-center mb-6">
+                 <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-2xl flex items-center justify-center">
+                   <Trophy size={32} className="text-black" />
+                 </div>
+                 <h2 className="text-2xl font-black text-white">Призы недели</h2>
+                 <p className="text-slate-400 text-sm mt-1">Попади в топ-10 и получи награды!</p>
+               </div>
+
+               <div className="space-y-3">
+                 {PRIZES.map((prize, idx) => (
+                   <motion.div
+                     key={prize.place}
+                     className={`flex items-center gap-3 p-3 rounded-2xl border ${
+                       idx < 3 ? 'bg-gradient-to-r ' + prize.color + ' border-transparent' : 'bg-white/5 border-white/10'
+                     }`}
+                     initial={{ opacity: 0, x: -20 }}
+                     animate={{ opacity: 1, x: 0 }}
+                     transition={{ delay: idx * 0.05 }}
+                   >
+                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${
+                       idx < 3 ? 'bg-black/20' : 'bg-white/10'
+                     }`}>
+                       {prize.badge}
+                     </div>
+                     <div className="flex-1">
+                       <div className={`font-bold ${idx < 3 ? 'text-black' : 'text-white'}`}>
+                         {prize.place} место
+                       </div>
+                       <div className={`text-xs ${idx < 3 ? 'text-black/70' : 'text-slate-400'}`}>
+                         {prize.title}
+                       </div>
+                     </div>
+                     <div className="text-right">
+                       <div className={`flex items-center gap-1 font-bold ${idx < 3 ? 'text-black' : 'text-yellow-400'}`}>
+                         <Coins size={14} /> {prize.coins}
+                       </div>
+                       {prize.discount > 0 && (
+                         <div className={`flex items-center gap-1 text-xs ${idx < 3 ? 'text-black/70' : 'text-green-400'}`}>
+                           <Percent size={12} /> -{prize.discount}%
+                         </div>
+                       )}
+                     </div>
+                   </motion.div>
+                 ))}
+               </div>
+
+               <div className="mt-6 p-4 bg-indigo-500/20 border border-indigo-500/30 rounded-2xl">
+                 <div className="flex items-start gap-3">
+                   <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                     <Star size={20} className="text-white" />
+                   </div>
+                   <div>
+                     <div className="font-bold text-white text-sm">Бонус за модуль!</div>
+                     <p className="text-indigo-200 text-xs mt-1">
+                       Топ-5 за весь модуль получают скидку на следующий месяц обучения! 🎓
+                     </p>
+                   </div>
+                 </div>
+               </div>
+
+               <button
+                 onClick={() => setShowPrizes(false)}
+                 className="w-full mt-4 py-3 bg-white/10 hover:bg-white/20 rounded-2xl font-bold text-white transition-colors"
+               >
+                 Понятно!
+               </button>
+             </motion.div>
+           </motion.div>
+         )}
+       </AnimatePresence>
 
        {/* TOP 3 PODIUM */}
        {sortedUsers.length >= 3 && (
@@ -189,9 +304,13 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ currentUser })
              >
                <Crown className="w-6 h-6 text-yellow-400 mb-1" />
                <img src={sortedUsers[0]?.avatar} className="w-16 h-16 rounded-full border-2 border-yellow-400 mb-2" alt="" />
-               <div className="w-24 h-20 bg-gradient-to-t from-yellow-600 to-yellow-500 rounded-t-xl flex flex-col items-center justify-center">
+               <div className="w-24 h-20 bg-gradient-to-t from-yellow-600 to-yellow-500 rounded-t-xl flex flex-col items-center justify-center relative">
                  <span className="text-2xl">🥇</span>
                  <span className="text-xs font-bold text-white">{sortedUsers[0]?.xp} XP</span>
+                 {/* Prize badge */}
+                 <div className="absolute -top-2 -right-2 bg-green-500 text-[10px] font-bold text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+                   <Coins size={10} /> 500
+                 </div>
                </div>
              </motion.div>
              
@@ -209,7 +328,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ currentUser })
                </div>
              </motion.div>
            </div>
-         </div>
+       </div>
        )}
 
        {/* LIST */}
@@ -274,7 +393,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ currentUser })
                    <Users className="w-12 h-12 mx-auto text-slate-600 mb-3" />
                    <p className="text-slate-500 text-sm">Пока мало участников</p>
                    <p className="text-slate-600 text-xs">Пригласи друзей!</p>
-                 </div>
+               </div>
                )}
            </div>
        </div>
