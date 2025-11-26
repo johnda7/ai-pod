@@ -976,16 +976,16 @@ export const MEDITATIONS: Meditation[] = [
   { id: 'm16', title: 'Сила момента', category: 'ENERGY', duration: '6 мин', color: 'bg-fuchsia-500' },
 ];
 
-// Звуковые ландшафты для фона (проверенные YouTube ID)
+// Звуковые ландшафты для фона (проверенные рабочие YouTube ID - 10+ часов)
 export const SOUNDSCAPES: Soundscape[] = [
-    { id: 'snd1', title: 'Дождь', iconType: 'RAIN', color: 'bg-blue-600', youtubeId: 'yIQd2Ya0Ziw' },
-    { id: 'snd2', title: 'Лес', iconType: 'FOREST', color: 'bg-green-600', youtubeId: 'xNN7iTA57jM' },
-    { id: 'snd3', title: 'Океан', iconType: 'OCEAN', color: 'bg-cyan-600', youtubeId: 'WHPEKLQID4U' },
-    { id: 'snd4', title: 'Костёр', iconType: 'FIRE', color: 'bg-orange-600', youtubeId: 'L_LUpnjgPso' },
-    { id: 'snd5', title: 'Горы', iconType: 'WIND', color: 'bg-slate-500', youtubeId: 'eKFTSSKCzWA' },
-    { id: 'snd6', title: 'Кофейня', iconType: 'CAFE', color: 'bg-amber-700', youtubeId: 'gaGrHUekGrc' },
-    { id: 'snd7', title: 'Гроза', iconType: 'THUNDER', color: 'bg-indigo-600', youtubeId: 'nDq6TstdEi8' },
-    { id: 'snd8', title: 'Ночь', iconType: 'NIGHT', color: 'bg-purple-700', youtubeId: 'qrx1vyvtRLY' },
+    { id: 'snd1', title: 'Дождь', iconType: 'RAIN', color: 'bg-blue-600', youtubeId: 'q76bMs-NwRk' }, // Rain sounds 10 hours
+    { id: 'snd2', title: 'Лес', iconType: 'FOREST', color: 'bg-green-600', youtubeId: 'xNN7iTA57jM' }, // Forest birds
+    { id: 'snd3', title: 'Океан', iconType: 'OCEAN', color: 'bg-cyan-600', youtubeId: 'Nep1qytq9JM' }, // Ocean waves 10 hours
+    { id: 'snd4', title: 'Костёр', iconType: 'FIRE', color: 'bg-orange-600', youtubeId: 'UgHKb_7884o' }, // Fireplace 10 hours
+    { id: 'snd5', title: 'Горы', iconType: 'WIND', color: 'bg-slate-500', youtubeId: '2OEL4P1Rz04' }, // Mountain wind
+    { id: 'snd6', title: 'Кофейня', iconType: 'CAFE', color: 'bg-amber-700', youtubeId: 'h2zkV-l_TbY' }, // Coffee shop ambient
+    { id: 'snd7', title: 'Гроза', iconType: 'THUNDER', color: 'bg-indigo-600', youtubeId: 'gVKEM4K8J8A' }, // Thunderstorm 10 hours
+    { id: 'snd8', title: 'Ночь', iconType: 'NIGHT', color: 'bg-purple-700', youtubeId: 'FjHGZj2IjBk' }, // Night crickets
 ];
 
 // Мотивационные цитаты (обновляются каждый день)
