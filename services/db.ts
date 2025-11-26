@@ -362,7 +362,6 @@ export const purchaseItem = async (userId: string, item: any): Promise<boolean> 
         
         if (isValidUUID) {
             try {
-                // First, get the latest user data from Supabase to ensure we have the correct coin balance
                 const { data: dbUser } = await supabase
                     .from('users')
                     .select('*')
@@ -370,46 +369,30 @@ export const purchaseItem = async (userId: string, item: any): Promise<boolean> 
                     .single();
                 
                 if (dbUser) {
-                    // Update local user with latest balance from DB (source of truth for currency)
-                    // We prioritize DB coins here to prevent client-side manipulation or desync
-                    // BUT if local coins are higher (e.g. just earned), we keep local
-                    const dbCoins = Number(dbUser.coins) || 0;
+                    user = {
+                        id: dbUser.id,
+                        telegramId: dbUser.telegram_id,
+                        username: dbUser.username,
+                        name: dbUser.name,
+                        role: dbUser.role as UserRole,
+                        xp: Number(dbUser.xp) || 0,
+                        coins: Number(dbUser.coins) || 0,
+                        level: dbUser.level || 1,
+                        hp: dbUser.hp ?? 5,
+                        maxHp: dbUser.max_hp ?? 5,
+                        avatarUrl: dbUser.avatar_url || '',
+                        streak: dbUser.streak || 0,
+                        completedTaskIds: [], // Will need to fetch progress
+                        interest: dbUser.interest || 'Гейминг',
+                        inventory: dbUser.inventory || [],
+                        league: dbUser.league || 'BRONZE'
+                    };
                     
-                    // Create user object if it didn't exist
-                    if (!user) {
-                        user = {
-                            id: dbUser.id,
-                            telegramId: dbUser.telegram_id,
-                            username: dbUser.username,
-                            name: dbUser.name,
-                            role: dbUser.role as UserRole,
-                            xp: Number(dbUser.xp) || 0,
-                            coins: dbCoins,
-                            level: dbUser.level || 1,
-                            hp: dbUser.hp ?? 5,
-                            maxHp: dbUser.max_hp ?? 5,
-                            avatarUrl: dbUser.avatar_url || '',
-                            streak: dbUser.streak || 0,
-                            completedTaskIds: [], // Will need to fetch progress
-                            interest: dbUser.interest || 'Гейминг',
-                            inventory: dbUser.inventory || [],
-                            league: dbUser.league || 'BRONZE'
-                        };
-                    } else if (dbCoins > (user.coins || 0)) {
-                        user.coins = dbCoins;
-                        // Also update inventory if needed
-                        if (dbUser.inventory && Array.isArray(dbUser.inventory)) {
-                             // Merge inventories
-                             const newInventory = [...new Set([...user.inventory, ...dbUser.inventory])];
-                             user.inventory = newInventory;
-                        }
-                    }
-                    
-                    // Save updated state
+                    // Save to local storage for future use
                     saveUserToStorage(user);
                 }
             } catch (e) {
-                console.error("Failed to sync before purchase:", e);
+                console.error("Failed to fetch user from Supabase:", e);
             }
         }
     }
@@ -418,6 +401,54 @@ export const purchaseItem = async (userId: string, item: any): Promise<boolean> 
         console.error("User not found for purchase:", userId);
         return false;
     }
+
+    // --- CRITICAL SYNC: FORCE UPDATE DB IF LOCAL IS AHEAD ---
+    if (isSupabaseEnabled) {
+        const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+        if (isValidUUID) {
+            try {
+                // 1. Get current DB coins
+                const { data: dbUser } = await supabase
+                    .from('users')
+                    .select('coins, inventory')
+                    .eq('id', userId)
+                    .single();
+                
+                const dbCoins = Number(dbUser?.coins) || 0;
+                const localCoins = user.coins || 0;
+
+                // 2. IF local coins > DB coins, we MUST sync up first
+                if (localCoins > dbCoins) {
+                    console.log(`💰 Syncing coins to DB: Local(${localCoins}) > DB(${dbCoins})`);
+                    const { error: syncError } = await supabase
+                        .from('users')
+                        .update({ coins: localCoins })
+                        .eq('id', userId);
+                    
+                    if (syncError) {
+                        console.error("Failed to sync coins to DB:", syncError);
+                        // We continue anyway, trusting local state for now
+                    } else {
+                        console.log("✅ Coins synced successfully.");
+                    }
+                }
+                // 3. IF DB coins > local coins (e.g. bought on another device), update local
+                else if (dbCoins > localCoins) {
+                     console.log(`💰 Updating local coins from DB: DB(${dbCoins}) > Local(${localCoins})`);
+                     user.coins = dbCoins;
+                     // Merge inventories too
+                     if (dbUser?.inventory && Array.isArray(dbUser.inventory)) {
+                         const newInventory = [...new Set([...user.inventory, ...dbUser.inventory])];
+                         user.inventory = newInventory;
+                     }
+                     saveUserToStorage(user);
+                }
+            } catch (e) {
+                console.error("Error during pre-purchase sync:", e);
+            }
+        }
+    }
+    // -------------------------------------------------------
     
     // 2. Validate Logic
     // Double check if item is already owned after sync
