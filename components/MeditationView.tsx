@@ -1,11 +1,14 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MEDITATIONS, SOUNDSCAPES, QUOTES } from '../constants';
+import { MEDITATIONS, SOUNDSCAPES, QUOTES, AFFIRMATIONS } from '../constants';
 import { 
   Play, Wind, CloudRain, Trees, Waves, Flame, Zap, Moon, Pause, X, 
-  Coffee, Leaf, Music2, Sun, Gamepad2, Brain, Sparkles, Heart
+  Coffee, Leaf, Music2, Sun, Gamepad2, Brain, Sparkles, Heart,
+  BookHeart, Eye, MessageCircleHeart, ChevronRight
 } from 'lucide-react';
+import { GratitudeJournal } from './GratitudeJournal';
+import { ZenVisualizer } from './ZenVisualizer';
 
 // Unique images for each soundscape
 const SOUNDSCAPE_IMAGES: Record<string, string> = {
@@ -48,6 +51,9 @@ export const MeditationView: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showJournal, setShowJournal] = useState(false);
+  const [showVisualizer, setShowVisualizer] = useState(false);
+  const [currentAffirmation, setCurrentAffirmation] = useState(0);
 
   const activeSound = SOUNDSCAPES.find(s => s.id === activeSoundId);
   
@@ -55,6 +61,14 @@ export const MeditationView: React.FC = () => {
     const today = new Date();
     const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
     return QUOTES[dayOfYear % QUOTES.length];
+  }, []);
+
+  // Rotate affirmations
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentAffirmation(prev => (prev + 1) % AFFIRMATIONS.length);
+    }, 8000);
+    return () => clearInterval(interval);
   }, []);
 
   const filteredMeditations = selectedCategory 
@@ -69,35 +83,35 @@ export const MeditationView: React.FC = () => {
   ];
 
   const handleSoundClick = (id: string) => {
-    if (activeSoundId === id) {
-      setIsPlaying(!isPlaying);
-    } else {
-      setActiveSoundId(id);
-      setIsPlaying(true);
+      if (activeSoundId === id) {
+          setIsPlaying(!isPlaying);
+      } else {
+          setActiveSoundId(id);
+          setIsPlaying(true);
     }
   };
 
   // 4-7-8 Breathing
   const BreathingOverlay = () => {
-    const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
-    const [timer, setTimer] = useState(4);
+      const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
+      const [timer, setTimer] = useState(4);
     const [cycles, setCycles] = useState(0);
-    
-    useEffect(() => {
-      const interval = setInterval(() => {
-        setTimer(prev => {
-          if (prev === 1) {
-            if (phase === 'inhale') { setPhase('hold'); return 7; }
-            if (phase === 'hold') { setPhase('exhale'); return 8; }
+      
+      useEffect(() => {
+          const interval = setInterval(() => {
+              setTimer(prev => {
+                  if (prev === 1) {
+                      if (phase === 'inhale') { setPhase('hold'); return 7; }
+                      if (phase === 'hold') { setPhase('exhale'); return 8; }
             if (phase === 'exhale') { setCycles(c => c + 1); setPhase('inhale'); return 4; }
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(interval);
-    }, [phase]);
+                  }
+                  return prev - 1;
+              });
+          }, 1000);
+          return () => clearInterval(interval);
+      }, [phase]);
 
-    return (
+      return (
       <motion.div 
         className="fixed inset-0 z-[80] flex flex-col items-center justify-center"
         initial={{ opacity: 0 }}
@@ -116,17 +130,17 @@ export const MeditationView: React.FC = () => {
           transition={{ duration: 4, ease: "easeInOut" }}
         />
 
-        <button 
-          onClick={() => setShowBreathing(false)}
+              <button 
+                  onClick={() => setShowBreathing(false)}
           className="absolute top-6 right-6 z-10 w-12 h-12 rounded-full flex items-center justify-center text-white/60 hover:text-white transition-colors"
           style={{
             background: 'rgba(255,255,255,0.1)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255,255,255,0.15)',
           }}
-        >
-          <X size={24} />
-        </button>
+              >
+                  <X size={24} />
+              </button>
 
         <div className="relative z-10 flex flex-col items-center">
           <motion.div className="text-center mb-12" initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
@@ -152,7 +166,7 @@ export const MeditationView: React.FC = () => {
                 boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
               }}
             >
-              <div className="text-center">
+                      <div className="text-center">
                 <motion.div 
                   className="text-7xl font-light text-white mb-1"
                   key={timer}
@@ -162,8 +176,8 @@ export const MeditationView: React.FC = () => {
                   {timer}
                 </motion.div>
                 <div className="text-sm font-medium uppercase tracking-widest text-white/50">
-                  {phase === 'inhale' ? 'Вдох' : phase === 'hold' ? 'Задержка' : 'Выдох'}
-                </div>
+                              {phase === 'inhale' ? 'Вдох' : phase === 'hold' ? 'Задержка' : 'Выдох'}
+                  </div>
               </div>
             </motion.div>
           </div>
@@ -171,7 +185,7 @@ export const MeditationView: React.FC = () => {
           <div className="text-white/30 text-sm">Циклов: {cycles}</div>
         </div>
       </motion.div>
-    );
+      );
   };
 
   return (
@@ -183,18 +197,22 @@ export const MeditationView: React.FC = () => {
       </div>
       
       <AnimatePresence>
-        {showBreathing && <BreathingOverlay />}
+      {showBreathing && <BreathingOverlay />}
       </AnimatePresence>
+
+      {/* Modals */}
+      <GratitudeJournal isOpen={showJournal} onClose={() => setShowJournal(false)} />
+      <ZenVisualizer isOpen={showVisualizer} onClose={() => setShowVisualizer(false)} />
 
       {/* Header */}
       <div className="px-5 pt-28 pb-4 relative z-10">
         <div className="flex justify-between items-center mb-6">
-          <div>
+             <div>
             <h1 className="text-3xl font-semibold text-white">Чилл-зона</h1>
             <p className="text-white/50 text-sm mt-1">Отдыхай с пользой</p>
-          </div>
-          <button 
-            onClick={() => setShowBreathing(true)}
+             </div>
+             <button 
+                onClick={() => setShowBreathing(true)}
             className="px-4 py-2 rounded-full text-sm font-medium text-white/80 hover:text-white transition-all"
             style={{
               background: 'rgba(255,255,255,0.1)',
@@ -207,27 +225,86 @@ export const MeditationView: React.FC = () => {
           </button>
         </div>
 
-        {/* Daily Quote - Glass Card */}
+        {/* Quick Actions - Journal & Visualizer */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <button
+            onClick={() => setShowJournal(true)}
+            className="p-4 rounded-2xl flex items-center gap-3 transition-all active:scale-[0.98]"
+            style={{
+              background: 'linear-gradient(135deg, rgba(236,72,153,0.2) 0%, rgba(236,72,153,0.05) 100%)',
+              border: '1px solid rgba(236,72,153,0.25)',
+            }}
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
+              <BookHeart size={18} className="text-white" />
+            </div>
+            <div className="text-left">
+              <div className="text-white font-medium text-sm">Дневник</div>
+              <div className="text-white/50 text-xs">Я молодец!</div>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => setShowVisualizer(true)}
+            className="p-4 rounded-2xl flex items-center gap-3 transition-all active:scale-[0.98]"
+            style={{
+              background: 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(99,102,241,0.05) 100%)',
+              border: '1px solid rgba(99,102,241,0.25)',
+            }}
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+              <Eye size={18} className="text-white" />
+            </div>
+            <div className="text-left">
+              <div className="text-white font-medium text-sm">Визуализации</div>
+              <div className="text-white/50 text-xs">Расслабься</div>
+            </div>
+             </button>
+          </div>
+
+        {/* Affirmation Card - Rotating */}
         <motion.div 
           className="relative overflow-hidden rounded-2xl p-5 mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           style={{
-            background: 'rgba(255,255,255,0.08)',
+            background: 'linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(236,72,153,0.1) 100%)',
             backdropFilter: 'blur(40px)',
-            border: '1px solid rgba(255,255,255,0.12)',
+            border: '1px solid rgba(168,85,247,0.2)',
           }}
         >
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-              <Sparkles size={18} className="text-white" />
-            </div>
-            <div>
-              <p className="text-white/90 text-sm font-light leading-relaxed italic mb-2">
-                "{dailyQuote.text}"
-              </p>
-              <p className="text-white/40 text-xs">— {dailyQuote.author}</p>
-            </div>
+              <MessageCircleHeart size={18} className="text-white" />
+               </div>
+            <div className="flex-1">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentAffirmation}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <p className="text-white text-sm font-medium leading-relaxed mb-2">
+                    "{AFFIRMATIONS[currentAffirmation].text}"
+                  </p>
+                  <p className="text-purple-300 text-xs">— {AFFIRMATIONS[currentAffirmation].author}</p>
+                </motion.div>
+              </AnimatePresence>
+               </div>
+          </div>
+          
+          {/* Progress dots */}
+          <div className="flex justify-center gap-1 mt-3">
+            {AFFIRMATIONS.slice(0, 8).map((_, idx) => (
+              <div 
+                key={idx}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${
+                  idx === currentAffirmation % 8 ? 'bg-purple-400 w-4' : 'bg-white/20'
+                }`}
+              />
+            ))}
           </div>
         </motion.div>
       </div>
@@ -250,7 +327,7 @@ export const MeditationView: React.FC = () => {
         <div className="flex gap-3 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide">
           {SOUNDSCAPES.map((sound) => {
             const isActive = activeSoundId === sound.id && isPlaying;
-            
+
             return (
               <motion.button
                 key={sound.id}
@@ -284,10 +361,10 @@ export const MeditationView: React.FC = () => {
                       </div>
                     ) : (
                       <Play size={12} fill="white" className="ml-0.5" />
-                    )}
-                  </div>
+                        )}
+                    </div>
                 </div>
-                
+
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                   <h3 className="text-white font-semibold text-sm">{sound.title}</h3>
                 </div>
@@ -368,7 +445,7 @@ export const MeditationView: React.FC = () => {
                     <Play size={12} fill="white" className="text-white ml-0.5" />
                   </div>
                 </div>
-                
+
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                   <h3 className="text-white font-semibold text-sm mb-0.5 leading-tight">
                     {meditation.title}
@@ -378,7 +455,7 @@ export const MeditationView: React.FC = () => {
               </motion.button>
             ))}
           </AnimatePresence>
-        </div>
+          </div>
       </div>
 
       {/* Mini Player */}
@@ -406,8 +483,8 @@ export const MeditationView: React.FC = () => {
                   alt=""
                   className="w-full h-full object-cover"
                 />
-              </div>
-              
+                   </div>
+                   
               <div className="flex-1 min-w-0">
                 <h4 className="text-white font-medium text-sm truncate">{activeSound?.title}</h4>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -416,45 +493,47 @@ export const MeditationView: React.FC = () => {
                       <div className="w-0.5 h-1.5 bg-green-400 rounded-full animate-[bounce_0.8s_infinite]" />
                       <div className="w-0.5 h-2.5 bg-green-400 rounded-full animate-[bounce_1.2s_infinite]" />
                       <div className="w-0.5 h-1 bg-green-400 rounded-full animate-[bounce_0.6s_infinite]" />
-                    </div>
-                  )}
+                               </div>
+                           )}
                   <span className="text-white/40 text-xs">
                     {isPlaying ? 'Воспроизводится' : 'Пауза'}
                   </span>
-                </div>
-              </div>
+                       </div>
+                   </div>
 
               <div className="flex items-center gap-2">
-                <button 
+                        <button 
                   onClick={() => setIsPlaying(!isPlaying)}
                   className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
                 >
                   {isPlaying ? <Pause size={18} className="text-black" fill="black" /> : <Play size={18} className="text-black ml-0.5" fill="black" />}
-                </button>
-                <button 
+                        </button>
+                        <button 
                   onClick={() => { setActiveSoundId(null); setIsPlaying(false); }}
                   className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 hover:text-white transition-all"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            </div>
+                        >
+                            <X size={14} />
+                        </button>
+                   </div>
+           </div>
 
-            {/* Hidden YouTube Embed */}
+           {/* Hidden YouTube Embed */}
             {activeSound && isPlaying && (
               <div className="absolute w-1 h-1 opacity-0 pointer-events-none overflow-hidden">
-                <iframe 
+                 <iframe 
                   key={activeSound.id + isPlaying}
-                  width="1" height="1" 
+                   width="1" height="1" 
                   src={`https://www.youtube.com/embed/${activeSound.youtubeId}?autoplay=1&controls=0&loop=1&playlist=${activeSound.youtubeId}&playsinline=1`} 
-                  title="Audio Player" 
-                  allow="autoplay; encrypted-media"
+                   title="Audio Player" 
+                   allow="autoplay; encrypted-media"
                 />
-              </div>
-            )}
+               </div>
+           )}
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
+};
+
 };
