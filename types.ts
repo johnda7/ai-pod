@@ -159,7 +159,7 @@ export interface Lecture {
 export interface Meditation {
   id: string;
   title: string;
-  category: 'SLEEP' | 'FOCUS' | 'ANXIETY';
+  category: 'SLEEP' | 'FOCUS' | 'ANXIETY' | 'ENERGY';
   duration: string;
   color: string;
 }
@@ -167,9 +167,26 @@ export interface Meditation {
 export interface Soundscape {
   id: string;
   title: string;
-  iconType: 'RAIN' | 'FOREST' | 'OCEAN' | 'FIRE' | 'WIND';
+  iconType: 'RAIN' | 'FOREST' | 'OCEAN' | 'FIRE' | 'WIND' | 'CAFE';
   color: string;
   youtubeId: string;
+}
+
+// Система достижений
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  category: 'LEARNING' | 'STREAK' | 'SOCIAL' | 'SPECIAL';
+  requirement: {
+    type: 'TASKS_COMPLETED' | 'STREAK_DAYS' | 'XP_EARNED' | 'COINS_EARNED' | 'BOSS_DEFEATED' | 'WEEK_COMPLETED';
+    value: number;
+  };
+  reward: {
+    xp?: number;
+    coins?: number;
+  };
 }
 
 export interface Quote {

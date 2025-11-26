@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MEDITATIONS, SOUNDSCAPES, QUOTES } from '../constants';
-import { Play, Wind, CloudRain, Trees, Waves, Flame, Zap, Moon, Pause, X, Headphones, Activity, Heart, ArrowRight, Volume2, Maximize2, SkipForward } from 'lucide-react';
+import { Play, Wind, CloudRain, Trees, Waves, Flame, Zap, Moon, Pause, X, Headphones, Activity, Heart, ArrowRight, Volume2, Maximize2, SkipForward, Coffee, Sparkles, Battery } from 'lucide-react';
 
 export const MeditationView: React.FC = () => {
   const [activeSoundId, setActiveSoundId] = useState<string | null>(null);
@@ -9,9 +10,28 @@ export const MeditationView: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
   const [audioLoading, setAudioLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const activeSound = SOUNDSCAPES.find(s => s.id === activeSoundId);
-  const dailyQuote = QUOTES[0];
+  
+  // Random daily quote based on date
+  const dailyQuote = useMemo(() => {
+    const today = new Date();
+    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+    return QUOTES[dayOfYear % QUOTES.length];
+  }, []);
+
+  // Filter meditations by category
+  const filteredMeditations = selectedCategory 
+    ? MEDITATIONS.filter(m => m.category === selectedCategory)
+    : MEDITATIONS;
+
+  const categories = [
+    { id: 'SLEEP', name: 'Сон', icon: Moon, color: 'from-indigo-500 to-purple-600' },
+    { id: 'FOCUS', name: 'Фокус', icon: Zap, color: 'from-yellow-500 to-orange-500' },
+    { id: 'ANXIETY', name: 'Тревога', icon: Wind, color: 'from-emerald-500 to-teal-600' },
+    { id: 'ENERGY', name: 'Энергия', icon: Battery, color: 'from-orange-500 to-red-500' },
+  ];
 
   // Immersive Background Logic
   const getBackgroundGradient = () => {
@@ -44,6 +64,7 @@ export const MeditationView: React.FC = () => {
       case 'OCEAN': return <Waves size={size} />;
       case 'FIRE': return <Flame size={size} />;
       case 'WIND': return <Wind size={size} />;
+      case 'CAFE': return <Coffee size={size} />;
       default: return <Headphones size={size} />;
     }
   };
@@ -202,38 +223,80 @@ export const MeditationView: React.FC = () => {
           <h2 className="text-white/80 font-bold text-xs mb-4 tracking-widest uppercase opacity-70 pl-1">
               Сессии
           </h2>
-          <div className="space-y-3">
-            {MEDITATIONS.map((meditation) => (
-              <div 
-                key={meditation.id}
-                onClick={() => setActiveMeditationId(meditation.id)}
-                className="group relative bg-[#151925]/30 hover:bg-white/10 border border-white/5 rounded-[1.5rem] p-4 flex items-center gap-5 transition-all active:scale-[0.98] cursor-pointer backdrop-blur-md shadow-sm hover:shadow-lg"
-              >
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${meditation.color} bg-opacity-20 text-white shadow-inner ring-1 ring-white/10 group-hover:scale-105 transition-transform`}>
-                   {meditation.category === 'SLEEP' && <Moon size={24} className="text-indigo-200" />}
-                   {meditation.category === 'FOCUS' && <Zap size={24} className="text-yellow-200" />}
-                   {meditation.category === 'ANXIETY' && <Wind size={24} className="text-emerald-200" />}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-white text-lg leading-tight mb-1 group-hover:text-blue-200 transition-colors">
-                      {meditation.title}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full">
-                        {meditation.duration}
-                    </span>
-                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
-                         {meditation.category === 'ANXIETY' ? 'Тревога' : meditation.category === 'FOCUS' ? 'Фокус' : 'Сон'}
-                    </span>
-                  </div>
-                </div>
+          
+          {/* Category Filters */}
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
+                selectedCategory === null 
+                  ? 'bg-white text-black' 
+                  : 'bg-white/10 text-white/70 hover:bg-white/20'
+              }`}
+            >
+              Все
+            </button>
+            {categories.map(cat => {
+              const Icon = cat.icon;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-2 ${
+                    selectedCategory === cat.id 
+                      ? `bg-gradient-to-r ${cat.color} text-white` 
+                      : 'bg-white/10 text-white/70 hover:bg-white/20'
+                  }`}
+                >
+                  <Icon size={14} />
+                  {cat.name}
+                </button>
+              );
+            })}
+          </div>
 
-                <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/40 group-hover:bg-white group-hover:text-black transition-all shadow-lg">
-                    <Play size={14} fill="currentColor" className="ml-0.5" />
-                </div>
-              </div>
-            ))}
+          <div className="space-y-3">
+            <AnimatePresence mode="popLayout">
+              {filteredMeditations.map((meditation, idx) => {
+                const categoryInfo = categories.find(c => c.id === meditation.category);
+                const Icon = categoryInfo?.icon || Moon;
+                
+                return (
+                  <motion.div 
+                    key={meditation.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.3, delay: idx * 0.05 }}
+                    onClick={() => setActiveMeditationId(meditation.id)}
+                    className="group relative bg-[#151925]/30 hover:bg-white/10 border border-white/5 rounded-[1.5rem] p-4 flex items-center gap-5 transition-all active:scale-[0.98] cursor-pointer backdrop-blur-md shadow-sm hover:shadow-lg"
+                  >
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 bg-gradient-to-br ${categoryInfo?.color || 'from-slate-500 to-slate-700'} text-white shadow-lg ring-1 ring-white/10 group-hover:scale-105 transition-transform`}>
+                       <Icon size={24} className="text-white" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-white text-lg leading-tight mb-1 group-hover:text-blue-200 transition-colors">
+                          {meditation.title}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full">
+                            {meditation.duration}
+                        </span>
+                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
+                             {categoryInfo?.name || meditation.category}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/40 group-hover:bg-white group-hover:text-black transition-all shadow-lg">
+                        <Play size={14} fill="currentColor" className="ml-0.5" />
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
       </div>
 

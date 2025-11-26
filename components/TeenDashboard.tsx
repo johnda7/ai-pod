@@ -1,13 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
-import { TASKS, SHOP_ITEMS } from '../constants';
+import React, { useState, useEffect, useMemo } from 'react';
+import { TASKS, SHOP_ITEMS, ACHIEVEMENTS } from '../constants';
 import { Task, User, ShopItem } from '../types';
-import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Trophy, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Trophy, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info, Award, Flame } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
 import { MemoryGame } from './MemoryGame';
 import { ShopView } from './ShopView';
 import { LeaderboardView } from './LeaderboardView';
+import { AchievementsView } from './AchievementsView';
 import { purchaseItem } from '../services/db'; // Import real purchase logic
 import { isSupabaseEnabled } from '../services/supabaseClient';
 import { GameTutorial } from './GameTutorial';
@@ -28,6 +29,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   const [prevXp, setPrevXp] = useState(user.xp);
   const [isXpAnimating, setIsXpAnimating] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
 
   // Show tutorial for new users
   useEffect(() => {
@@ -184,7 +186,62 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                     </div>
                 </div>
 
-                {/* 2. INVENTORY SHELF */}
+                {/* 2. ACHIEVEMENTS PREVIEW */}
+                <div className="mb-8 animate-in slide-in-from-bottom-8 duration-700 delay-75">
+                    <div className="flex items-center justify-between px-2 mb-4">
+                        <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                            <Trophy size={18} className="text-yellow-400"/> Достижения
+                        </h3>
+                        <span className="text-xs font-bold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded-lg">
+                            {ACHIEVEMENTS.filter(a => {
+                                if (a.requirement.type === 'TASKS_COMPLETED') return user.completedTaskIds.length >= a.requirement.value;
+                                if (a.requirement.type === 'STREAK_DAYS') return user.streak >= a.requirement.value;
+                                if (a.requirement.type === 'XP_EARNED') return user.xp >= a.requirement.value;
+                                return false;
+                            }).length} / {ACHIEVEMENTS.length}
+                        </span>
+                    </div>
+                    
+                    <div className="flex gap-3 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide">
+                        {ACHIEVEMENTS.slice(0, 5).map((achievement, idx) => {
+                            const isUnlocked = 
+                                (achievement.requirement.type === 'TASKS_COMPLETED' && user.completedTaskIds.length >= achievement.requirement.value) ||
+                                (achievement.requirement.type === 'STREAK_DAYS' && user.streak >= achievement.requirement.value) ||
+                                (achievement.requirement.type === 'XP_EARNED' && user.xp >= achievement.requirement.value);
+                            
+                            return (
+                                <div 
+                                    key={achievement.id}
+                                    className={`w-20 h-20 shrink-0 rounded-[1.2rem] flex flex-col items-center justify-center relative overflow-hidden ${
+                                        isUnlocked 
+                                            ? 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/30' 
+                                            : 'bg-slate-800/50 border border-white/5'
+                                    }`}
+                                >
+                                    <span className={`text-2xl ${isUnlocked ? '' : 'grayscale opacity-30'}`}>
+                                        {achievement.icon}
+                                    </span>
+                                    {isUnlocked && (
+                                        <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                                            <Check size={10} className="text-white" />
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                        
+                        {/* View All Button */}
+                        <button 
+                            onClick={() => setShowAchievements(true)}
+                            className="w-20 h-20 shrink-0 rounded-[1.2rem] bg-white/5 border border-white/10 border-dashed flex flex-col items-center justify-center gap-1 text-slate-500 hover:text-white hover:bg-white/10 transition-all active:scale-95"
+                        >
+                            <Award size={20} />
+                            <span className="text-[9px] font-bold uppercase">Все</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* 3. INVENTORY SHELF */}
                 <div className="mb-8 animate-in slide-in-from-bottom-8 duration-700 delay-100">
                     <div className="flex items-center justify-between px-2 mb-4">
                         <h3 className="text-white font-bold text-lg flex items-center gap-2">
@@ -568,6 +625,19 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       
       {/* Tutorial Modal */}
       <GameTutorial isOpen={showTutorial} onClose={handleCloseTutorial} />
+      
+      {/* Achievements Modal */}
+      {showAchievements && (
+        <div className="fixed inset-0 z-[80] bg-[#020617] overflow-y-auto">
+          <button 
+            onClick={() => setShowAchievements(false)}
+            className="fixed top-6 right-6 z-[90] w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+          >
+            ✕
+          </button>
+          <AchievementsView user={user} />
+        </div>
+      )}
       
       <div className="h-full overflow-y-auto scroll-smooth scrollbar-hide">
          {renderContent()}
