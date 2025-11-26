@@ -14,11 +14,12 @@ import { isSupabaseEnabled } from '../services/supabaseClient';
 interface TeenDashboardProps {
   user: User;
   onTaskComplete: (task: Task) => void;
+  onUserUpdate?: (user: User) => void; // Callback to update parent
 }
 
 type Tab = 'LEARN' | 'RELAX' | 'SHOP' | 'LEADERBOARD' | 'PROFILE';
 
-export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser, onTaskComplete }) => {
+export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser, onTaskComplete, onUserUpdate }) => {
   const [user, setUser] = useState<User>(initialUser); // Local user state to reflect changes immediately
   const [activeTab, setActiveTab] = useState<Tab>('LEARN'); 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -61,18 +62,38 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       const success = await purchaseItem(user.id, item);
       
       if (success) {
-          // Optimistic Update
-          const updatedUser = { ...user };
-          updatedUser.coins -= item.price;
+          // Reload user from storage/DB to get accurate state
+          const users = JSON.parse(localStorage.getItem('ai_teenager_users_v6') || '[]');
+          let updatedUser = users.find((u: User) => u.id === user.id);
           
-          if (item.type === 'COSMETIC') {
-              updatedUser.inventory = [...updatedUser.inventory, item.id];
-          } else if (item.id === 'hp_potion') {
-              updatedUser.hp = Math.min(updatedUser.hp + 1, updatedUser.maxHp);
+          // If Supabase enabled, try to refresh from DB
+          if (isSupabaseEnabled && !updatedUser) {
+              const { refreshUserFromSupabase } = await import('../services/db');
+              updatedUser = await refreshUserFromSupabase(user.id) || undefined;
           }
           
-          setUser(updatedUser);
-          // Force update parent if needed or rely on next fetch
+          if (updatedUser) {
+              setUser(updatedUser);
+              // Update parent component
+              if (onUserUpdate) {
+                  onUserUpdate(updatedUser);
+              }
+          } else {
+              // Fallback: Optimistic Update
+              const optimisticUser = { ...user };
+              optimisticUser.coins -= item.price;
+              
+              if (item.type === 'COSMETIC') {
+                  optimisticUser.inventory = [...optimisticUser.inventory, item.id];
+              } else if (item.id === 'hp_potion') {
+                  optimisticUser.hp = Math.min(optimisticUser.hp + 1, optimisticUser.maxHp);
+              }
+              
+              setUser(optimisticUser);
+              if (onUserUpdate) {
+                  onUserUpdate(optimisticUser);
+              }
+          }
       } else {
           // Fallback if validation failed inside purchaseItem
           alert("Недостаточно монет или предмет уже куплен!");
