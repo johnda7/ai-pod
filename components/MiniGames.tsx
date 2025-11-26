@@ -8,28 +8,28 @@ interface MiniGameProps {
   onComplete: (score: number) => void;
 }
 
-// --- GAME 1: FOCUS DEFENDER (Liquid Glass Edition) ---
+// --- GAME 1: FOCUS DEFENDER (Simplified & Fun Edition) ---
 export const FocusDefender: React.FC<MiniGameProps> = ({ config, onComplete }) => {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(config.durationSeconds || 30);
-  const [targets, setTargets] = useState<{id: number, x: number, y: number, type: 'DISTRACTION' | 'FOCUS', iconIdx: number}[]>([]);
+  const [targets, setTargets] = useState<{id: number, x: number, y: number, type: 'DISTRACTION' | 'FOCUS', iconIdx: number, lifetime: number}[]>([]);
   const [gameState, setGameState] = useState<'START' | 'PLAYING' | 'WON' | 'LOST'>('START');
+  const [combo, setCombo] = useState(0);
+  const [showCombo, setShowCombo] = useState(false);
   
   const targetIdCounter = useRef(0);
-  const targetScore = config.targetScore || 15;
-
-  // Audio refs (mock)
-  // const sfxPop = useRef(new Audio('/pop.mp3'));
+  // Сильно снижаем требования для прохождения
+  const targetScore = Math.min(config.targetScore || 15, 10); // Максимум 10 очков нужно
 
   // Timer
   useEffect(() => {
     if (gameState !== 'PLAYING') return;
     
     if (timeLeft <= 0) {
-      if (score >= targetScore) {
+      // Победа если набрали хотя бы 60% от цели
+      if (score >= Math.floor(targetScore * 0.6)) {
         setGameState('WON');
-        // Auto complete after small delay or let user click continue
-        setTimeout(() => onComplete(score), 1500); 
+        setTimeout(() => onComplete(Math.max(score * 10, 50)), 1500); 
       } else {
         setGameState('LOST');
       }
@@ -40,41 +40,60 @@ export const FocusDefender: React.FC<MiniGameProps> = ({ config, onComplete }) =
     return () => clearInterval(timer);
   }, [gameState, timeLeft, score, targetScore, onComplete]);
 
-  // Spawner
+  // Spawner - медленнее и больше красных (которые нужно кликать)
   useEffect(() => {
     if (gameState !== 'PLAYING') return;
 
     const spawner = setInterval(() => {
       setTargets(prev => {
-        if (prev.length >= 5) return prev; // Max targets on screen
+        if (prev.length >= 4) return prev; // Меньше целей на экране
 
-        const isDistraction = Math.random() > 0.4; // 60% chance of distraction
+        // 80% красных (которые нужно кликать), 20% зелёных (избегать)
+        const isDistraction = Math.random() > 0.2;
         const newTarget = {
           id: targetIdCounter.current++,
-          x: Math.random() * 80 + 10, // 10% to 90%
-          y: Math.random() * 70 + 15, // 15% to 85%
+          x: Math.random() * 70 + 15, // 15% to 85%
+          y: Math.random() * 60 + 20, // 20% to 80%
           type: isDistraction ? 'DISTRACTION' : 'FOCUS' as 'DISTRACTION' | 'FOCUS',
-          iconIdx: Math.floor(Math.random() * 3)
+          iconIdx: Math.floor(Math.random() * 3),
+          lifetime: 4000 // 4 секунды жизни
         };
         return [...prev, newTarget];
       });
-    }, 600); // Spawn rate
+    }, 1200); // Спавн каждые 1.2 секунды (медленнее)
 
     return () => clearInterval(spawner);
   }, [gameState]);
 
+  // Auto-remove targets after lifetime
+  useEffect(() => {
+    if (gameState !== 'PLAYING') return;
+    
+    const cleanup = setInterval(() => {
+      setTargets(prev => prev.filter(t => {
+        // Remove old targets (older than 4 seconds)
+        return Date.now() - t.id < 4000;
+      }));
+    }, 500);
+    
+    return () => clearInterval(cleanup);
+  }, [gameState]);
+
   const handleTargetClick = (e: React.MouseEvent | React.TouchEvent, id: number, type: 'DISTRACTION' | 'FOCUS') => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent ghost clicks
-    
-    // SFX placeholder
-    // sfxPop.current.play().catch(() => {});
+    e.stopPropagation();
 
     if (type === 'DISTRACTION') {
-      setScore(s => s + 1);
+      // Правильный клик! +1 очко + бонус за комбо
+      const comboBonus = Math.min(combo, 3);
+      setScore(s => s + 1 + comboBonus);
+      setCombo(c => c + 1);
+      setShowCombo(true);
+      setTimeout(() => setShowCombo(false), 500);
     } else {
-      setScore(s => Math.max(0, s - 3)); // Penalty
-      // Shake effect logic could go here
+      // Ошибка - только -1 очко (мягкий штраф)
+      setScore(s => Math.max(0, s - 1));
+      setCombo(0);
     }
     setTargets(prev => prev.filter(t => t.id !== id));
   };
@@ -82,8 +101,10 @@ export const FocusDefender: React.FC<MiniGameProps> = ({ config, onComplete }) =
   const startGame = () => {
     setGameState('PLAYING');
     setScore(0);
+    setCombo(0);
     setTimeLeft(config.durationSeconds || 30);
     setTargets([]);
+    targetIdCounter.current = Date.now(); // Reset counter with timestamp
   };
 
   const getTargetIcon = (type: 'DISTRACTION' | 'FOCUS', idx: number) => {
@@ -108,47 +129,48 @@ export const FocusDefender: React.FC<MiniGameProps> = ({ config, onComplete }) =
 
   if (gameState === 'START') {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-8 animate-in zoom-in duration-500 relative overflow-hidden">
+      <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-6 animate-in zoom-in duration-500 relative overflow-hidden">
         {/* Background Ambience */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 blur-[80px] rounded-full pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500/20 blur-[80px] rounded-full pointer-events-none"></div>
 
-        <div className="w-28 h-28 bg-white/5 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-indigo-400 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative z-10">
-          <Shield size={48} className="drop-shadow-lg" />
-          <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-xs font-black px-2 py-1 rounded-lg shadow-lg rotate-12">
-             Цель: {targetScore}
-          </div>
+        <div className="w-24 h-24 bg-gradient-to-br from-rose-500 to-orange-500 rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-[0_20px_50px_rgba(244,63,94,0.4)] relative z-10 animate-pulse">
+          <Target size={40} className="drop-shadow-lg" />
         </div>
         
         <div className="relative z-10">
-          <h3 className="text-3xl font-black text-white uppercase tracking-tight leading-none mb-3">
-            Focus<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-rose-400">Defender</span>
+          <h3 className="text-2xl font-black text-white uppercase tracking-tight leading-none mb-2">
+            🎯 Охотник за<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-orange-400">Отвлечениями</span>
           </h3>
           <p className="text-slate-400 text-sm font-medium max-w-[260px] mx-auto leading-relaxed">
-            {config.instructions || "Уничтожай отвлечения, сохраняй фокус."}
+            Кликай по красным иконкам!<br/>Избегай зелёных.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 w-full relative z-10 max-w-xs">
-             <div className="bg-[#151925]/60 backdrop-blur-md p-3 rounded-2xl border border-rose-500/20 flex flex-col items-center gap-2 group">
-                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 shadow-lg shadow-rose-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                     <Smartphone size={20} className="text-white" />
+        <div className="grid grid-cols-2 gap-3 w-full relative z-10 max-w-xs">
+             <div className="bg-rose-500/20 backdrop-blur-md p-4 rounded-2xl border border-rose-500/30 flex flex-col items-center gap-2">
+                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 shadow-lg shadow-rose-500/40 flex items-center justify-center">
+                     <Smartphone size={24} className="text-white" />
                  </div>
-                 <div className="text-[10px] font-black text-rose-300 uppercase tracking-wider">Кликай</div>
+                 <div className="text-xs font-black text-rose-300 uppercase">👆 КЛИКАЙ!</div>
              </div>
-             <div className="bg-[#151925]/60 backdrop-blur-md p-3 rounded-2xl border border-emerald-500/20 flex flex-col items-center gap-2 group">
-                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                     <Brain size={20} className="text-white" />
+             <div className="bg-emerald-500/10 backdrop-blur-md p-4 rounded-2xl border border-emerald-500/20 flex flex-col items-center gap-2">
+                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 shadow-lg shadow-emerald-500/20 flex items-center justify-center opacity-60">
+                     <Brain size={24} className="text-white" />
                  </div>
-                 <div className="text-[10px] font-black text-emerald-300 uppercase tracking-wider">Не трогай</div>
+                 <div className="text-xs font-black text-emerald-400/60 uppercase">🚫 Не трогай</div>
              </div>
+        </div>
+
+        <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-xl px-4 py-2 relative z-10">
+          <p className="text-yellow-300 text-xs font-bold">🏆 Цель: {targetScore} очков</p>
         </div>
 
         <button 
             onClick={startGame} 
-            className="w-full max-w-xs py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(99,102,241,0.4)] transition-all active:scale-95 relative z-10"
+            className="w-full max-w-xs py-4 bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-400 hover:to-orange-400 text-white font-black rounded-2xl uppercase tracking-wider shadow-[0_0_30px_rgba(244,63,94,0.4)] transition-all active:scale-95 relative z-10"
         >
-          <span className="flex items-center justify-center gap-2"><Play size={18} fill="currentColor" /> НАЧАТЬ</span>
+          <span className="flex items-center justify-center gap-2"><Play size={18} fill="currentColor" /> ИГРАТЬ!</span>
         </button>
       </div>
     );
@@ -157,22 +179,21 @@ export const FocusDefender: React.FC<MiniGameProps> = ({ config, onComplete }) =
   if (gameState === 'LOST') {
      return (
         <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-6 animate-in zoom-in duration-300 relative">
-             <div className="absolute inset-0 bg-red-500/10 blur-[100px] pointer-events-none"></div>
+             <div className="absolute inset-0 bg-orange-500/10 blur-[100px] pointer-events-none"></div>
              
-             <div className="w-24 h-24 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.4)] mb-4">
-                 <XCircle size={48} className="text-red-400" />
-             </div>
+             <div className="text-6xl mb-2">😅</div>
              
              <div>
-               <h3 className="text-2xl font-black text-white mb-2">Цель не достигнута</h3>
-               <p className="text-slate-400 font-medium">Счет: <span className="text-white font-bold">{score}</span> / {targetScore}</p>
+               <h3 className="text-2xl font-black text-white mb-2">Почти получилось!</h3>
+               <p className="text-slate-400 font-medium">Набрано: <span className="text-orange-400 font-bold">{score}</span> / {targetScore}</p>
+               <p className="text-slate-500 text-sm mt-1">Нужно {Math.ceil(targetScore * 0.6)} для победы</p>
              </div>
 
              <button 
                onClick={startGame} 
-               className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl flex items-center gap-2 transition-all border border-white/10"
+               className="px-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-400 hover:to-rose-400 text-white font-black rounded-xl flex items-center gap-2 transition-all shadow-lg"
              >
-                <RefreshCw size={18} /> Попробовать снова
+                <RefreshCw size={18} /> Ещё раз!
              </button>
         </div>
      );
@@ -181,25 +202,24 @@ export const FocusDefender: React.FC<MiniGameProps> = ({ config, onComplete }) =
   if (gameState === 'WON') {
     return (
        <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-6 animate-in zoom-in duration-500 relative">
-            <div className="absolute inset-0 bg-yellow-500/20 blur-[100px] pointer-events-none"></div>
+            <div className="absolute inset-0 bg-emerald-500/20 blur-[100px] pointer-events-none"></div>
             
-            <div className="relative">
-                 <div className="absolute inset-0 bg-yellow-400 blur-2xl opacity-40 animate-pulse"></div>
-                 <Target size={80} className="text-yellow-400 relative z-10 drop-shadow-2xl" />
-            </div>
+            <div className="text-7xl animate-bounce">🎉</div>
             
             <div>
-              <h3 className="text-3xl font-black text-white mb-2">Победа!</h3>
-              <div className="inline-block bg-white/10 px-4 py-1 rounded-full border border-white/10">
-                  <p className="text-indigo-300 text-xs font-bold uppercase tracking-widest">Фокус защищен</p>
+              <h3 className="text-3xl font-black text-white mb-2">Отлично!</h3>
+              <div className="inline-block bg-emerald-500/20 px-4 py-2 rounded-full border border-emerald-500/30">
+                  <p className="text-emerald-300 text-sm font-bold">✨ Фокус защищён!</p>
               </div>
             </div>
 
-            <div className="text-5xl font-black text-white font-mono tracking-tighter drop-shadow-xl">
-                {score} <span className="text-lg text-slate-500">XP</span>
+            <div className="bg-white/10 rounded-2xl px-8 py-4 border border-white/10">
+              <div className="text-4xl font-black text-emerald-400 font-mono">
+                  +{Math.max(score * 10, 50)} <span className="text-lg text-slate-400">XP</span>
+              </div>
             </div>
             
-            <div className="text-xs text-slate-500 font-medium animate-pulse">Завершение уровня...</div>
+            <div className="text-sm text-slate-400 font-medium animate-pulse">Загрузка награды...</div>
        </div>
     );
  }
@@ -207,6 +227,7 @@ export const FocusDefender: React.FC<MiniGameProps> = ({ config, onComplete }) =
   // --- PLAYING STATE ---
 
   const progress = (timeLeft / (config.durationSeconds || 30)) * 100;
+  const scoreProgress = Math.min(100, (score / targetScore) * 100);
 
   return (
     <div className="h-full flex flex-col relative overflow-hidden bg-[#050B14] rounded-[2.5rem] select-none shadow-2xl border border-white/5 ring-1 ring-white/5 touch-none">
@@ -214,29 +235,42 @@ export const FocusDefender: React.FC<MiniGameProps> = ({ config, onComplete }) =
        {/* GRID BG */}
        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:30px_30px]"></div>
 
+       {/* Combo Popup */}
+       {showCombo && combo > 1 && (
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none animate-in zoom-in-50 fade-in duration-200">
+           <div className="text-4xl font-black text-yellow-400 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)]">
+             🔥 x{combo}
+           </div>
+         </div>
+       )}
+
        {/* HUD */}
-       <div className="flex justify-between items-start p-6 z-30 pointer-events-none">
+       <div className="flex justify-between items-start p-4 z-30 pointer-events-none">
           <div className="flex flex-col gap-1">
-             <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Счет</div>
-             <div className="bg-white/10 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-2 text-white font-black font-mono text-2xl border border-white/10 shadow-lg">
-                <Crosshair size={20} className="text-indigo-400" /> 
-                {score}
-                <span className="text-sm text-slate-500 font-medium">/ {targetScore}</span>
+             <div className="bg-white/10 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-2 text-white font-black font-mono text-xl border border-white/10 shadow-lg">
+                <Target size={18} className="text-rose-400" /> 
+                <span className={score >= targetScore ? 'text-emerald-400' : 'text-white'}>{score}</span>
+                <span className="text-sm text-slate-500">/ {targetScore}</span>
+             </div>
+             {/* Score progress bar */}
+             <div className="h-1.5 bg-white/10 rounded-full overflow-hidden mx-1">
+               <div 
+                 className={`h-full transition-all duration-300 ${score >= targetScore ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                 style={{ width: `${scoreProgress}%` }}
+               />
              </div>
           </div>
           
-          <div className="flex flex-col gap-1 items-end">
-             <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest pr-1">Время</div>
-             <div className={`bg-white/10 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-2 font-black font-mono text-xl border border-white/10 shadow-lg transition-colors ${timeLeft < 5 ? 'text-red-400 border-red-500/50 animate-pulse' : 'text-white'}`}>
-                {timeLeft}s <Clock size={18} />
-             </div>
+          <div className={`bg-white/10 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-2 font-black font-mono text-xl border shadow-lg transition-all ${timeLeft <= 5 ? 'text-red-400 border-red-500/50 animate-pulse scale-110' : 'text-white border-white/10'}`}>
+             <Clock size={18} />
+             {timeLeft}s
           </div>
        </div>
 
        {/* TIMER BAR */}
-       <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 z-40">
+       <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/10 z-40">
            <div 
-             className="h-full bg-gradient-to-r from-indigo-500 to-rose-500 transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(99,102,241,0.8)]"
+             className={`h-full transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(99,102,241,0.8)] ${timeLeft <= 5 ? 'bg-red-500' : 'bg-gradient-to-r from-indigo-500 to-rose-500'}`}
              style={{ width: `${progress}%` }}
            ></div>
        </div>
@@ -248,33 +282,41 @@ export const FocusDefender: React.FC<MiniGameProps> = ({ config, onComplete }) =
               key={t.id}
               onMouseDown={(e) => handleTargetClick(e, t.id, t.type)}
               onTouchStart={(e) => handleTargetClick(e, t.id, t.type)}
-              className={`absolute w-20 h-20 flex items-center justify-center transition-all duration-75 active:scale-90 animate-in zoom-in duration-300 ease-out hover:scale-105
-                ${t.type === 'DISTRACTION' ? 'z-20' : 'z-10'}
+              className={`absolute flex items-center justify-center transition-all duration-75 active:scale-75 animate-in zoom-in duration-300 ease-out
+                ${t.type === 'DISTRACTION' ? 'z-20 w-20 h-20' : 'z-10 w-16 h-16'}
               `}
               style={{ top: `${t.y}%`, left: `${t.x}%`, transform: 'translate(-50%, -50%)' }}
             >
                {t.type === 'DISTRACTION' ? (
-                   // DISTRACTION TARGET (RED)
-                   <div className="relative w-16 h-16">
-                       <div className="absolute inset-0 bg-rose-500/30 blur-xl rounded-full animate-pulse"></div>
-                       <div className="relative w-full h-full bg-gradient-to-br from-rose-600 to-red-800 rounded-2xl border border-white/20 shadow-[0_10px_30px_rgba(225,29,72,0.4)] flex items-center justify-center overflow-hidden">
-                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-30"></div>
+                   // DISTRACTION TARGET (RED) - Big and obvious!
+                   <div className="relative w-full h-full">
+                       <div className="absolute inset-0 bg-rose-500/40 blur-xl rounded-full animate-pulse"></div>
+                       <div className="relative w-full h-full bg-gradient-to-br from-rose-500 to-red-600 rounded-2xl border-2 border-white/30 shadow-[0_0_30px_rgba(244,63,94,0.6)] flex items-center justify-center overflow-hidden hover:scale-110 transition-transform">
                             {getTargetIcon('DISTRACTION', t.iconIdx)}
-                            {/* Glitch effect line */}
-                            <div className="absolute top-0 left-0 w-full h-[1px] bg-white/50 animate-[ping_2s_infinite]"></div>
                        </div>
                    </div>
                ) : (
-                   // FOCUS TARGET (GREEN)
-                   <div className="relative w-14 h-14 opacity-90">
-                       <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full"></div>
-                       <div className="relative w-full h-full bg-gradient-to-br from-emerald-600 to-teal-800 rounded-full border border-white/20 shadow-[0_5px_20px_rgba(16,185,129,0.3)] flex items-center justify-center">
+                   // FOCUS TARGET (GREEN) - Smaller and less obvious
+                   <div className="relative w-full h-full opacity-70">
+                       <div className="relative w-full h-full bg-gradient-to-br from-emerald-700 to-teal-900 rounded-full border border-white/10 shadow-lg flex items-center justify-center">
                            {getTargetIcon('FOCUS', t.iconIdx)}
                        </div>
                    </div>
                )}
             </button>
           ))}
+          
+          {/* Help text */}
+          {targets.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <p className="text-slate-500 text-sm animate-pulse">Жди появления целей...</p>
+            </div>
+          )}
+      </div>
+      
+      {/* Bottom hint */}
+      <div className="p-3 text-center z-30">
+        <p className="text-xs text-slate-500">👆 Кликай по <span className="text-rose-400 font-bold">красным</span> иконкам!</p>
       </div>
     </div>
   );
