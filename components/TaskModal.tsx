@@ -8,6 +8,7 @@ import { AnimatedBrain, AnimatedDopamine, AnimatedFocus, AnimatedBattery, Animat
 import { KatyaCharacter } from './KatyaCharacter';
 import { BubblePopGame, EmotionMatchGame, BreathSyncGame } from './ImprovedGames';
 import { RiveKatya } from './RiveKatya';
+import { KatyaMentor } from './KatyaMentor';
 
 interface TaskModalProps {
   task: Task;
@@ -261,20 +262,22 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
         return <AnimatedBoss defeated={true} />;
       case 'reward':
         return <AnimatedReward amount={50} />;
-      // Rive персонаж Кати с разными состояниями
+      // Новый качественный персонаж Кати
       case 'katya':
       case 'katya_idle':
-        return <RiveKatya state="idle" size="lg" />;
+        return <KatyaMentor state="idle" size="lg" />;
       case 'katya_talking':
-        return <RiveKatya state="talking" size="lg" message="Привет! 👋" />;
+        return <KatyaMentor state="talking" size="lg" message="Привет! Рада тебя видеть! 💜" />;
       case 'katya_happy':
-        return <RiveKatya state="happy" size="lg" message="Молодец! 🎉" />;
+        return <KatyaMentor state="happy" size="lg" message="Молодец! Ты справился! 🎉" />;
       case 'katya_thinking':
-        return <RiveKatya state="thinking" size="lg" />;
+        return <KatyaMentor state="thinking" size="lg" message="Хм, давай подумаем..." />;
       case 'katya_waving':
-        return <RiveKatya state="waving" size="lg" message="Привет!" />;
+        return <KatyaMentor state="waving" size="lg" message="Привет! Я — Катя 👋" />;
       case 'katya_encouraging':
-        return <RiveKatya state="encouraging" size="lg" message="Ты справишься! 💪" />;
+        return <KatyaMentor state="encouraging" size="lg" message="Ты справишься! Я в тебя верю! 💪" />;
+      case 'katya_celebrating':
+        return <KatyaMentor state="celebrating" size="lg" message="Ура! Отличная работа! 🎊" />;
       default:
         return null;
     }
