@@ -5,7 +5,7 @@ import { TeenDashboard } from './components/TeenDashboard';
 import { ParentDashboard } from './components/ParentDashboard';
 import { CuratorDashboard } from './components/CuratorDashboard';
 import { initTelegramApp, getTelegramUser } from './services/telegramService';
-import { getOrCreateUser, completeTask } from './services/db';
+import { getOrCreateUser, completeTask, refreshUserFromSupabase } from './services/db';
 import { KatyaChat } from './components/KatyaChat';
 import { Terminal, Zap, ShieldCheck, Wifi, User as UserIcon, AlertCircle, RefreshCw } from 'lucide-react';
 import { isSupabaseEnabled } from './services/supabaseClient';
@@ -130,6 +130,14 @@ const App: React.FC = () => {
 
     // Sync DB
     await completeTask(currentUser.id, task);
+    
+    // Refresh from Supabase to ensure sync
+    if (isSupabaseEnabled) {
+      const refreshedUser = await refreshUserFromSupabase(currentUser.id);
+      if (refreshedUser) {
+        setCurrentUser(refreshedUser);
+      }
+    }
   };
 
   if (isBooting) {
@@ -183,7 +191,10 @@ const App: React.FC = () => {
         {currentUser.role === UserRole.TEEN && (
           <TeenDashboard 
             user={currentUser}
-            onTaskComplete={handleTaskComplete} 
+            onTaskComplete={handleTaskComplete}
+            onUserUpdate={(updatedUser) => {
+              setCurrentUser(updatedUser);
+            }}
           />
         )}
         {currentUser.role === UserRole.PARENT && (

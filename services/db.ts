@@ -71,46 +71,68 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
   // 3. SUPABASE SYNC
   if (isSupabaseEnabled) {
     try {
-      console.log(`DB: Checking Supabase for Telegram ID: ${userId}`);
+      console.log(`DB: Checking Supabase for Telegram ID: ${userId} (Guest: ${isGuest})`);
       
-      // Query by telegram_id if available, otherwise by UUID
+      // Query by telegram_id if available (Telegram user), otherwise by UUID (Guest)
       let query = supabase.from('users').select('*');
-      if (!isGuest) {
-          query = query.eq('telegram_id', userId);
+      let existingUser = null;
+      let error = null;
+      
+      if (!isGuest && telegramUser?.id) {
+          // For Telegram users, search by telegram_id first
+          const { data, error: err } = await supabase
+              .from('users')
+              .select('*')
+              .eq('telegram_id', telegramUser.id.toString())
+              .maybeSingle();
+          existingUser = data;
+          error = err;
       } else {
-          query = query.eq('id', userId);
+          // For guests or fallback, search by ID
+          const { data, error: err } = await query.eq('id', userId).maybeSingle();
+          existingUser = data;
+          error = err;
       }
 
-      const { data: existingUser, error } = await query.single();
-
       if (existingUser) {
-        console.log('✅ Found User in Supabase:', existingUser.name);
+        console.log('✅ Found User in Supabase:', existingUser.name, 'ID:', existingUser.id);
         
-        // Get Progress
-        const { data: progressData } = await supabase
+        // Get Progress - ALL completed tasks
+        const { data: progressData, error: progressError } = await supabase
           .from('progress')
           .select('task_id')
           .eq('user_id', existingUser.id);
 
+        if (progressError) {
+          console.error("Error loading progress:", progressError);
+        }
+
+        const completedTaskIds = progressData?.map((p: any) => p.task_id) || [];
+        console.log(`📊 Loaded ${completedTaskIds.length} completed tasks from Supabase`);
+
         // MERGE: Cloud is source of truth
         const mergedUser: User = {
           ...newUserTemplate,
-          id: existingUser.id, // Use the UUID from DB
-          telegramId: existingUser.telegram_id,
-          name: existingUser.name,
+          id: existingUser.id, // Use the UUID from DB (IMPORTANT!)
+          telegramId: existingUser.telegram_id || telegramUser?.id,
+          username: existingUser.username || telegramUser?.username,
+          name: existingUser.name || telegramUser?.first_name || 'Студент',
           xp: Number(existingUser.xp) || 0,
           coins: Number(existingUser.coins) || 0, // Ensure Number type
           level: existingUser.level || 1,
           hp: existingUser.hp ?? 5,
           maxHp: existingUser.max_hp ?? 5,
+          streak: existingUser.streak || 0,
           interest: existingUser.interest || 'Гейминг',
           inventory: existingUser.inventory || [],
-          completedTaskIds: progressData?.map((p: any) => p.task_id) || [],
-          avatarUrl: telegramUser?.photo_url || existingUser.avatar_url || defaultAvatar
+          completedTaskIds: completedTaskIds, // Load from progress table
+          avatarUrl: telegramUser?.photo_url || existingUser.avatar_url || defaultAvatar,
+          league: existingUser.league || 'BRONZE'
         };
         
-        // Update Local Cache
+        // Update Local Cache with correct UUID
         saveUserToStorage(mergedUser);
+        console.log('💾 User synced to local storage with UUID:', mergedUser.id);
         return mergedUser;
 
       } else {
@@ -438,6 +460,57 @@ export const getAllStudentsStats = async (): Promise<StudentStats[]> => {
   return [];
 };
 
+// --- REFRESH USER FROM SUPABASE ---
+export const refreshUserFromSupabase = async (userId: string): Promise<User | null> => {
+  if (!isSupabaseEnabled) return null;
+  
+  try {
+    const { data: dbUser, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (error || !dbUser) {
+      console.error("Failed to refresh user from Supabase:", error);
+      return null;
+    }
+    
+    // Get progress
+    const { data: progressData } = await supabase
+      .from('progress')
+      .select('task_id')
+      .eq('user_id', userId);
+    
+    const user: User = {
+      id: dbUser.id,
+      telegramId: dbUser.telegram_id,
+      username: dbUser.username,
+      name: dbUser.name,
+      role: dbUser.role as UserRole,
+      xp: Number(dbUser.xp) || 0,
+      coins: Number(dbUser.coins) || 0,
+      level: dbUser.level || 1,
+      hp: dbUser.hp ?? 5,
+      maxHp: dbUser.max_hp ?? 5,
+      avatarUrl: dbUser.avatar_url || '',
+      streak: dbUser.streak || 0,
+      completedTaskIds: progressData?.map((p: any) => p.task_id) || [],
+      interest: dbUser.interest || 'Гейминг',
+      inventory: dbUser.inventory || [],
+      league: dbUser.league || 'BRONZE'
+    };
+    
+    // Update local storage
+    saveUserToStorage(user);
+    
+    return user;
+  } catch (e) {
+    console.error("Error refreshing user from Supabase:", e);
+    return null;
+  }
+};
+
 // HELPERS
 function getUsersFromStorage(): User[] {
   try {
@@ -451,7 +524,7 @@ function getUsersFromStorage(): User[] {
 function saveUserToStorage(user: User) {
   const users = getUsersFromStorage();
   const index = users.findIndex(u => u.id === user.id);
-  if (index === -1) users.push(user);
-  else users[index] = user;
+  if (index !== -1) users[index] = user;
+  else users.push(user);
   localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
 }
