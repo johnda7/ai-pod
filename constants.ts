@@ -952,33 +952,40 @@ export const LECTURES: Lecture[] = [
   }
 ];
 
-// Медитации и практики осознанности
+// Медитации и практики осознанности (Calm-style)
 export const MEDITATIONS: Meditation[] = [
   // Сон
   { id: 'm1', title: 'Быстрый сон', category: 'SLEEP', duration: '10 мин', color: 'bg-indigo-500' },
   { id: 'm2', title: 'Глубокий отдых', category: 'SLEEP', duration: '20 мин', color: 'bg-indigo-600' },
   { id: 'm3', title: 'Ночные мысли', category: 'SLEEP', duration: '15 мин', color: 'bg-purple-600' },
+  { id: 'm4', title: 'Сонное царство', category: 'SLEEP', duration: '30 мин', color: 'bg-violet-600' },
   // Фокус
-  { id: 'm4', title: 'Фокус перед экзаменом', category: 'FOCUS', duration: '5 мин', color: 'bg-yellow-500' },
-  { id: 'm5', title: 'Утренняя ясность', category: 'FOCUS', duration: '7 мин', color: 'bg-amber-500' },
-  { id: 'm6', title: 'Практика Тишины', category: 'FOCUS', duration: '15 мин', color: 'bg-yellow-600' },
-  // Тревога
-  { id: 'm7', title: 'Снять тревогу', category: 'ANXIETY', duration: '7 мин', color: 'bg-emerald-500' },
-  { id: 'm8', title: 'Заземление 5-4-3-2-1', category: 'ANXIETY', duration: '5 мин', color: 'bg-teal-500' },
-  { id: 'm9', title: 'Отпустить страх', category: 'ANXIETY', duration: '10 мин', color: 'bg-green-600' },
+  { id: 'm5', title: 'Фокус перед экзаменом', category: 'FOCUS', duration: '5 мин', color: 'bg-yellow-500' },
+  { id: 'm6', title: 'Утренняя ясность', category: 'FOCUS', duration: '7 мин', color: 'bg-amber-500' },
+  { id: 'm7', title: 'Практика тишины', category: 'FOCUS', duration: '15 мин', color: 'bg-yellow-600' },
+  { id: 'm8', title: 'Ясный ум', category: 'FOCUS', duration: '10 мин', color: 'bg-orange-500' },
+  // Спокойствие (Anxiety)
+  { id: 'm9', title: 'Снять тревогу', category: 'ANXIETY', duration: '7 мин', color: 'bg-emerald-500' },
+  { id: 'm10', title: 'Заземление', category: 'ANXIETY', duration: '5 мин', color: 'bg-teal-500' },
+  { id: 'm11', title: 'Отпустить страх', category: 'ANXIETY', duration: '10 мин', color: 'bg-green-600' },
+  { id: 'm12', title: 'Внутренний покой', category: 'ANXIETY', duration: '12 мин', color: 'bg-cyan-600' },
   // Энергия
-  { id: 'm10', title: 'Заряд энергии', category: 'ENERGY', duration: '5 мин', color: 'bg-orange-500' },
-  { id: 'm11', title: 'Перезагрузка', category: 'ENERGY', duration: '3 мин', color: 'bg-red-500' },
+  { id: 'm13', title: 'Заряд энергии', category: 'ENERGY', duration: '5 мин', color: 'bg-rose-500' },
+  { id: 'm14', title: 'Перезагрузка', category: 'ENERGY', duration: '3 мин', color: 'bg-red-500' },
+  { id: 'm15', title: 'Утренний буст', category: 'ENERGY', duration: '8 мин', color: 'bg-pink-500' },
+  { id: 'm16', title: 'Сила момента', category: 'ENERGY', duration: '6 мин', color: 'bg-fuchsia-500' },
 ];
 
-// Звуковые ландшафты для фона
+// Звуковые ландшафты для фона (расширенный набор)
 export const SOUNDSCAPES: Soundscape[] = [
     { id: 'snd1', title: 'Дождь', iconType: 'RAIN', color: 'bg-blue-600', youtubeId: 'mPZkdNFkNps' },
     { id: 'snd2', title: 'Лес', iconType: 'FOREST', color: 'bg-green-600', youtubeId: 'xNN7iTA57jM' },
     { id: 'snd3', title: 'Океан', iconType: 'OCEAN', color: 'bg-cyan-600', youtubeId: 'bn9F19Hi1Lk' },
-    { id: 'snd4', title: 'Огонь', iconType: 'FIRE', color: 'bg-orange-600', youtubeId: 'L_LUpnjgPso' },
-    { id: 'snd5', title: 'Ветер', iconType: 'WIND', color: 'bg-gray-600', youtubeId: '2cKqx7qJFHo' },
+    { id: 'snd4', title: 'Костёр', iconType: 'FIRE', color: 'bg-orange-600', youtubeId: 'L_LUpnjgPso' },
+    { id: 'snd5', title: 'Ветер', iconType: 'WIND', color: 'bg-slate-500', youtubeId: '2cKqx7qJFHo' },
     { id: 'snd6', title: 'Кофейня', iconType: 'CAFE', color: 'bg-amber-700', youtubeId: 'h2zkV-l_TbY' },
+    { id: 'snd7', title: 'Гроза', iconType: 'RAIN', color: 'bg-indigo-600', youtubeId: 'nDq6TstdEi8' },
+    { id: 'snd8', title: 'Ночь', iconType: 'WIND', color: 'bg-purple-700', youtubeId: 'aJaZc4E8Y4U' },
 ];
 
 // Мотивационные цитаты (обновляются каждый день)
