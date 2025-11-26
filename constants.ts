@@ -1,5 +1,5 @@
 
-import { Lecture, Task, User, UserRole, StudentProgress, Meditation, Soundscape, Quote, ShopItem } from "./types";
+import { Lecture, Task, User, UserRole, StudentProgress, Meditation, Soundscape, Quote, ShopItem, Achievement } from "./types";
 
 export const KATYA_IMAGE_URL = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Katya&hair=long&clothing=hoodie';
 
@@ -952,22 +952,49 @@ export const LECTURES: Lecture[] = [
   }
 ];
 
+// Медитации и практики осознанности
 export const MEDITATIONS: Meditation[] = [
+  // Сон
   { id: 'm1', title: 'Быстрый сон', category: 'SLEEP', duration: '10 мин', color: 'bg-indigo-500' },
-  { id: 'm2', title: 'Фокус перед экзаменом', category: 'FOCUS', duration: '5 мин', color: 'bg-yellow-500' },
-  { id: 'm3', title: 'Снять тревогу', category: 'ANXIETY', duration: '7 мин', color: 'bg-emerald-500' },
-  { id: 'm4', title: 'Практика Тишины', category: 'FOCUS', duration: '15 мин', color: 'bg-indigo-600' },
+  { id: 'm2', title: 'Глубокий отдых', category: 'SLEEP', duration: '20 мин', color: 'bg-indigo-600' },
+  { id: 'm3', title: 'Ночные мысли', category: 'SLEEP', duration: '15 мин', color: 'bg-purple-600' },
+  // Фокус
+  { id: 'm4', title: 'Фокус перед экзаменом', category: 'FOCUS', duration: '5 мин', color: 'bg-yellow-500' },
+  { id: 'm5', title: 'Утренняя ясность', category: 'FOCUS', duration: '7 мин', color: 'bg-amber-500' },
+  { id: 'm6', title: 'Практика Тишины', category: 'FOCUS', duration: '15 мин', color: 'bg-yellow-600' },
+  // Тревога
+  { id: 'm7', title: 'Снять тревогу', category: 'ANXIETY', duration: '7 мин', color: 'bg-emerald-500' },
+  { id: 'm8', title: 'Заземление 5-4-3-2-1', category: 'ANXIETY', duration: '5 мин', color: 'bg-teal-500' },
+  { id: 'm9', title: 'Отпустить страх', category: 'ANXIETY', duration: '10 мин', color: 'bg-green-600' },
+  // Энергия
+  { id: 'm10', title: 'Заряд энергии', category: 'ENERGY', duration: '5 мин', color: 'bg-orange-500' },
+  { id: 'm11', title: 'Перезагрузка', category: 'ENERGY', duration: '3 мин', color: 'bg-red-500' },
 ];
 
+// Звуковые ландшафты для фона
 export const SOUNDSCAPES: Soundscape[] = [
     { id: 'snd1', title: 'Дождь', iconType: 'RAIN', color: 'bg-blue-600', youtubeId: 'mPZkdNFkNps' },
     { id: 'snd2', title: 'Лес', iconType: 'FOREST', color: 'bg-green-600', youtubeId: 'xNN7iTA57jM' },
     { id: 'snd3', title: 'Океан', iconType: 'OCEAN', color: 'bg-cyan-600', youtubeId: 'bn9F19Hi1Lk' },
     { id: 'snd4', title: 'Огонь', iconType: 'FIRE', color: 'bg-orange-600', youtubeId: 'L_LUpnjgPso' },
+    { id: 'snd5', title: 'Ветер', iconType: 'WIND', color: 'bg-gray-600', youtubeId: '2cKqx7qJFHo' },
+    { id: 'snd6', title: 'Кофейня', iconType: 'CAFE', color: 'bg-amber-700', youtubeId: 'h2zkV-l_TbY' },
 ];
 
+// Мотивационные цитаты (обновляются каждый день)
 export const QUOTES: Quote[] = [
-    { text: "Даже самый маленький шаг — это движение вперед.", author: "Йода", movie: "Звездные Войны" }
+    { text: "Даже самый маленький шаг — это движение вперед.", author: "Йода", movie: "Звёздные Войны" },
+    { text: "С тобой всё нормально. Уже нормально.", author: "Катя Карпенко", movie: "Шаг к себе" },
+    { text: "Действие рождает мотивацию, а не наоборот.", author: "Катя Карпенко", movie: "Шаг к себе" },
+    { text: "Просто прочитать — это ничто. Важно внедрять в жизнь.", author: "Катя Карпенко", movie: "Шаг к себе" },
+    { text: "Ты справишься. В тебе очень много внутренней силы.", author: "Катя Карпенко", movie: "Шаг к себе" },
+    { text: "Мы становимся тем, о чём думаем большую часть времени.", author: "Эрл Найтингейл", movie: "" },
+    { text: "Единственный способ делать великие дела — любить то, что ты делаешь.", author: "Стив Джобс", movie: "" },
+    { text: "Успех — это не конец, неудача — не приговор. Главное — смелость продолжать.", author: "Уинстон Черчилль", movie: "" },
+    { text: "Будь собой — все остальные роли уже заняты.", author: "Оскар Уайльд", movie: "" },
+    { text: "Лучше сделать и пожалеть, чем не сделать и пожалеть.", author: "Народная мудрость", movie: "" },
+    { text: "Не бойся идти медленно, бойся стоять на месте.", author: "Китайская пословица", movie: "" },
+    { text: "Твои ограничения — только в твоей голове.", author: "Джейми Паолинетти", movie: "" },
 ];
 
 export const MOCK_STUDENTS = [
@@ -981,4 +1008,129 @@ export const SHOP_ITEMS: ShopItem[] = [
     { id: 'streak_freeze', name: 'Заморозка', description: 'Сохрани стрик на день', price: 100, icon: 'streak_freeze', type: 'POWERUP' },
     { id: 'mystery_box', name: 'Сюрприз', description: 'Случайная награда', price: 75, icon: 'mystery_box', type: 'POWERUP' },
     { id: 'frame_gold', name: 'Золотая Рамка', description: 'Украшение аватара', price: 500, icon: 'frame_gold', type: 'COSMETIC' },
+];
+
+// Система достижений
+export const ACHIEVEMENTS: Achievement[] = [
+  // Обучение
+  {
+    id: 'first_lesson',
+    title: 'Первый шаг',
+    description: 'Заверши свой первый урок',
+    icon: '🎯',
+    category: 'LEARNING',
+    requirement: { type: 'TASKS_COMPLETED', value: 1 },
+    reward: { xp: 50, coins: 25 }
+  },
+  {
+    id: 'five_lessons',
+    title: 'На волне',
+    description: 'Заверши 5 уроков',
+    icon: '🌊',
+    category: 'LEARNING',
+    requirement: { type: 'TASKS_COMPLETED', value: 5 },
+    reward: { xp: 100, coins: 50 }
+  },
+  {
+    id: 'ten_lessons',
+    title: 'Мастер знаний',
+    description: 'Заверши 10 уроков',
+    icon: '📚',
+    category: 'LEARNING',
+    requirement: { type: 'TASKS_COMPLETED', value: 10 },
+    reward: { xp: 200, coins: 100 }
+  },
+  {
+    id: 'first_boss',
+    title: 'Победитель',
+    description: 'Победи своего первого босса',
+    icon: '👑',
+    category: 'LEARNING',
+    requirement: { type: 'BOSS_DEFEATED', value: 1 },
+    reward: { xp: 150, coins: 75 }
+  },
+  {
+    id: 'week_complete',
+    title: 'Неделя в кармане',
+    description: 'Заверши все уроки первой недели',
+    icon: '🏆',
+    category: 'LEARNING',
+    requirement: { type: 'WEEK_COMPLETED', value: 1 },
+    reward: { xp: 300, coins: 150 }
+  },
+  // Стрик
+  {
+    id: 'streak_3',
+    title: 'Три дня подряд',
+    description: 'Заходи 3 дня подряд',
+    icon: '🔥',
+    category: 'STREAK',
+    requirement: { type: 'STREAK_DAYS', value: 3 },
+    reward: { xp: 75, coins: 30 }
+  },
+  {
+    id: 'streak_7',
+    title: 'Неделя огня',
+    description: 'Заходи 7 дней подряд',
+    icon: '💪',
+    category: 'STREAK',
+    requirement: { type: 'STREAK_DAYS', value: 7 },
+    reward: { xp: 150, coins: 75 }
+  },
+  {
+    id: 'streak_14',
+    title: 'Две недели силы',
+    description: 'Заходи 14 дней подряд',
+    icon: '⚡',
+    category: 'STREAK',
+    requirement: { type: 'STREAK_DAYS', value: 14 },
+    reward: { xp: 300, coins: 150 }
+  },
+  {
+    id: 'streak_21',
+    title: 'Привычка сформирована',
+    description: 'Заходи 21 день подряд',
+    icon: '🧠',
+    category: 'STREAK',
+    requirement: { type: 'STREAK_DAYS', value: 21 },
+    reward: { xp: 500, coins: 250 }
+  },
+  // Опыт
+  {
+    id: 'xp_500',
+    title: 'Начинающий',
+    description: 'Набери 500 XP',
+    icon: '⭐',
+    category: 'SPECIAL',
+    requirement: { type: 'XP_EARNED', value: 500 },
+    reward: { coins: 50 }
+  },
+  {
+    id: 'xp_1000',
+    title: 'Продвинутый',
+    description: 'Набери 1000 XP',
+    icon: '🌟',
+    category: 'SPECIAL',
+    requirement: { type: 'XP_EARNED', value: 1000 },
+    reward: { coins: 100 }
+  },
+  {
+    id: 'xp_2500',
+    title: 'Эксперт',
+    description: 'Набери 2500 XP',
+    icon: '💫',
+    category: 'SPECIAL',
+    requirement: { type: 'XP_EARNED', value: 2500 },
+    reward: { coins: 200 }
+  },
+  // Монеты
+  {
+    id: 'coins_500',
+    title: 'Копилка',
+    description: 'Накопи 500 монет',
+    icon: '💰',
+    category: 'SPECIAL',
+    requirement: { type: 'COINS_EARNED', value: 500 },
+    reward: { xp: 100 }
+  },
 ];
