@@ -1004,6 +1004,26 @@ export const QUOTES: Quote[] = [
     { text: "Твои ограничения — только в твоей голове.", author: "Джейми Паолинетти", movie: "" },
 ];
 
+// Аффирмации от Кати Карпенко для раздела "Чилл"
+export const AFFIRMATIONS = [
+    { text: "С тобой всё нормально. Ты такой, какой нужен.", author: "Катя Карпенко", category: "self-love" },
+    { text: "Ты не обязан быть идеальным. Ты обязан быть собой.", author: "Катя Карпенко", category: "self-love" },
+    { text: "Каждое 'нет' другим — это 'да' себе.", author: "Катя Карпенко", category: "boundaries" },
+    { text: "Ты молодец уже потому, что справляешься.", author: "Катя Карпенко", category: "motivation" },
+    { text: "Твои чувства важны. Не прячь их.", author: "Катя Карпенко", category: "emotions" },
+    { text: "Ошибки — это не провал, а обучение.", author: "Катя Карпенко", category: "growth" },
+    { text: "Ты имеешь право на свои границы.", author: "Катя Карпенко", category: "boundaries" },
+    { text: "Сравнивать себя с другими — как сравнивать яблоко с апельсином.", author: "Катя Карпенко", category: "self-love" },
+    { text: "Маленькие шаги — тоже прогресс.", author: "Катя Карпенко", category: "motivation" },
+    { text: "Ты не должен всем нравиться. И это нормально.", author: "Катя Карпенко", category: "boundaries" },
+    { text: "Отдых — это не лень, а забота о себе.", author: "Катя Карпенко", category: "self-care" },
+    { text: "Ты уникален. Используй это как суперсилу.", author: "Катя Карпенко", category: "self-love" },
+    { text: "Не бойся просить о помощи. Это признак силы.", author: "Катя Карпенко", category: "growth" },
+    { text: "Твоё мнение имеет значение.", author: "Катя Карпенко", category: "boundaries" },
+    { text: "Сегодня я делаю лучшее, на что способен.", author: "Катя Карпенко", category: "motivation" },
+    { text: "Я принимаю себя со всеми своими особенностями.", author: "Катя Карпенко", category: "self-love" },
+];
+
 export const MOCK_STUDENTS = [
     { id: 'u2', name: 'Катя С.', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Katya', tasksCompleted: 15 },
     { id: 'u3', name: 'Макс Б.', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Max', tasksCompleted: 8 },
