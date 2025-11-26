@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TASKS, SHOP_ITEMS, ACHIEVEMENTS } from '../constants';
 import { Task, User, ShopItem } from '../types';
-import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info, Award, Flame, Wrench, Trophy } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info, Award, Flame, Wrench, Trophy, Calendar } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
 import { MemoryGame } from './MemoryGame';
@@ -12,6 +12,10 @@ import { ToolsView } from './ToolsView';
 import { purchaseItem } from '../services/db';
 import { isSupabaseEnabled } from '../services/supabaseClient';
 import { GameTutorial } from './GameTutorial';
+import { Confetti, RewardPopup, Toast } from './Confetti';
+import { DailyRewards } from './DailyRewards';
+import { ActivityChart } from './ActivityChart';
+import { DailyQuoteWidget } from './KatyaQuotes';
 
 interface TeenDashboardProps {
   user: User;
@@ -30,6 +34,14 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   const [isXpAnimating, setIsXpAnimating] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  
+  // New UI States
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showReward, setShowReward] = useState(false);
+  const [rewardData, setRewardData] = useState({ xp: 0, coins: 0 });
+  const [showDailyRewards, setShowDailyRewards] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
 
   // Show tutorial for new users
   useEffect(() => {
@@ -84,6 +96,48 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
               onUserUpdate(updatedUser);
           }
       }
+  };
+
+  // Check for daily rewards on mount
+  useEffect(() => {
+    const lastClaim = localStorage.getItem('daily_reward_last_claim');
+    const today = new Date().toDateString();
+    if (lastClaim !== today && user.completedTaskIds.length > 0) {
+      // Show daily rewards after a delay
+      const timer = setTimeout(() => setShowDailyRewards(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Handle daily reward claim
+  const handleDailyRewardClaim = (day: number, xp: number, coins: number) => {
+    setRewardData({ xp, coins });
+    setShowReward(true);
+    
+    // Update user
+    const updatedUser = {
+      ...user,
+      xp: user.xp + xp,
+      coins: user.coins + coins,
+      streak: user.streak + 1,
+    };
+    setUser(updatedUser);
+    
+    // Save to localStorage
+    const users = JSON.parse(localStorage.getItem('ai_teenager_users_v6') || '[]');
+    const userIndex = users.findIndex((u: User) => u.id === user.id);
+    if (userIndex !== -1) {
+      users[userIndex] = updatedUser;
+      localStorage.setItem('ai_teenager_users_v6', JSON.stringify(users));
+    }
+    
+    if (onUserUpdate) onUserUpdate(updatedUser);
+  };
+
+  // Show toast notification
+  const showToastMessage = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
   };
 
   // REAL PURCHASE LOGIC
@@ -559,17 +613,34 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                     
                     const isNewWeek = index === 0 || task.week > TASKS[index - 1].week;
                     
+                    // Иконки для каждого урока
+                    const lessonIcons: Record<string, string> = {
+                      't1': '🧠', 't2': '⚡', 't3': '🎯', 't4': '🔋', 't5': '😴',
+                      't6': '👑', 't7': '🦥', 't8': '🧹', 't9': '❓', 't10': '🐸',
+                      't11': '💪', 't12': '🏗️', 't13': '📈', 't14': '🎮', 't15': '🌊',
+                      't16': '🍅', 't17': '🔬', 't18': '🧘', 't19': '👥', 't20': '📜', 't21': '🏆'
+                    };
+                    const lessonIcon = lessonIcons[task.id] || '📚';
+                    
                     return (
                         <React.Fragment key={task.id}>
-                           {/* WEEK DIVIDER - Minimal */}
+                           {/* WEEK DIVIDER - Enhanced */}
                             {isNewWeek && (
                                 <div 
                                     className="absolute w-full text-center z-0"
                                    style={{ top: topPos - 60, left: '50%', transform: 'translateX(-50%)' }}
                                 >
-                                   <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/20">
-                                            Неделя {task.week}
-                                   </span>
+                                   <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full"
+                                     style={{
+                                       background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.08) 100%)',
+                                       border: '1px solid rgba(99,102,241,0.2)',
+                                     }}
+                                   >
+                                     <Flame size={10} className="text-orange-400" />
+                                     <span className="text-[10px] font-bold uppercase tracking-wider text-white/60">
+                                       Неделя {task.week}
+                                     </span>
+                                   </div>
                                 </div>
                             )}
 
@@ -581,70 +652,99 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                                     onClick={() => handleTaskClick(task, isLocked)}
                                     disabled={isLocked}
                                     className={`
-                                       relative flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 w-[160px]
+                                       relative flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 w-[165px]
                                        ${isLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
-                                       ${isActive ? 'hover:scale-105' : ''}
+                                       ${isActive ? 'hover:scale-105 hover:shadow-xl' : ''}
                                    `}
                                    style={{
                                      background: isCompleted 
-                                       ? 'linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%)'
+                                       ? 'linear-gradient(135deg, rgba(34,197,94,0.2) 0%, rgba(34,197,94,0.08) 100%)'
                                        : isActive 
                                          ? task.isBoss 
-                                           ? 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.08) 100%)'
-                                           : 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(99,102,241,0.08) 100%)'
+                                           ? 'linear-gradient(135deg, rgba(239,68,68,0.25) 0%, rgba(239,68,68,0.1) 100%)'
+                                           : 'linear-gradient(135deg, rgba(99,102,241,0.25) 0%, rgba(139,92,246,0.1) 100%)'
                                          : 'rgba(255,255,255,0.03)',
                                      backdropFilter: 'blur(20px)',
                                      border: isCompleted 
-                                       ? '1px solid rgba(34,197,94,0.25)'
+                                       ? '1px solid rgba(34,197,94,0.4)'
                                        : isActive 
                                          ? task.isBoss 
-                                           ? '1px solid rgba(239,68,68,0.3)'
-                                           : '1px solid rgba(99,102,241,0.25)'
-                                         : '1px solid rgba(255,255,255,0.05)',
+                                           ? '1px solid rgba(239,68,68,0.4)'
+                                           : '1px solid rgba(99,102,241,0.35)'
+                                         : '1px solid rgba(255,255,255,0.08)',
+                                     boxShadow: isActive && !task.isBoss 
+                                       ? '0 8px 32px rgba(99,102,241,0.2)' 
+                                       : isActive && task.isBoss 
+                                         ? '0 8px 32px rgba(239,68,68,0.2)'
+                                         : 'none',
                                    }}
                                >
-                                   {/* Icon Circle */}
+                                   {/* Shine effect for active */}
+                                   {isActive && (
+                                     <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+                                       <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent" />
+                                     </div>
+                                   )}
+                                   
+                                   {/* Icon Circle with emoji */}
                                     <div className={`
-                                       w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all
+                                       w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all relative
                                         ${isCompleted 
-                                           ? 'bg-green-500' 
+                                           ? 'bg-gradient-to-br from-green-400 to-emerald-500' 
                                             : isLocked 
                                                ? 'bg-white/5' 
                                                 : task.isBoss 
                                                    ? 'bg-gradient-to-br from-red-500 to-orange-500' 
                                                    : 'bg-gradient-to-br from-indigo-500 to-purple-500'
                                         }
-                                    `}>
+                                    `}
+                                    style={{
+                                      boxShadow: isActive 
+                                        ? task.isBoss 
+                                          ? '0 4px 20px rgba(239,68,68,0.4)' 
+                                          : '0 4px 20px rgba(99,102,241,0.4)'
+                                        : 'none'
+                                    }}
+                                    >
                                         {isCompleted 
-                                           ? <Check size={20} strokeWidth={3} className="text-white" /> 
+                                           ? <Check size={22} strokeWidth={3} className="text-white" /> 
                                             : isLocked 
                                                ? <Lock size={16} className="text-white/30" /> 
                                                 : task.isBoss
-                                                   ? <Skull size={20} className="text-white" />
-                                                   : <span className="text-white font-bold text-lg">{index + 1}</span>
+                                                   ? <Skull size={22} className="text-white" />
+                                                   : <span className="text-xl">{lessonIcon}</span>
                                         }
                                     </div>
                                     
                                    {/* Text */}
-                                   <div className="flex-1 text-left min-w-0">
-                                       <span className={`text-[11px] font-semibold leading-tight block truncate ${
+                                   <div className="flex-1 text-left min-w-0 relative z-10">
+                                       <span className={`text-[11px] font-bold leading-tight block truncate ${
                                            isCompleted ? 'text-green-400' : isActive ? 'text-white' : 'text-white/30'
                                        }`}>
                                            {task.title}
                                        </span>
-                                       <span className={`text-[9px] ${
-                                           isCompleted ? 'text-green-400/60' : isActive ? 'text-white/40' : 'text-white/20'
-                                       }`}>
-                                           +{task.xpReward} XP
-                                       </span>
+                                       <div className="flex items-center gap-1.5 mt-0.5">
+                                         <Zap size={10} className={isCompleted ? 'text-green-400/60' : isActive ? 'text-yellow-400' : 'text-white/20'} />
+                                         <span className={`text-[9px] font-medium ${
+                                             isCompleted ? 'text-green-400/60' : isActive ? 'text-yellow-400' : 'text-white/20'
+                                         }`}>
+                                             +{task.xpReward} XP
+                                         </span>
+                                       </div>
                                         </div>
 
-                                   {/* Active indicator */}
+                                   {/* Active indicator with glow */}
                                    {isActive && !task.isBoss && (
-                                       <div className="absolute -right-1 -top-1 w-3 h-3 rounded-full bg-indigo-500 animate-pulse" />
+                                       <div className="absolute -right-1 -top-1">
+                                         <div className="w-3 h-3 rounded-full bg-indigo-400 animate-pulse" />
+                                         <div className="absolute inset-0 w-3 h-3 rounded-full bg-indigo-400 animate-ping opacity-75" />
+                                       </div>
                                    )}
                                    {task.isBoss && isActive && (
-                                       <div className="absolute -right-1 -top-1 w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                                       <div className="absolute -right-1 -top-1">
+                                         <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                                         <div className="absolute inset-0 w-3 h-3 rounded-full bg-red-500 animate-ping opacity-75" />
+                                       </div>
                                     )}
                                 </button>
                             </div>
@@ -746,6 +846,34 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
             onComplete={handleGameComplete}
           />
       )}
+
+      {/* NEW UI COMPONENTS */}
+      
+      {/* Confetti Animation */}
+      <Confetti isActive={showConfetti} />
+      
+      {/* Reward Popup */}
+      <RewardPopup 
+        xp={rewardData.xp}
+        coins={rewardData.coins}
+        isVisible={showReward}
+        onComplete={() => setShowReward(false)}
+      />
+      
+      {/* Toast Notifications */}
+      <Toast 
+        message={toastMessage}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
+      
+      {/* Daily Rewards Modal */}
+      <DailyRewards
+        isOpen={showDailyRewards}
+        onClose={() => setShowDailyRewards(false)}
+        onClaim={handleDailyRewardClaim}
+        currentStreak={user.streak}
+      />
     </div>
   );
 };

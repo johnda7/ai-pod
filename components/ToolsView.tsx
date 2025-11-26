@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Timer, Target, BookHeart, Brain, Sparkles, ChevronRight, Clock, BarChart3, Heart, Calendar, FileText, Lightbulb } from 'lucide-react';
+import { Timer, Target, BookHeart, Brain, Sparkles, ChevronRight, Clock, BarChart3, Heart, Calendar, FileText, Lightbulb, TreePine, Trophy, Flame, BookOpen } from 'lucide-react';
 import { User } from '../types';
 import { PomodoroTimer } from './PomodoroTimer';
 import { BalanceWheel } from './BalanceWheel';
@@ -8,6 +8,11 @@ import { EmotionDiary } from './EmotionDiary';
 import { PlannerTool } from './PlannerTool';
 import { GoalsTool } from './GoalsTool';
 import { NotesTool } from './NotesTool';
+import { HabitTracker } from './HabitTracker';
+import { ChallengeSystem } from './ChallengeSystem';
+import { FocusMode } from './FocusMode';
+import { ReflectionJournal } from './ReflectionJournal';
+import { LifeSkillsModule } from './LifeSkillsModule';
 
 interface ToolsViewProps {
   user: User;
@@ -24,9 +29,65 @@ interface Tool {
   gradient: string;
   xpReward: number;
   isNew?: boolean;
+  isHot?: boolean;
 }
 
 const TOOLS: Tool[] = [
+  {
+    id: 'focus',
+    name: 'Режим Фокуса',
+    description: 'Вырасти дерево концентрации',
+    emoji: '🌲',
+    icon: TreePine,
+    color: '#22c55e',
+    gradient: 'from-green-500 to-emerald-500',
+    xpReward: 30,
+    isHot: true,
+  },
+  {
+    id: 'challenges',
+    name: 'Челленджи',
+    description: 'Выполняй задания — получай награды',
+    emoji: '🏆',
+    icon: Trophy,
+    color: '#f59e0b',
+    gradient: 'from-amber-500 to-orange-500',
+    xpReward: 50,
+    isHot: true,
+  },
+  {
+    id: 'habits',
+    name: 'Привычки',
+    description: 'Формируй полезные привычки',
+    emoji: '✅',
+    icon: Flame,
+    color: '#ef4444',
+    gradient: 'from-red-500 to-orange-500',
+    xpReward: 15,
+    isNew: true,
+  },
+  {
+    id: 'lifeskills',
+    name: 'Life Skills',
+    description: 'Навыки для реальной жизни',
+    emoji: '🚀',
+    icon: BookOpen,
+    color: '#6366f1',
+    gradient: 'from-indigo-500 to-purple-500',
+    xpReward: 40,
+    isNew: true,
+  },
+  {
+    id: 'reflection',
+    name: 'Рефлексия',
+    description: 'Дневник самопознания',
+    emoji: '📔',
+    icon: BookHeart,
+    color: '#8b5cf6',
+    gradient: 'from-violet-500 to-purple-500',
+    xpReward: 25,
+    isNew: true,
+  },
   {
     id: 'pomodoro',
     name: 'Помодоро',
@@ -46,7 +107,6 @@ const TOOLS: Tool[] = [
     color: '#22c55e',
     gradient: 'from-green-500 to-emerald-500',
     xpReward: 15,
-    isNew: true,
   },
   {
     id: 'goals',
@@ -57,7 +117,6 @@ const TOOLS: Tool[] = [
     color: '#f59e0b',
     gradient: 'from-amber-500 to-orange-500',
     xpReward: 25,
-    isNew: true,
   },
   {
     id: 'notes',
@@ -68,7 +127,6 @@ const TOOLS: Tool[] = [
     color: '#8b5cf6',
     gradient: 'from-violet-500 to-purple-500',
     xpReward: 10,
-    isNew: true,
   },
   {
     id: 'balance',
@@ -142,6 +200,34 @@ const getToolStats = () => {
     stats.emotions = parsed.length || 0;
   }
   
+  // Habits
+  const habits = localStorage.getItem('habit_tracker_data');
+  if (habits) {
+    const parsed = JSON.parse(habits);
+    stats.habits = parsed.length || 0;
+  }
+  
+  // Reflection
+  const reflection = localStorage.getItem('reflection_journal');
+  if (reflection) {
+    const parsed = JSON.parse(reflection);
+    stats.reflection = parsed.length || 0;
+  }
+  
+  // Focus
+  const focusStreak = localStorage.getItem('focus_streak');
+  if (focusStreak) {
+    const parsed = JSON.parse(focusStreak);
+    stats.focus = parsed.streak || 0;
+  }
+  
+  // Life Skills
+  const lifeSkills = localStorage.getItem('life_skills_progress');
+  if (lifeSkills) {
+    const parsed = JSON.parse(lifeSkills);
+    stats.lifeskills = parsed.length || 0;
+  }
+  
   return stats;
 };
 
@@ -149,8 +235,8 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const stats = getToolStats();
 
-  const handleToolComplete = (toolId: string, xp: number) => {
-    onXpEarned?.(xp, 0);
+  const handleToolComplete = (toolId: string, xp: number, coins: number = 0) => {
+    onXpEarned?.(xp, coins);
   };
 
   const getStatLabel = (toolId: string) => {
@@ -170,6 +256,14 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
         return `${stat} раз`;
       case 'emotions':
         return `${stat} записей`;
+      case 'habits':
+        return `${stat} привычек`;
+      case 'reflection':
+        return `${stat} записей`;
+      case 'focus':
+        return `${stat} дней streak`;
+      case 'lifeskills':
+        return `${stat} уроков`;
       default:
         return 'Начни!';
     }
@@ -211,7 +305,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
             </div>
             <div>
               <h1 className="text-2xl font-black text-white">Полезное</h1>
-              <p className="text-white/50 text-sm">Инструменты для продуктивности</p>
+              <p className="text-white/50 text-sm">{TOOLS.length} инструментов для роста</p>
             </div>
           </div>
         </div>
@@ -229,7 +323,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
                 key={tool.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08 }}
+                transition={{ delay: index * 0.05 }}
                 onClick={() => setActiveTool(tool.id)}
                 className="w-full text-left rounded-3xl p-5 transition-all active:scale-[0.98] hover:scale-[1.01] relative overflow-hidden"
                 style={{
@@ -240,7 +334,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
                   boxShadow: `0 8px 32px ${tool.color}15, inset 0 1px 0 rgba(255,255,255,0.08)`,
                 }}
               >
-                {/* NEW badge */}
+                {/* Badges */}
                 {tool.isNew && (
                   <div 
                     className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
@@ -250,6 +344,17 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
                     }}
                   >
                     New
+                  </div>
+                )}
+                {tool.isHot && (
+                  <div 
+                    className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase flex items-center gap-1"
+                    style={{
+                      background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                      color: 'white',
+                    }}
+                  >
+                    🔥 Hot
                   </div>
                 )}
                 
@@ -314,8 +419,8 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
             <div>
               <h4 className="text-white font-bold mb-1">Совет от Кати</h4>
               <p className="text-white/60 text-sm leading-relaxed">
-                Начни день с планирования! Запиши 3 главные задачи и сфокусируйся на них. 
-                Используй Помодоро для глубокой работы.
+                Попробуй "Режим Фокуса" — вырасти своё дерево концентрации! 
+                Чем дольше фокусируешься, тем больше оно растёт 🌲
               </p>
             </div>
           </div>
@@ -323,6 +428,38 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
       </div>
 
       {/* Tool Modals */}
+      <FocusMode
+        isOpen={activeTool === 'focus'}
+        onClose={() => setActiveTool(null)}
+        onComplete={(xp, coins) => handleToolComplete('focus', xp, coins)}
+      />
+      
+      <ChallengeSystem
+        isOpen={activeTool === 'challenges'}
+        onClose={() => setActiveTool(null)}
+        onComplete={(xp, coins) => handleToolComplete('challenges', xp, coins)}
+        userXp={user.xp}
+        completedLessons={user.completedTaskIds.length}
+      />
+      
+      <HabitTracker
+        isOpen={activeTool === 'habits'}
+        onClose={() => setActiveTool(null)}
+        onComplete={(xp) => handleToolComplete('habits', xp)}
+      />
+      
+      <LifeSkillsModule
+        isOpen={activeTool === 'lifeskills'}
+        onClose={() => setActiveTool(null)}
+        onComplete={(xp, coins) => handleToolComplete('lifeskills', xp, coins)}
+      />
+      
+      <ReflectionJournal
+        isOpen={activeTool === 'reflection'}
+        onClose={() => setActiveTool(null)}
+        onComplete={(xp) => handleToolComplete('reflection', xp)}
+      />
+      
       <PomodoroTimer 
         isOpen={activeTool === 'pomodoro'} 
         onClose={() => setActiveTool(null)}
