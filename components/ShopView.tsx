@@ -1,15 +1,46 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SHOP_ITEMS } from '../constants';
 import { User, ShopItem } from '../types';
-import { ShoppingBag, Coins, Heart, Snowflake, Gift, Crown, Check } from 'lucide-react';
+import { ShoppingBag, Coins, Heart, Snowflake, Gift, Crown, Check, Sparkles, X } from 'lucide-react';
 
 interface ShopViewProps {
   user: User;
   onBuy: (item: ShopItem) => void;
 }
 
+interface MysteryReward {
+  type: string;
+  amount: number;
+  message: string;
+}
+
 export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy }) => {
+  const [mysteryReward, setMysteryReward] = useState<MysteryReward | null>(null);
+  const [showRewardModal, setShowRewardModal] = useState(false);
+
+  // Check for mystery box reward after purchase
+  useEffect(() => {
+    const checkReward = () => {
+      const rewardStr = localStorage.getItem('mystery_box_reward');
+      if (rewardStr) {
+        const reward = JSON.parse(rewardStr);
+        setMysteryReward(reward);
+        setShowRewardModal(true);
+        localStorage.removeItem('mystery_box_reward');
+      }
+    };
+    
+    // Check immediately and set up interval
+    checkReward();
+    const interval = setInterval(checkReward, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  const closeRewardModal = () => {
+    setShowRewardModal(false);
+    setMysteryReward(null);
+  };
   
   const getIcon = (id: string) => {
     switch(id) {
@@ -110,6 +141,64 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy }) => {
               </div>
           </div>
       </div>
+
+      {/* MYSTERY BOX REWARD MODAL */}
+      {showRewardModal && mysteryReward && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-gradient-to-b from-purple-900 to-indigo-950 rounded-[2rem] p-8 max-w-sm w-full relative overflow-hidden border border-purple-500/30 shadow-2xl animate-in zoom-in-95 duration-300">
+            {/* Sparkle effects */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute top-4 left-4 w-2 h-2 bg-yellow-400 rounded-full animate-ping"></div>
+              <div className="absolute top-8 right-8 w-3 h-3 bg-purple-400 rounded-full animate-ping delay-100"></div>
+              <div className="absolute bottom-12 left-8 w-2 h-2 bg-pink-400 rounded-full animate-ping delay-200"></div>
+              <div className="absolute bottom-8 right-12 w-2 h-2 bg-cyan-400 rounded-full animate-ping delay-300"></div>
+            </div>
+            
+            {/* Glow */}
+            <div className="absolute inset-0 bg-gradient-to-t from-purple-500/20 to-transparent"></div>
+            
+            {/* Content */}
+            <div className="relative z-10 text-center">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/50 animate-bounce">
+                <Gift className="text-white" size={48} />
+              </div>
+              
+              <h2 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-2">
+                <Sparkles className="text-yellow-400" size={24} />
+                СЮРПРИЗ!
+                <Sparkles className="text-yellow-400" size={24} />
+              </h2>
+              
+              <p className="text-2xl font-bold text-purple-200 mb-6">
+                {mysteryReward.message}
+              </p>
+              
+              <div className="bg-white/10 rounded-xl p-4 mb-6">
+                <p className="text-sm text-purple-300">
+                  {mysteryReward.type === 'coins' && `Монеты добавлены к вашему балансу!`}
+                  {mysteryReward.type === 'xp' && `Опыт добавлен! Проверь свой уровень!`}
+                  {mysteryReward.type === 'hp' && `Жизни восстановлены!`}
+                </p>
+              </div>
+              
+              <button 
+                onClick={closeRewardModal}
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black uppercase tracking-wider text-sm hover:from-purple-500 hover:to-pink-500 transition-all shadow-lg shadow-purple-500/30 active:scale-95"
+              >
+                Круто! 🎉
+              </button>
+            </div>
+            
+            {/* Close button */}
+            <button 
+              onClick={closeRewardModal}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
