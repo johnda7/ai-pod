@@ -25,3 +25,4 @@ echo "Последний коммит: $(git log -1 --format='%h - %s')" >> "$OU
 echo "✅ Комментарии сохранены в: $OUTPUT_FILE"
 
 
+
