@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Task, LessonSlide, SortingItem, PairItem } from '../types';
 import { X, Play, Trophy, CheckCircle, AlertCircle, Skull, BarChart2, Heart, ArrowRight, RotateCcw, Sparkles, MoveRight, MoveLeft, Hand, Coins, Star, Zap, Gift, Shield, Brain, Target, Battery, Moon } from 'lucide-react';
-import { FocusDefender, EmbeddedMemoryGame } from './MiniGames';
+import { FocusDefender, EmbeddedMemoryGame, ReactionGame } from './MiniGames';
 import { AnimatedBrain, AnimatedDopamine, AnimatedFocus, AnimatedBattery, AnimatedSleep, AnimatedBoss, AnimatedReward } from './AnimatedSlides';
 
 interface TaskModalProps {
@@ -698,6 +698,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
                     <div className="flex flex-col h-full p-2 rounded-[2.5rem] overflow-hidden relative">
                         {currentSlide.gameType === 'FOCUS_DEFENDER' && <FocusDefender config={currentSlide} onComplete={handleGameComplete} />}
                         {currentSlide.gameType === 'NEURO_MATCH' && <EmbeddedMemoryGame config={currentSlide} onComplete={handleGameComplete} />}
+                        {currentSlide.gameType === 'REACTION_TIME' && <ReactionGame onComplete={handleGameComplete} />}
                     </div>
                 );
 

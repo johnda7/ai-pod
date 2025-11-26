@@ -1,23 +1,27 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, X, Mic } from 'lucide-react';
+import { Send, X, Mic, Sparkles, Heart, Brain, Target, Zap } from 'lucide-react';
 import { ChatMessage } from '../types';
 import { askKatya } from '../services/geminiService';
-import { KATYA_IMAGE_URL } from '../constants';
+import { KATYA_IMAGE_URL, KATYA_MESSAGES } from '../constants';
 import { useRive, useStateMachineInput } from '@rive-app/react-canvas';
 
 type CharacterState = 'IDLE' | 'LISTENING' | 'SPEAKING';
 
-// Demo Rive URL - Replace this with your specific 'katya.riv' file URL
-const RIVE_URL = "https://cdn.rive.app/animations/vehicles.riv"; 
-// A better character placeholder for demo purposes (if accessible):
-// const RIVE_URL = "https://public.rive.app/community/runtime-files/2063-4139-example-character.riv"; 
+// Quick reply suggestions
+const QUICK_REPLIES = [
+  { text: 'Нет мотивации', icon: <Zap size={14} /> },
+  { text: 'Как справиться с тревогой?', icon: <Heart size={14} /> },
+  { text: 'Как поставить цель?', icon: <Target size={14} /> },
+  { text: 'Как перестать прокрастинировать?', icon: <Brain size={14} /> },
+];
 
 export const KatyaChat: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: '0', sender: 'katya', text: 'Привет! Я на связи. Чем могу помочь?', timestamp: Date.now() }
+    { id: '0', sender: 'katya', text: `${KATYA_MESSAGES.welcome}\n\n${KATYA_MESSAGES.mainMessage}`, timestamp: Date.now() }
   ]);
+  const [showQuickReplies, setShowQuickReplies] = useState(true);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -63,23 +67,30 @@ export const KatyaChat: React.FC = () => {
     scrollToBottom();
   }, [messages, isOpen]);
 
-  const handleSend = async () => {
-    if (!inputValue.trim()) return;
+  const sendMessage = async (text: string) => {
+    if (!text.trim()) return;
+
+    setShowQuickReplies(false);
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       sender: 'user',
-      text: inputValue,
+      text: text,
       timestamp: Date.now()
     };
 
     setMessages(prev => [...prev, userMsg]);
     setInputValue('');
     setIsTyping(true);
-    setCharacterState('LISTENING'); // Katya is "processing/listening"
+    setCharacterState('LISTENING');
 
     try {
-        const responseText = await askKatya(userMsg.text, "User is a teen learning about soft skills", "Gaming");
+        const context = `Ты — Катя Карпенко, психолог для подростков. Твой стиль общения: тёплый, поддерживающий, без осуждения. 
+        Твоё главное послание: "С тобой всё нормально. Уже нормально."
+        Используй техники из своей книги "Шаг к себе": "Я молодец!", "Дырявое ведро", "5 Почему", правила постановки целей.
+        Отвечай кратко (2-3 предложения), дружелюбно, с эмодзи. Используй "ты" форму.`;
+        
+        const responseText = await askKatya(text, context, "Мотивация и саморазвитие");
         
         setIsTyping(false);
         setCharacterState('SPEAKING');
@@ -93,15 +104,27 @@ export const KatyaChat: React.FC = () => {
         
         setMessages(prev => [...prev, botMsg]);
         
-        // Return to IDLE after reading time
         setTimeout(() => {
             setCharacterState('IDLE');
         }, Math.min(responseText.length * 50, 5000));
     } catch (e) {
         setIsTyping(false);
         setCharacterState('IDLE');
+        
+        // Fallback response
+        const fallbackMsg: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          sender: 'katya',
+          text: 'Прости, что-то пошло не так. Но помни: с тобой всё нормально! 💜 Попробуй написать ещё раз.',
+          timestamp: Date.now()
+        };
+        setMessages(prev => [...prev, fallbackMsg]);
     }
   };
+
+  const handleSend = () => sendMessage(inputValue);
+  
+  const handleQuickReply = (text: string) => sendMessage(text);
 
   // Helper to render the Avatar (Rive or Fallback Image)
   const renderAvatar = () => (
@@ -228,6 +251,25 @@ export const KatyaChat: React.FC = () => {
               )}
               <div ref={messagesEndRef} />
            </div>
+
+           {/* Quick Replies */}
+           {showQuickReplies && messages.length <= 2 && (
+             <div className="px-4 py-3 bg-slate-50/80 border-t border-slate-100">
+               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Быстрые вопросы</p>
+               <div className="flex flex-wrap gap-2">
+                 {QUICK_REPLIES.map((reply, idx) => (
+                   <button
+                     key={idx}
+                     onClick={() => handleQuickReply(reply.text)}
+                     className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-full text-xs font-medium text-slate-600 border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 transition-all active:scale-95"
+                   >
+                     {reply.icon}
+                     {reply.text}
+                   </button>
+                 ))}
+               </div>
+             </div>
+           )}
 
            {/* Input Area */}
            <div className="p-4 bg-white border-t border-slate-100 flex gap-2 shrink-0 relative z-20">

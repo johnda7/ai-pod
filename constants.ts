@@ -368,7 +368,7 @@ export const TASKS: Task[] = [
           { id: 'p4', left: 'Отвлекают уведомления', right: 'Авиарежим' }
       ]},
       // Final game
-      { id: 's3_game3', type: 'GAME', gameType: 'FOCUS_DEFENDER', instructions: '🏆 ФИНАЛЬНОЕ ИСПЫТАНИЕ!\n\nПокажи, чему научился. Отрази все отвлечения!', durationSeconds: 40, targetScore: 12 },
+      { id: 's3_game3', type: 'GAME', gameType: 'REACTION_TIME', instructions: '⚡ Проверь свою реакцию!\n\nЖди зелёный сигнал и нажимай как можно быстрее!' },
       // Summary
       { 
         id: 's3_summary', 
