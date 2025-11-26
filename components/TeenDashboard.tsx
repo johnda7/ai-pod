@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { TASKS, SHOP_ITEMS } from '../constants';
 import { Task, User, ShopItem } from '../types';
-import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Trophy, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Trophy, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
 import { MemoryGame } from './MemoryGame';
@@ -10,6 +10,7 @@ import { ShopView } from './ShopView';
 import { LeaderboardView } from './LeaderboardView';
 import { purchaseItem } from '../services/db'; // Import real purchase logic
 import { isSupabaseEnabled } from '../services/supabaseClient';
+import { GameTutorial } from './GameTutorial';
 
 interface TeenDashboardProps {
   user: User;
@@ -26,6 +27,20 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   const [isGameOpen, setIsGameOpen] = useState(false);
   const [prevXp, setPrevXp] = useState(user.xp);
   const [isXpAnimating, setIsXpAnimating] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // Show tutorial for new users
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem('ai_pod_tutorial_seen');
+    if (!hasSeenTutorial && user.completedTaskIds.length === 0) {
+      setShowTutorial(true);
+    }
+  }, []);
+
+  const handleCloseTutorial = () => {
+    setShowTutorial(false);
+    localStorage.setItem('ai_pod_tutorial_seen', 'true');
+  };
   
   // Sync local state if prop changes (e.g. from parent refresh)
   useEffect(() => {
@@ -210,6 +225,21 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
 
                 {/* 3. SETTINGS MENU */}
                 <div className="space-y-3 animate-in slide-in-from-bottom-8 duration-700 delay-200">
+                     {/* How to Play Button */}
+                     <button 
+                        onClick={() => setShowTutorial(true)}
+                        className="w-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 backdrop-blur-md border border-indigo-500/30 p-4 rounded-[1.5rem] flex items-center gap-4 transition-all hover:from-indigo-500/30 hover:to-purple-500/30 active:scale-[0.98] group"
+                     >
+                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                             <Info size={20} />
+                         </div>
+                         <div className="flex-1 text-left">
+                             <div className="text-sm font-bold text-white">Как играть?</div>
+                             <div className="text-xs text-indigo-300">Туториал по механикам</div>
+                         </div>
+                         <Sparkles size={18} className="text-indigo-400" />
+                     </button>
+
                      {[
                          { icon: ShieldCheck, label: 'Настройки аккаунта', badge: null },
                          { icon: HelpCircle, label: 'Поддержка', badge: null },
@@ -252,52 +282,143 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
     return (
         <div className="relative pt-2 pb-40 px-4 min-h-screen overflow-x-hidden">
              
-             {/* TOP BAR - UPDATED PADDING TO pt-28 (approx 110px) to clear Telegram header */}
-             <div className="flex justify-between items-center mb-6 relative z-40 pt-28 backdrop-blur-xl sticky top-0 pb-4 -mx-4 px-6 bg-[#020617]/95 border-b border-white/5 shadow-lg transition-all duration-300">
+             {/* TOP BAR - PREMIUM DESIGN */}
+             <div className="flex justify-between items-center mb-6 relative z-40 pt-28 backdrop-blur-xl sticky top-0 pb-4 -mx-4 px-5 bg-gradient-to-b from-[#020617] via-[#020617]/95 to-transparent transition-all duration-300">
+                 {/* Left side - HP & Streak */}
                  <div className="flex items-center gap-2">
-                    {/* HP */}
-                    <div className="flex flex-col items-center">
-                        <div className="glass-panel px-3 py-2 rounded-2xl flex items-center gap-2 border border-white/10 bg-white/5 shadow-lg">
-                            <Heart size={18} fill="currentColor" className="text-rose-500 drop-shadow-[0_0_10px_rgba(244,63,94,0.6)]" />
-                            <span className="text-white font-black font-mono text-sm">{user.hp || 5}</span>
+                    {/* HP with animation */}
+                    <div className="relative group">
+                        <div className="absolute inset-0 bg-rose-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div className="relative px-3 py-2 rounded-2xl flex items-center gap-2 border border-rose-500/30 bg-rose-950/50 shadow-lg backdrop-blur-md">
+                            <div className="flex gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                    <Heart 
+                                        key={i} 
+                                        size={14} 
+                                        fill={i < (user.hp || 5) ? "currentColor" : "none"}
+                                        className={`${i < (user.hp || 5) ? 'text-rose-500 drop-shadow-[0_0_6px_rgba(244,63,94,0.8)]' : 'text-slate-700'} transition-all`}
+                                    />
+                                ))}
+                            </div>
                         </div>
                     </div>
+                    
+                    {/* Streak */}
+                    {user.streak > 0 && (
+                        <div className="px-3 py-2 rounded-2xl flex items-center gap-1.5 border border-orange-500/30 bg-orange-950/50 backdrop-blur-md">
+                            <span className="text-lg">🔥</span>
+                            <span className="text-white font-black text-sm">{user.streak}</span>
+                        </div>
+                    )}
                  </div>
                  
+                 {/* Right side - Coins & XP */}
                  <div className="flex gap-2 items-center">
-                     {/* COINS */}
-                     <div className="glass-panel px-3 py-2 rounded-2xl flex items-center gap-2 border border-white/10 bg-white/5 shadow-lg cursor-pointer hover:bg-white/10 transition-colors" onClick={() => setActiveTab('SHOP')}>
-                         <Coins size={18} fill="currentColor" className="text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.6)]" />
-                         <div className="text-sm font-black font-mono text-white">
-                             {user.coins || 0}
-                         </div>
+                     {/* XP Badge */}
+                     <div className="px-3 py-2 rounded-2xl flex items-center gap-2 border border-purple-500/30 bg-purple-950/50 backdrop-blur-md">
+                         <Star size={14} fill="currentColor" className="text-purple-400" />
+                         <span className={`text-sm font-black text-white ${isXpAnimating ? 'animate-pulse text-purple-300' : ''}`}>
+                             {user.xp}
+                         </span>
                      </div>
+                     
+                     {/* COINS - Clickable */}
+                     <button 
+                         onClick={() => setActiveTab('SHOP')}
+                         className="relative group px-3 py-2 rounded-2xl flex items-center gap-2 border border-yellow-500/30 bg-yellow-950/50 backdrop-blur-md hover:bg-yellow-900/50 transition-all active:scale-95"
+                     >
+                         <div className="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                         <Coins size={14} fill="currentColor" className="text-yellow-400 relative z-10" />
+                         <span className="text-sm font-black text-white relative z-10">{user.coins || 0}</span>
+                     </button>
                  </div>
              </div>
 
-             {/* DAILY QUESTS WIDGET */}
-             <div className="mb-6 relative z-10 mx-auto max-w-sm">
-                 <div className="bg-[#151925] rounded-3xl p-5 border border-white/5 shadow-xl">
-                     <div className="flex items-center justify-between mb-4">
-                         <h3 className="text-white font-bold flex items-center gap-2 text-xs uppercase tracking-wider">
-                             <Target className="text-indigo-400" size={16} /> Ежедневные цели
-                         </h3>
-                         <span className="text-[10px] text-slate-500 font-mono bg-white/5 px-2 py-1 rounded">12:45:01</span>
+             {/* WELCOME MESSAGE - For new users */}
+             {user.completedTaskIds.length === 0 && (
+                 <div className="mb-6 mx-auto max-w-sm animate-in fade-in slide-in-from-top-4 duration-500">
+                     <div className="relative overflow-hidden rounded-3xl p-5 border border-indigo-500/30 bg-gradient-to-br from-indigo-950/80 to-purple-950/80 backdrop-blur-md">
+                         <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-3xl"></div>
+                         <div className="relative z-10">
+                             <h3 className="text-white font-black text-lg mb-2 flex items-center gap-2">
+                                 <span className="text-2xl">👋</span> Привет, {user.name}!
+                             </h3>
+                             <p className="text-indigo-200 text-sm leading-relaxed">
+                                 Начни своё путешествие с первого урока. Прокачай свой мозг и стань лучшей версией себя!
+                             </p>
+                             <button 
+                                 onClick={() => setShowTutorial(true)}
+                                 className="mt-4 px-4 py-2 rounded-xl bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-400 transition-colors flex items-center gap-2"
+                             >
+                                 <Info size={16} /> Как играть?
+                             </button>
+                         </div>
                      </div>
-                     <div className="space-y-2">
-                         {dailyQuests.map(q => (
-                             <div key={q.id} className="flex items-center justify-between">
+                 </div>
+             )}
+
+             {/* DAILY QUESTS WIDGET - IMPROVED */}
+             <div className="mb-6 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+                 <div className="relative overflow-hidden rounded-3xl p-5 border border-white/5 bg-[#151925]/90 backdrop-blur-md shadow-2xl">
+                     {/* Background decoration */}
+                     <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 blur-2xl"></div>
+                     
+                     <div className="flex items-center justify-between mb-4 relative z-10">
+                         <h3 className="text-white font-bold flex items-center gap-2 text-xs uppercase tracking-wider">
+                             <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                                 <Target className="text-indigo-400" size={14} />
+                             </div>
+                             Ежедневные цели
+                         </h3>
+                         <div className="flex items-center gap-1 text-[10px] text-slate-500 font-mono bg-white/5 px-2 py-1 rounded-lg">
+                             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                             Обновление в 00:00
+                         </div>
+                     </div>
+                     <div className="space-y-3 relative z-10">
+                         {dailyQuests.map((q, idx) => (
+                             <div 
+                                 key={q.id} 
+                                 className={`flex items-center justify-between p-3 rounded-2xl transition-all ${
+                                     q.completed 
+                                         ? 'bg-green-500/10 border border-green-500/20' 
+                                         : 'bg-white/5 border border-white/5 hover:bg-white/10'
+                                 }`}
+                                 style={{ animationDelay: `${idx * 100}ms` }}
+                             >
                                  <div className="flex items-center gap-3">
-                                     <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${q.completed ? 'bg-green-500 border-green-500' : 'border-slate-600'}`}>
-                                         {q.completed && <Check size={10} className="text-white" />}
+                                     <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all ${
+                                         q.completed 
+                                             ? 'bg-green-500 shadow-lg shadow-green-500/30' 
+                                             : 'bg-slate-800 border border-slate-700'
+                                     }`}>
+                                         {q.completed && <Check size={14} className="text-white" strokeWidth={3} />}
                                      </div>
-                                     <span className={`text-xs font-medium ${q.completed ? 'text-slate-500 line-through' : 'text-slate-200'}`}>{q.text}</span>
+                                     <span className={`text-sm font-medium ${q.completed ? 'text-green-300' : 'text-slate-200'}`}>
+                                         {q.text}
+                                     </span>
                                  </div>
-                                 <div className="flex items-center gap-1 text-[10px] font-bold text-yellow-500">
-                                     +{q.reward} <Coins size={8} fill="currentColor" />
+                                 <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg ${
+                                     q.completed ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
+                                 }`}>
+                                     +{q.reward} <Coins size={10} fill="currentColor" />
                                  </div>
                              </div>
                          ))}
+                     </div>
+                     
+                     {/* Progress bar */}
+                     <div className="mt-4 pt-4 border-t border-white/5 relative z-10">
+                         <div className="flex justify-between text-[10px] text-slate-400 mb-2 uppercase tracking-wider font-bold">
+                             <span>Прогресс</span>
+                             <span>{dailyQuests.filter(q => q.completed).length}/{dailyQuests.length}</span>
+                         </div>
+                         <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                             <div 
+                                 className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                                 style={{ width: `${(dailyQuests.filter(q => q.completed).length / dailyQuests.length) * 100}%` }}
+                             ></div>
+                         </div>
                      </div>
                  </div>
              </div>
@@ -444,6 +565,9 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
 
   return (
     <div className="h-full relative overflow-hidden text-white bg-[#020617]">
+      
+      {/* Tutorial Modal */}
+      <GameTutorial isOpen={showTutorial} onClose={handleCloseTutorial} />
       
       <div className="h-full overflow-y-auto scroll-smooth scrollbar-hide">
          {renderContent()}

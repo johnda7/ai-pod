@@ -1,8 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Task, LessonSlide, SortingItem, PairItem } from '../types';
-import { X, Play, Trophy, CheckCircle, AlertCircle, Skull, BarChart2, Heart, ArrowRight, RotateCcw, Sparkles, MoveRight, MoveLeft, Hand } from 'lucide-react';
+import { X, Play, Trophy, CheckCircle, AlertCircle, Skull, BarChart2, Heart, ArrowRight, RotateCcw, Sparkles, MoveRight, MoveLeft, Hand, Coins, Star, Zap, Gift, Shield, Brain, Target, Battery, Moon } from 'lucide-react';
 import { FocusDefender, EmbeddedMemoryGame } from './MiniGames';
+import { AnimatedBrain, AnimatedDopamine, AnimatedFocus, AnimatedBattery, AnimatedSleep, AnimatedBoss, AnimatedReward } from './AnimatedSlides';
 
 interface TaskModalProps {
   task: Task;
@@ -237,30 +239,116 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
       handleCorrect();
   };
   
+  // Render animation based on slide animation type
+  const renderAnimation = (animationType?: string) => {
+    switch (animationType) {
+      case 'brain':
+        return <AnimatedBrain isActive={true} />;
+      case 'dopamine':
+        return <AnimatedDopamine />;
+      case 'focus':
+        return <AnimatedFocus />;
+      case 'battery':
+        return <AnimatedBattery level={70} />;
+      case 'sleep':
+        return <AnimatedSleep />;
+      case 'boss':
+        return <AnimatedBoss defeated={false} />;
+      case 'boss_defeated':
+        return <AnimatedBoss defeated={true} />;
+      case 'reward':
+        return <AnimatedReward amount={50} />;
+      default:
+        return null;
+    }
+  };
+
   const renderSlideContent = () => {
       switch (currentSlide.type) {
           case 'THEORY':
+              const animation = renderAnimation((currentSlide as any).animation);
               return (
-                  <div className="flex flex-col h-full justify-center p-6 text-center space-y-8 animate-in zoom-in-95 duration-500">
+                  <motion.div 
+                    className="flex flex-col h-full justify-center p-6 text-center space-y-6 overflow-y-auto"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                      {/* Background glow */}
                       <div className="w-32 h-32 mx-auto bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-full blur-[60px] opacity-50 absolute top-20 left-1/2 -translate-x-1/2 pointer-events-none"></div>
                       
-                      <h3 className="text-3xl font-black text-white relative z-10 drop-shadow-xl tracking-tight leading-tight">
-                          {currentSlide.title}
-                      </h3>
+                      {/* Animation (if specified) */}
+                      {animation && (
+                        <motion.div 
+                          className="relative z-10 mb-2"
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.6, delay: 0.2 }}
+                        >
+                          {animation}
+                        </motion.div>
+                      )}
                       
-                      <div className="glass-panel p-8 rounded-[2rem] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative z-10 backdrop-blur-2xl bg-white/5">
-                          <p className="text-indigo-50 text-lg leading-relaxed font-medium">
+                      {/* Title with animation */}
+                      <motion.h3 
+                        className="text-2xl font-black text-white relative z-10 drop-shadow-xl tracking-tight leading-tight"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: animation ? 0.4 : 0.1 }}
+                      >
+                          {currentSlide.title}
+                      </motion.h3>
+                      
+                      {/* Content card with animation */}
+                      <motion.div 
+                        className="glass-panel p-6 rounded-[2rem] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative z-10 backdrop-blur-2xl bg-white/5"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: animation ? 0.6 : 0.3 }}
+                      >
+                          <p className="text-indigo-50 text-base leading-relaxed font-medium whitespace-pre-line">
                               {currentSlide.content}
                           </p>
-                      </div>
+                      </motion.div>
 
+                      {/* Tips/highlights if present */}
+                      {(currentSlide as any).tips && (
+                        <motion.div 
+                          className="space-y-3 relative z-10"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.5, delay: 0.8 }}
+                        >
+                          {(currentSlide as any).tips.map((tip: string, idx: number) => (
+                            <motion.div 
+                              key={idx}
+                              className="flex items-center gap-3 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 px-4 py-3 rounded-2xl border border-indigo-500/30"
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.3, delay: 0.9 + idx * 0.1 }}
+                            >
+                              <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <Sparkles className="w-4 h-4 text-white" />
+                              </div>
+                              <p className="text-sm text-indigo-100 font-medium text-left">{tip}</p>
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      )}
+
+                      {/* Image with animation */}
                       {currentSlide.imageUrl && (
-                          <div className="relative rounded-[2rem] overflow-hidden border border-white/20 shadow-2xl group mx-4">
+                          <motion.div 
+                            className="relative rounded-[2rem] overflow-hidden border border-white/20 shadow-2xl group mx-4"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5, delay: 0.5 }}
+                          >
                               <div className="absolute inset-0 bg-indigo-500/20 mix-blend-overlay group-hover:bg-transparent transition-all"></div>
                               <img src={currentSlide.imageUrl} className="w-full h-48 object-cover" alt="" />
-                          </div>
+                          </motion.div>
                       )}
-                  </div>
+                  </motion.div>
               );
 
           case 'VIDEO':
