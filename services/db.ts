@@ -485,10 +485,44 @@ export const purchaseItem = async (userId: string, item: any): Promise<boolean> 
     // 3. Deduct & Grant
     user.coins -= item.price;
     
+    // Variable to store mystery box reward for UI
+    let mysteryReward: { type: string; amount: number; message: string } | null = null;
+    
     if (item.type === 'COSMETIC') {
         user.inventory.push(item.id);
     } else if (item.id === 'hp_potion') {
         user.hp = Math.min(user.hp + 1, user.maxHp);
+    } else if (item.id === 'mystery_box') {
+        // Mystery Box - Random Reward!
+        const rewards = [
+            { type: 'coins', amount: 50, message: '💰 +50 монет!' },
+            { type: 'coins', amount: 100, message: '💰💰 +100 монет! Удача!' },
+            { type: 'coins', amount: 150, message: '💰💰💰 +150 монет! ДЖЕКПОТ!' },
+            { type: 'xp', amount: 100, message: '⭐ +100 XP!' },
+            { type: 'xp', amount: 200, message: '⭐⭐ +200 XP! Супер!' },
+            { type: 'hp', amount: 1, message: '❤️ +1 HP восстановлено!' },
+            { type: 'hp', amount: 2, message: '❤️❤️ +2 HP! Отлично!' },
+        ];
+        
+        const reward = rewards[Math.floor(Math.random() * rewards.length)];
+        mysteryReward = reward;
+        
+        if (reward.type === 'coins') {
+            user.coins += reward.amount;
+        } else if (reward.type === 'xp') {
+            user.xp += reward.amount;
+            user.level = Math.floor(user.xp / 500) + 1;
+        } else if (reward.type === 'hp') {
+            user.hp = Math.min(user.hp + reward.amount, user.maxHp);
+        }
+        
+        console.log('🎁 Mystery Box Reward:', reward.message);
+        
+        // Store reward in localStorage for UI to display
+        localStorage.setItem('mystery_box_reward', JSON.stringify(reward));
+    } else if (item.id === 'streak_freeze') {
+        // Streak Freeze - add to inventory for later use
+        user.inventory.push(item.id);
     }
 
     // 4. Save Local
