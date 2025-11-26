@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Target, Zap, Clock, Brain, CheckCircle, XCircle, Crosshair, Sparkles, Shield, Skull, Battery, Flame, Droplets, Ghost, Play, Smartphone, Bell, Gamepad2, BookOpen, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Target, Zap, Clock, Brain, CheckCircle, XCircle, Crosshair, Sparkles, Shield, Skull, Battery, Flame, Droplets, Ghost, Play, Smartphone, Bell, Gamepad2, BookOpen, AlertTriangle, RefreshCw, Trophy } from 'lucide-react';
 import { GameSlide } from '../types';
 
 interface MiniGameProps {
@@ -458,5 +458,161 @@ export const EmbeddedMemoryGame: React.FC<MiniGameProps> = ({ config, onComplete
               ))}
           </div>
       </div>
+  );
+}
+
+// --- GAME 3: REACTION TIME ---
+interface ReactionGameProps {
+  onComplete: (score: number) => void;
+}
+
+export const ReactionGame: React.FC<ReactionGameProps> = ({ onComplete }) => {
+  const [gameState, setGameState] = useState<'WAITING' | 'READY' | 'GO' | 'TOO_EARLY' | 'RESULT'>('WAITING');
+  const [reactionTime, setReactionTime] = useState(0);
+  const [round, setRound] = useState(1);
+  const [times, setTimes] = useState<number[]>([]);
+  const startTimeRef = useRef<number>(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const totalRounds = 5;
+
+  const startRound = () => {
+    setGameState('READY');
+    
+    // Random delay between 1-4 seconds
+    const delay = Math.random() * 3000 + 1000;
+    
+    timerRef.current = setTimeout(() => {
+      startTimeRef.current = Date.now();
+      setGameState('GO');
+    }, delay);
+  };
+
+  const handleClick = () => {
+    if (gameState === 'WAITING') {
+      startRound();
+    } else if (gameState === 'READY') {
+      // Clicked too early!
+      if (timerRef.current) clearTimeout(timerRef.current);
+      setGameState('TOO_EARLY');
+    } else if (gameState === 'GO') {
+      const time = Date.now() - startTimeRef.current;
+      setReactionTime(time);
+      setTimes(prev => [...prev, time]);
+      
+      if (round >= totalRounds) {
+        setGameState('RESULT');
+      } else {
+        setRound(r => r + 1);
+        setGameState('WAITING');
+      }
+    } else if (gameState === 'TOO_EARLY') {
+      setGameState('WAITING');
+    } else if (gameState === 'RESULT') {
+      // Calculate score based on average time
+      const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
+      const score = Math.max(0, Math.min(100, Math.round(150 - avgTime / 5)));
+      onComplete(score);
+    }
+  };
+
+  const getBackgroundColor = () => {
+    switch (gameState) {
+      case 'READY': return 'bg-gradient-to-br from-red-900 to-red-950';
+      case 'GO': return 'bg-gradient-to-br from-green-600 to-emerald-700';
+      case 'TOO_EARLY': return 'bg-gradient-to-br from-orange-900 to-red-950';
+      case 'RESULT': return 'bg-gradient-to-br from-indigo-900 to-purple-950';
+      default: return 'bg-gradient-to-br from-slate-900 to-slate-950';
+    }
+  };
+
+  const avgTime = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
+
+  return (
+    <div 
+      onClick={handleClick}
+      className={`h-full flex flex-col items-center justify-center text-center p-6 cursor-pointer transition-all duration-500 ${getBackgroundColor()}`}
+    >
+      {gameState === 'WAITING' && (
+        <div className="animate-in zoom-in duration-300">
+          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
+            <Zap size={48} className="text-yellow-400" />
+          </div>
+          <h3 className="text-2xl font-black text-white mb-2">Раунд {round} / {totalRounds}</h3>
+          <p className="text-slate-400 mb-6">Нажми, чтобы начать</p>
+          {times.length > 0 && (
+            <div className="text-sm text-slate-500">
+              Последнее время: <span className="text-green-400 font-bold">{reactionTime} мс</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {gameState === 'READY' && (
+        <div className="animate-in zoom-in duration-300">
+          <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-red-500/30 border-4 border-red-500 flex items-center justify-center animate-pulse">
+            <Clock size={48} className="text-red-400" />
+          </div>
+          <h3 className="text-3xl font-black text-red-400 mb-2">ЖДИ...</h3>
+          <p className="text-red-300/70">Не нажимай пока не станет зелёным!</p>
+        </div>
+      )}
+
+      {gameState === 'GO' && (
+        <div className="animate-in zoom-in duration-200">
+          <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-green-500/30 border-4 border-green-400 flex items-center justify-center">
+            <Target size={48} className="text-green-300" />
+          </div>
+          <h3 className="text-4xl font-black text-green-400 mb-2">ЖМИИ!</h3>
+          <p className="text-green-300/70">Как можно быстрее!</p>
+        </div>
+      )}
+
+      {gameState === 'TOO_EARLY' && (
+        <div className="animate-in shake duration-300">
+          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-orange-500/30 flex items-center justify-center">
+            <AlertTriangle size={48} className="text-orange-400" />
+          </div>
+          <h3 className="text-2xl font-black text-orange-400 mb-2">Слишком рано!</h3>
+          <p className="text-orange-300/70">Нажми, чтобы попробовать снова</p>
+        </div>
+      )}
+
+      {gameState === 'RESULT' && (
+        <div className="animate-in zoom-in duration-500">
+          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg shadow-yellow-500/30">
+            <Trophy size={48} className="text-white" />
+          </div>
+          <h3 className="text-3xl font-black text-white mb-2">Готово!</h3>
+          <div className="bg-white/10 rounded-2xl p-4 mb-6">
+            <p className="text-slate-400 text-sm mb-1">Среднее время реакции</p>
+            <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
+              {avgTime} мс
+            </p>
+          </div>
+          <div className="text-sm text-slate-500 mb-4">
+            {avgTime < 250 ? '🔥 Невероятно быстро!' : 
+             avgTime < 350 ? '⚡ Отличная реакция!' : 
+             avgTime < 450 ? '👍 Хороший результат!' : 
+             '💪 Продолжай тренироваться!'}
+          </div>
+          <p className="text-indigo-300">Нажми, чтобы продолжить</p>
+        </div>
+      )}
+
+      {/* Progress dots */}
+      <div className="absolute bottom-8 flex gap-2">
+        {Array.from({ length: totalRounds }).map((_, i) => (
+          <div 
+            key={i} 
+            className={`w-2 h-2 rounded-full transition-all ${
+              i < times.length ? 'bg-green-400' : 
+              i === round - 1 && gameState !== 'RESULT' ? 'bg-white animate-pulse' : 
+              'bg-white/20'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
