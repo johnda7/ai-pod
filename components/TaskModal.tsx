@@ -5,6 +5,8 @@ import { Task, LessonSlide, SortingItem, PairItem } from '../types';
 import { X, Play, Trophy, CheckCircle, AlertCircle, Skull, BarChart2, Heart, ArrowRight, RotateCcw, Sparkles, MoveRight, MoveLeft, Hand, Coins, Star, Zap, Gift, Shield, Brain, Target, Battery, Moon } from 'lucide-react';
 import { FocusDefender, EmbeddedMemoryGame, ReactionGame } from './MiniGames';
 import { AnimatedBrain, AnimatedDopamine, AnimatedFocus, AnimatedBattery, AnimatedSleep, AnimatedBoss, AnimatedReward } from './AnimatedSlides';
+import { KatyaCharacter } from './KatyaCharacter';
+import { BubblePopGame, EmotionMatchGame, BreathSyncGame } from './ImprovedGames';
 
 interface TaskModalProps {
   task: Task;
@@ -699,6 +701,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
                         {currentSlide.gameType === 'FOCUS_DEFENDER' && <FocusDefender config={currentSlide} onComplete={handleGameComplete} />}
                         {currentSlide.gameType === 'NEURO_MATCH' && <EmbeddedMemoryGame config={currentSlide} onComplete={handleGameComplete} />}
                         {currentSlide.gameType === 'REACTION_TIME' && <ReactionGame onComplete={handleGameComplete} />}
+                        {currentSlide.gameType === 'BUBBLE_POP' && <BubblePopGame onComplete={handleGameComplete} duration={currentSlide.durationSeconds || 30} targetScore={currentSlide.targetScore || 10} />}
+                        {currentSlide.gameType === 'EMOTION_MATCH' && <EmotionMatchGame onComplete={handleGameComplete} />}
+                        {currentSlide.gameType === 'BREATH_SYNC' && <BreathSyncGame onComplete={handleGameComplete} cycles={3} />}
                     </div>
                 );
 
