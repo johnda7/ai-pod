@@ -535,5 +535,3 @@ export const MeditationView: React.FC = () => {
     </div>
   );
 };
-
-};
