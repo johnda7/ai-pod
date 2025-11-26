@@ -2,13 +2,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TASKS, SHOP_ITEMS, ACHIEVEMENTS } from '../constants';
 import { Task, User, ShopItem } from '../types';
-import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Trophy, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info, Award, Flame } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Trophy, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info, Award, Flame, Gamepad2 } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
 import { MemoryGame } from './MemoryGame';
 import { ShopView } from './ShopView';
 import { LeaderboardView } from './LeaderboardView';
 import { AchievementsView } from './AchievementsView';
+import { GameSystem } from './GameSystem';
 import { purchaseItem } from '../services/db'; // Import real purchase logic
 import { isSupabaseEnabled } from '../services/supabaseClient';
 import { GameTutorial } from './GameTutorial';
@@ -19,7 +20,7 @@ interface TeenDashboardProps {
   onUserUpdate?: (user: User) => void; // Callback to update parent
 }
 
-type Tab = 'LEARN' | 'RELAX' | 'SHOP' | 'LEADERBOARD' | 'PROFILE';
+type Tab = 'LEARN' | 'RELAX' | 'SHOP' | 'LEADERBOARD' | 'PROFILE' | 'GAMES';
 
 export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser, onTaskComplete, onUserUpdate }) => {
   const [user, setUser] = useState<User>(initialUser); // Local user state to reflect changes immediately
@@ -108,10 +109,40 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
 
   const inventoryItems = user.inventory.map(id => SHOP_ITEMS.find(item => item.id === id)).filter(Boolean);
 
+  // Обработка награды от игр
+  const handleGameReward = (xp: number, coins: number, bonus?: string) => {
+    const updatedUser = {
+      ...user,
+      xp: user.xp + xp,
+      coins: user.coins + coins,
+      level: Math.floor((user.xp + xp) / 100) + 1,
+    };
+    
+    // Добавляем бонусный предмет в инвентарь
+    if (bonus && !updatedUser.inventory.includes(bonus)) {
+      updatedUser.inventory = [...updatedUser.inventory, bonus];
+    }
+    
+    setUser(updatedUser);
+    localStorage.setItem('ai_pod_user', JSON.stringify(updatedUser));
+    onUserUpdate?.(updatedUser);
+    
+    // Анимация XP
+    setIsXpAnimating(true);
+    setTimeout(() => setIsXpAnimating(false), 500);
+  };
+
   const renderContent = () => {
     if (activeTab === 'RELAX') return <MeditationView />;
     if (activeTab === 'SHOP') return <ShopView user={user} onBuy={handleBuyItem} onRefreshUser={refreshUserData} />;
     if (activeTab === 'LEADERBOARD') return <LeaderboardView currentUser={user} />;
+    if (activeTab === 'GAMES') return (
+      <GameSystem 
+        userId={user.id} 
+        onReward={handleGameReward}
+        onClose={() => setActiveTab('LEARN')}
+      />
+    );
 
     if (activeTab === 'PROFILE') {
         return (
@@ -670,9 +701,10 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         >
                 {[
                   { id: 'LEARN', icon: LayoutGrid, label: 'Путь' },
+                  { id: 'GAMES', icon: Gamepad2, label: 'Игры' },
                   { id: 'LEADERBOARD', icon: Trophy, label: 'Топ' },
-                  { id: 'SHOP', icon: ShoppingBag, label: 'Магазин' },
-            { id: 'RELAX', icon: Star, label: 'Чилл' },
+                  { id: 'SHOP', icon: ShoppingBag, label: 'Магаз' },
+                  { id: 'RELAX', icon: Star, label: 'Чилл' },
                   { id: 'PROFILE', icon: UserIcon, label: 'Я' },
                 ].map((tab) => {
                     const isActive = activeTab === tab.id;
