@@ -13,11 +13,23 @@ const STORAGE_KEYS = {
   CURRENT_USER_ID: 'ai_teenager_current_id_v6'
 };
 
+// Helper to generate UUID for guests
+function generateUUID() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
 // --- INITIALIZATION ---
 
 export const getOrCreateUser = async (telegramUser: any | null): Promise<User> => {
   let userId: string;
   let isGuest = false;
+  let isLegacyGuest = false;
 
   console.log("DB: Identifying User...", telegramUser);
 
@@ -29,13 +41,20 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
     isGuest = true;
     // Check if we already have a stored guest ID to PERSIST progress across refreshes
     const storedId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
-    if (storedId && storedId.startsWith('guest_')) {
-      userId = storedId;
-      console.log("DB: Recovered Guest ID:", userId);
+    if (storedId) {
+        userId = storedId;
+        // Check if it's a legacy non-UUID guest ID
+        if (storedId.startsWith('guest_')) {
+            console.log("DB: Found Legacy Guest ID (Non-UUID):", userId);
+            isLegacyGuest = true;
+        } else {
+            console.log("DB: Recovered Guest UUID:", userId);
+        }
     } else {
-      userId = 'guest_' + Date.now();
+      // Generate a proper UUID for new guests
+      userId = generateUUID();
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, userId);
-      console.log("DB: Generated New Guest ID:", userId);
+      console.log("DB: Generated New Guest UUID:", userId);
     }
   }
 
@@ -69,7 +88,8 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
   );
 
   // 3. SUPABASE SYNC
-  if (isSupabaseEnabled) {
+  // Skip Supabase sync for Legacy Guests to avoid 400 Bad Request (Invalid UUID)
+  if (isSupabaseEnabled && !isLegacyGuest) {
     try {
       console.log(`DB: Checking Supabase for Telegram ID: ${userId} (Guest: ${isGuest})`);
       
@@ -88,7 +108,7 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
           existingUser = data;
           error = err;
       } else {
-          // For guests or fallback, search by ID
+          // For guests or fallback, search by ID (must be UUID)
           const { data, error: err } = await query.eq('id', userId).maybeSingle();
           existingUser = data;
           error = err;
@@ -147,6 +167,7 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
         const sourceData = localUser || newUserTemplate;
 
         const dbUserPayload = {
+          id: isGuest ? userId : undefined, // Explicitly set ID for guests
           telegram_id: !isGuest ? userId : null,
           username: sourceData.username || telegramUser?.username,
           name: sourceData.name || telegramUser?.first_name,
@@ -196,6 +217,8 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
     } catch (e) {
       console.error("Supabase Connection Error:", e);
     }
+  } else if (isLegacyGuest) {
+      console.warn("⚠️ Skipping Supabase sync for Legacy Guest ID (update to UUID to fix)");
   }
 
   // Offline / No-DB Fallback
@@ -225,7 +248,10 @@ export const completeTask = async (userId: string, task: Task): Promise<void> =>
   }
 
   // 2. UPDATE SUPABASE
-  if (isSupabaseEnabled) {
+  // Check if valid UUID before syncing to avoid 400 errors
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+
+  if (isSupabaseEnabled && isValidUUID) {
       try {
         // If user not found locally, try to get from Supabase
         if (!updatedUser) {
@@ -332,44 +358,48 @@ export const purchaseItem = async (userId: string, item: any): Promise<boolean> 
         user = users[userIndex];
     } else if (isSupabaseEnabled) {
         // Try to get from Supabase if not found locally
-        try {
-            const { data: dbUser } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', userId)
-                .single();
-            
-            if (dbUser) {
-                // Get progress to build full user object
-                const { data: progressData } = await supabase
-                    .from('progress')
-                    .select('task_id')
-                    .eq('user_id', userId);
+        const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+        
+        if (isValidUUID) {
+            try {
+                const { data: dbUser } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
                 
-                user = {
-                    id: dbUser.id,
-                    telegramId: dbUser.telegram_id,
-                    username: dbUser.username,
-                    name: dbUser.name,
-                    role: dbUser.role as UserRole,
-                    xp: Number(dbUser.xp) || 0,
-                    coins: Number(dbUser.coins) || 0,
-                    level: dbUser.level || 1,
-                    hp: dbUser.hp ?? 5,
-                    maxHp: dbUser.max_hp ?? 5,
-                    avatarUrl: dbUser.avatar_url || '',
-                    streak: dbUser.streak || 0,
-                    completedTaskIds: progressData?.map((p: any) => p.task_id) || [],
-                    interest: dbUser.interest || 'Гейминг',
-                    inventory: dbUser.inventory || [],
-                    league: dbUser.league || 'BRONZE'
-                };
-                
-                // Save to local storage for future use
-                saveUserToStorage(user);
+                if (dbUser) {
+                    // Get progress to build full user object
+                    const { data: progressData } = await supabase
+                        .from('progress')
+                        .select('task_id')
+                        .eq('user_id', userId);
+                    
+                    user = {
+                        id: dbUser.id,
+                        telegramId: dbUser.telegram_id,
+                        username: dbUser.username,
+                        name: dbUser.name,
+                        role: dbUser.role as UserRole,
+                        xp: Number(dbUser.xp) || 0,
+                        coins: Number(dbUser.coins) || 0,
+                        level: dbUser.level || 1,
+                        hp: dbUser.hp ?? 5,
+                        maxHp: dbUser.max_hp ?? 5,
+                        avatarUrl: dbUser.avatar_url || '',
+                        streak: dbUser.streak || 0,
+                        completedTaskIds: progressData?.map((p: any) => p.task_id) || [],
+                        interest: dbUser.interest || 'Гейминг',
+                        inventory: dbUser.inventory || [],
+                        league: dbUser.league || 'BRONZE'
+                    };
+                    
+                    // Save to local storage for future use
+                    saveUserToStorage(user);
+                }
+            } catch (e) {
+                console.error("Failed to fetch user from Supabase:", e);
             }
-        } catch (e) {
-            console.error("Failed to fetch user from Supabase:", e);
         }
     }
 
@@ -412,7 +442,9 @@ export const purchaseItem = async (userId: string, item: any): Promise<boolean> 
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updatedUsers));
 
     // 5. Cloud Update
-    if (isSupabaseEnabled) {
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+    
+    if (isSupabaseEnabled && isValidUUID) {
         try {
             const { error } = await supabase.from('users').update({
                 coins: user.coins,
@@ -468,6 +500,8 @@ export const getAllStudentsStats = async (): Promise<StudentStats[]> => {
 // --- REFRESH USER FROM SUPABASE ---
 export const refreshUserFromSupabase = async (userId: string): Promise<User | null> => {
   if (!isSupabaseEnabled) return null;
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+  if (!isValidUUID) return null;
   
   try {
     const { data: dbUser, error } = await supabase
