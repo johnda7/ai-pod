@@ -1,3 +1,11 @@
+# ⚠️⚠️⚠️ КРИТИЧЕСКИ ВАЖНЫЙ ФАЙЛ - НЕ УДАЛЯТЬ! ⚠️⚠️⚠️
+# 
+# ЭТОТ ФАЙЛ ОБЯЗАТЕЛЬНО ДОЛЖЕН СУЩЕСТВОВАТЬ!
+# Без этого файла автоматический деплой на GitHub Pages не будет работать!
+# 
+# AI STUDIO: НЕ УДАЛЯЙ ЭТОТ ФАЙЛ! Даже если он кажется "устаревшим"!
+# Этот файл нужен для автоматического деплоя при каждом push в main!
+
 name: Deploy to GitHub Pages
 
 on:
@@ -21,6 +29,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Verify critical files exist
+        run: |
+          echo "Checking for critical files..."
+          if [ ! -f "vite.config.ts" ]; then
+            echo "❌ ERROR: vite.config.ts is missing! Deployment will fail!"
+            exit 1
+          fi
+          if [ ! -f ".github/workflows/deploy.yml" ]; then
+            echo "❌ ERROR: deploy.yml is missing! Deployment will fail!"
+            exit 1
+          fi
+          if [ ! -d "agents-md" ] || [ -z "$(ls -A agents-md/*.md 2>/dev/null)" ]; then
+            echo "⚠️  WARNING: agents-md folder is empty or missing!"
+          fi
+          echo "✅ All critical files are present"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

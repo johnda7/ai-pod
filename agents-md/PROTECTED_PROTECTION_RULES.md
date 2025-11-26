@@ -154,3 +154,4 @@ git commit -m "restore: Recover critical documentation files"
 **Создано:** 2025-11-26  
 **Причина:** Восстановление после случайного удаления в коммите a24f9ba
 
+
