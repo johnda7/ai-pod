@@ -29,7 +29,6 @@ function generateUUID() {
 export const getOrCreateUser = async (telegramUser: any | null): Promise<User> => {
   let userId: string;
   let isGuest = false;
-  let isLegacyGuest = false;
 
   console.log("DB: Identifying User...", telegramUser);
 
@@ -42,12 +41,32 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
     // Check if we already have a stored guest ID to PERSIST progress across refreshes
     const storedId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
     if (storedId) {
-        userId = storedId;
-        // Check if it's a legacy non-UUID guest ID
+        // Check if it's a legacy non-UUID guest ID - MIGRATE IT!
         if (storedId.startsWith('guest_')) {
-            console.log("DB: Found Legacy Guest ID (Non-UUID):", userId);
-            isLegacyGuest = true;
+            console.log("DB: Found Legacy Guest ID (Non-UUID):", storedId);
+            console.log("DB: 🔄 MIGRATING to new UUID format...");
+            
+            // Get the old user data before migration
+            const users = getUsersFromStorage();
+            const oldUser = users.find(u => u.id === storedId);
+            
+            // Generate new UUID
+            const newUUID = generateUUID();
+            userId = newUUID;
+            
+            // Update localStorage with new UUID
+            localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, newUUID);
+            
+            // If old user exists, update their ID in storage
+            if (oldUser) {
+                console.log("DB: Migrating user data:", oldUser.coins, "coins,", oldUser.xp, "XP");
+                oldUser.id = newUUID;
+                saveUserToStorage(oldUser);
+            }
+            
+            console.log("DB: ✅ Migration complete! New UUID:", newUUID);
         } else {
+            userId = storedId;
             console.log("DB: Recovered Guest UUID:", userId);
         }
     } else {
@@ -88,8 +107,7 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
   );
 
   // 3. SUPABASE SYNC
-  // Skip Supabase sync for Legacy Guests to avoid 400 Bad Request (Invalid UUID)
-  if (isSupabaseEnabled && !isLegacyGuest) {
+  if (isSupabaseEnabled) {
     try {
       console.log(`DB: Checking Supabase for Telegram ID: ${userId} (Guest: ${isGuest})`);
       
@@ -217,8 +235,6 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
     } catch (e) {
       console.error("Supabase Connection Error:", e);
     }
-  } else if (isLegacyGuest) {
-      console.warn("⚠️ Skipping Supabase sync for Legacy Guest ID (update to UUID to fix)");
   }
 
   // Offline / No-DB Fallback
