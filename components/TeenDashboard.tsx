@@ -14,11 +14,12 @@ import { isSupabaseEnabled } from '../services/supabaseClient';
 interface TeenDashboardProps {
   user: User;
   onTaskComplete: (task: Task) => void;
+  onUserUpdate?: (user: User) => void; // Callback to update parent
 }
 
 type Tab = 'LEARN' | 'RELAX' | 'SHOP' | 'LEADERBOARD' | 'PROFILE';
 
-export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser, onTaskComplete }) => {
+export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser, onTaskComplete, onUserUpdate }) => {
   const [user, setUser] = useState<User>(initialUser); // Local user state to reflect changes immediately
   const [activeTab, setActiveTab] = useState<Tab>('LEARN'); 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -56,23 +57,28 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       setIsGameOpen(false);
   };
 
+  // Refresh user data from localStorage
+  const refreshUserData = () => {
+      const users = JSON.parse(localStorage.getItem('ai_teenager_users_v6') || '[]');
+      const updatedUser = users.find((u: User) => u.id === user.id);
+      if (updatedUser) {
+          setUser(updatedUser);
+          if (onUserUpdate) {
+              onUserUpdate(updatedUser);
+          }
+      }
+  };
+
   // REAL PURCHASE LOGIC
   const handleBuyItem = async (item: ShopItem) => {
       const success = await purchaseItem(user.id, item);
       
       if (success) {
-          // Optimistic Update
-          const updatedUser = { ...user };
-          updatedUser.coins -= item.price;
+          // Small delay to ensure localStorage is updated
+          await new Promise(resolve => setTimeout(resolve, 100));
           
-          if (item.type === 'COSMETIC') {
-              updatedUser.inventory = [...updatedUser.inventory, item.id];
-          } else if (item.id === 'hp_potion') {
-              updatedUser.hp = Math.min(updatedUser.hp + 1, updatedUser.maxHp);
-          }
-          
-          setUser(updatedUser);
-          // Force update parent if needed or rely on next fetch
+          // Reload user from storage to get accurate state
+          refreshUserData();
       } else {
           // Fallback if validation failed inside purchaseItem
           alert("Недостаточно монет или предмет уже куплен!");
@@ -87,7 +93,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
 
   const renderContent = () => {
     if (activeTab === 'RELAX') return <MeditationView />;
-    if (activeTab === 'SHOP') return <ShopView user={user} onBuy={handleBuyItem} />;
+    if (activeTab === 'SHOP') return <ShopView user={user} onBuy={handleBuyItem} onRefreshUser={refreshUserData} />;
     if (activeTab === 'LEADERBOARD') return <LeaderboardView currentUser={user} />;
 
     if (activeTab === 'PROFILE') {

@@ -7,6 +7,7 @@ import { ShoppingBag, Coins, Heart, Snowflake, Gift, Crown, Check, Sparkles, X }
 interface ShopViewProps {
   user: User;
   onBuy: (item: ShopItem) => void;
+  onRefreshUser?: () => void;
 }
 
 interface MysteryReward {
@@ -15,9 +16,10 @@ interface MysteryReward {
   message: string;
 }
 
-export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy }) => {
+export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }) => {
   const [mysteryReward, setMysteryReward] = useState<MysteryReward | null>(null);
   const [showRewardModal, setShowRewardModal] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
 
   // Check for mystery box reward after purchase
   useEffect(() => {
@@ -33,13 +35,23 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy }) => {
     
     // Check immediately and set up interval
     checkReward();
-    const interval = setInterval(checkReward, 500);
+    const interval = setInterval(checkReward, 300);
     return () => clearInterval(interval);
   }, []);
 
   const closeRewardModal = () => {
     setShowRewardModal(false);
     setMysteryReward(null);
+    // Refresh user data after closing modal to show updated coins/xp/hp
+    if (onRefreshUser) {
+      onRefreshUser();
+    }
+  };
+
+  const handleBuy = async (item: ShopItem) => {
+    setIsPurchasing(true);
+    await onBuy(item);
+    setIsPurchasing(false);
   };
   
   const getIcon = (id: string) => {
@@ -75,12 +87,25 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy }) => {
              const canAfford = user.coins >= item.price;
              const isHpFull = item.id === 'hp_potion' && user.hp === user.maxHp;
              const isOwned = user.inventory.includes(item.id) && item.type === 'COSMETIC';
+             
+             // Count how many of this item user has (for consumables like streak_freeze)
+             const ownedCount = user.inventory.filter(id => id === item.id).length;
+             const hasInInventory = ownedCount > 0;
+             
+             // Disable logic: cosmetics can only be bought once, consumables can be bought multiple times
              const isDisabled = !canAfford || isHpFull || isOwned;
 
              return (
                <div key={item.id} className="bg-[#151925] rounded-[2rem] p-6 border border-white/5 relative group overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
                    {/* Hover Effect */}
                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                   {/* Owned Badge for consumables */}
+                   {hasInInventory && item.type === 'POWERUP' && item.id === 'streak_freeze' && (
+                       <div className="absolute top-4 right-4 bg-sky-500/20 text-sky-300 px-3 py-1 rounded-full text-xs font-bold border border-sky-500/30 z-20">
+                           В инвентаре: {ownedCount}
+                       </div>
+                   )}
 
                    <div className="relative z-10 flex flex-col items-center text-center gap-4">
                        <div className="w-20 h-20 rounded-full bg-[#0A0F1C] border border-white/5 flex items-center justify-center shadow-lg text-4xl mb-2 group-hover:scale-110 transition-transform duration-300 relative">
@@ -101,15 +126,17 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy }) => {
                               </button>
                           ) : (
                               <button 
-                                onClick={() => onBuy(item)}
-                                disabled={isDisabled}
+                                onClick={() => handleBuy(item)}
+                                disabled={isDisabled || isPurchasing}
                                 className={`w-full py-3 rounded-xl font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95
-                                    ${isDisabled 
+                                    ${isDisabled || isPurchasing
                                         ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50' 
                                         : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/50'}
                                 `}
                               >
-                                  {isHpFull ? (
+                                  {isPurchasing ? (
+                                      <span className="animate-pulse">Покупка...</span>
+                                  ) : isHpFull ? (
                                       <span>HP Полно</span>
                                   ) : (
                                     <>

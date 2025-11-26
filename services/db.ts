@@ -543,7 +543,9 @@ export const purchaseItem = async (userId: string, item: any): Promise<boolean> 
             const { error } = await supabase.from('users').update({
                 coins: user.coins,
                 inventory: user.inventory,
-                hp: user.hp
+                hp: user.hp,
+                xp: user.xp,
+                level: user.level
             }).eq('id', userId);
             
             if (error) {
