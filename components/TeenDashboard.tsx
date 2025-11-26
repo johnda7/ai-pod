@@ -339,332 +339,291 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
     return (
         <div className="relative pt-2 pb-40 px-4 min-h-screen overflow-x-hidden">
              
-             {/* TOP BAR - iOS 26 LIQUID GLASS */}
-             <div className="flex justify-between items-center mb-6 relative z-40 pt-28 sticky top-0 pb-4 -mx-4 px-5 transition-all duration-300">
+             {/* TOP BAR - iOS 26 LIQUID GLASS - COMPACT */}
+             <div className="flex justify-between items-center mb-4 relative z-40 pt-16 sticky top-0 pb-3 -mx-4 px-4 transition-all duration-300">
                  {/* Glass background */}
                  <div 
-                   className="absolute inset-0 -top-20"
+                   className="absolute inset-0 -top-10"
                    style={{
-                     background: 'linear-gradient(to bottom, rgba(2,6,23,1) 0%, rgba(2,6,23,0.95) 60%, transparent 100%)',
+                     background: 'linear-gradient(to bottom, rgba(2,6,23,1) 0%, rgba(2,6,23,0.9) 70%, transparent 100%)',
                    }}
                  />
                  
                  {/* Left side - HP & Streak */}
-                 <div className="flex items-center gap-2 relative z-10">
-                    {/* HP - Liquid Glass */}
+                 <div className="flex items-center gap-1.5 relative z-10">
+                    {/* HP - Compact Glass Pill */}
                     <div 
-                      className="px-3 py-2 rounded-2xl flex items-center gap-2"
+                      className="px-2.5 py-1.5 rounded-xl flex items-center gap-1.5"
                       style={{
-                        background: 'linear-gradient(135deg, rgba(244,63,94,0.15) 0%, rgba(244,63,94,0.05) 100%)',
+                        background: 'rgba(244,63,94,0.12)',
                         backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(244,63,94,0.2)',
-                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)',
+                        border: '1px solid rgba(244,63,94,0.15)',
                       }}
                     >
-                      <div className="flex gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <Heart 
-                            key={i} 
-                            size={12} 
-                            fill={i < (user.hp || 5) ? "currentColor" : "none"}
-                            className={`${i < (user.hp || 5) ? 'text-rose-400' : 'text-slate-600'} transition-all`}
-                          />
-                        ))}
-                        </div>
+                      <Heart size={12} fill="currentColor" className="text-rose-400" />
+                      <span className="text-xs font-bold text-rose-300">{user.hp || 5}</span>
                     </div>
                     
-                    {/* Streak */}
+                    {/* Streak - Compact */}
                     {user.streak > 0 && (
                       <div 
-                        className="px-3 py-2 rounded-2xl flex items-center gap-1.5"
+                        className="px-2.5 py-1.5 rounded-xl flex items-center gap-1"
                         style={{
-                          background: 'linear-gradient(135deg, rgba(249,115,22,0.15) 0%, rgba(249,115,22,0.05) 100%)',
+                          background: 'rgba(249,115,22,0.12)',
                           backdropFilter: 'blur(20px)',
-                          border: '1px solid rgba(249,115,22,0.2)',
-                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)',
+                          border: '1px solid rgba(249,115,22,0.15)',
                         }}
                       >
-                        <span className="text-base">🔥</span>
-                        <span className="text-white font-bold text-sm">{user.streak}</span>
+                        <Flame size={12} className="text-orange-400" />
+                        <span className="text-xs font-bold text-orange-300">{user.streak}</span>
                       </div>
                     )}
                  </div>
                  
-                 {/* Right side - Coins & XP */}
-                 <div className="flex gap-2 items-center relative z-10">
-                     {/* XP - Liquid Glass */}
+                 {/* Right side - XP & Coins */}
+                 <div className="flex gap-1.5 items-center relative z-10">
+                     {/* XP - Compact */}
                      <div 
-                       className="px-3 py-2 rounded-2xl flex items-center gap-2"
+                       className="px-2.5 py-1.5 rounded-xl flex items-center gap-1.5"
                        style={{
-                         background: 'linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(168,85,247,0.05) 100%)',
+                         background: 'rgba(168,85,247,0.12)',
                          backdropFilter: 'blur(20px)',
-                         border: '1px solid rgba(168,85,247,0.2)',
-                         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)',
+                         border: '1px solid rgba(168,85,247,0.15)',
                        }}
                      >
-                       <Star size={12} fill="currentColor" className="text-purple-400" />
-                       <span className={`text-sm font-bold text-white ${isXpAnimating ? 'animate-pulse text-purple-300' : ''}`}>
+                       <Zap size={12} className="text-purple-400" />
+                       <span className={`text-xs font-bold text-purple-300 ${isXpAnimating ? 'animate-pulse' : ''}`}>
                          {user.xp}
                        </span>
                      </div>
                      
-                     {/* COINS - Clickable Liquid Glass */}
+                     {/* COINS - Clickable */}
                      <button 
                        onClick={() => setActiveTab('SHOP')}
-                       className="px-3 py-2 rounded-2xl flex items-center gap-2 transition-all active:scale-95 hover:brightness-110"
+                       className="px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95"
                        style={{
-                         background: 'linear-gradient(135deg, rgba(234,179,8,0.2) 0%, rgba(234,179,8,0.08) 100%)',
+                         background: 'rgba(234,179,8,0.15)',
                          backdropFilter: 'blur(20px)',
-                         border: '1px solid rgba(234,179,8,0.25)',
-                         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)',
+                         border: '1px solid rgba(234,179,8,0.2)',
                        }}
                      >
-                       <Coins size={12} fill="currentColor" className="text-yellow-400" />
-                       <span className="text-sm font-bold text-white">{user.coins || 0}</span>
+                       <Coins size={12} className="text-yellow-400" />
+                       <span className="text-xs font-bold text-yellow-300">{user.coins || 0}</span>
                      </button>
                  </div>
              </div>
 
-             {/* WELCOME MESSAGE - For new users - LIQUID GLASS */}
+             {/* WELCOME CARD - Compact */}
              {user.completedTaskIds.length === 0 && (
-                 <div className="mb-6 mx-auto max-w-sm animate-in fade-in slide-in-from-top-4 duration-500">
+                 <div className="mb-4 mx-auto max-w-sm animate-in fade-in slide-in-from-top-4 duration-500">
                      <div 
-                       className="relative overflow-hidden rounded-3xl p-5"
+                       className="relative overflow-hidden rounded-2xl p-4"
                        style={{
-                         background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.08) 100%)',
-                         backdropFilter: 'blur(40px)',
-                         border: '1px solid rgba(99,102,241,0.2)',
-                         boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+                         background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.06) 100%)',
+                         backdropFilter: 'blur(30px)',
+                         border: '1px solid rgba(99,102,241,0.15)',
                        }}
                      >
-                         <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-3xl"></div>
-                         <div className="relative z-10">
-                             <h3 className="text-white font-bold text-lg mb-2 flex items-center gap-2">
-                                 <span className="text-2xl">👋</span> Привет, {user.name}!
-                             </h3>
-                             <p className="text-white/70 text-sm leading-relaxed">
-                                 С тобой всё нормально. Начни своё путешествие и стань лучшей версией себя!
-                             </p>
+                         <div className="flex items-center gap-3">
+                             <div className="text-3xl">👋</div>
+                             <div className="flex-1">
+                                 <h3 className="text-white font-bold text-sm">Привет, {user.name}!</h3>
+                                 <p className="text-white/50 text-xs">С тобой всё нормально ✨</p>
+                             </div>
                              <button 
                                  onClick={() => setShowTutorial(true)}
-                                 className="mt-4 px-4 py-2 rounded-xl text-white text-sm font-bold transition-all active:scale-95 flex items-center gap-2"
+                                 className="px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-300 transition-all active:scale-95"
                                  style={{
-                                   background: 'linear-gradient(135deg, rgba(99,102,241,0.8) 0%, rgba(139,92,246,0.8) 100%)',
-                                   boxShadow: '0 4px 15px rgba(99,102,241,0.3)',
+                                   background: 'rgba(99,102,241,0.2)',
+                                   border: '1px solid rgba(99,102,241,0.3)',
                                  }}
                              >
-                                 <Info size={16} /> Как играть?
+                                 Как играть?
                              </button>
                          </div>
                      </div>
                  </div>
              )}
 
-             {/* DAILY QUESTS WIDGET - LIQUID GLASS */}
-             <div className="mb-6 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+             {/* DAILY QUESTS - Compact Glass Card */}
+             <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
                  <div 
-                   className="relative overflow-hidden rounded-3xl p-5"
+                   className="relative overflow-hidden rounded-2xl p-4"
                    style={{
-                     background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
-                     backdropFilter: 'blur(40px)',
-                     border: '1px solid rgba(255,255,255,0.1)',
-                     boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+                     background: 'rgba(255,255,255,0.05)',
+                     backdropFilter: 'blur(30px)',
+                     border: '1px solid rgba(255,255,255,0.08)',
                    }}
                  >
-                     {/* Background decoration */}
-                     <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 blur-2xl"></div>
-                     
-                     <div className="flex items-center justify-between mb-4 relative z-10">
-                         <h3 className="text-white font-bold flex items-center gap-2 text-xs uppercase tracking-wider">
-                             <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                                 <Target className="text-indigo-400" size={14} />
-                             </div>
-                             Ежедневные цели
-                         </h3>
-                         <div className="flex items-center gap-1 text-[10px] text-slate-500 font-mono bg-white/5 px-2 py-1 rounded-lg">
-                             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                             Обновление в 00:00
-                         </div>
+                     <div className="flex items-center justify-between mb-3 relative z-10">
+                         <div className="flex items-center gap-2">
+                             <Target className="text-indigo-400" size={14} />
+                             <span className="text-white/80 font-semibold text-xs">Цели дня</span>
+             </div>
+                         <span className="text-white/40 text-[10px] font-medium">
+                             {dailyQuests.filter(q => q.completed).length}/{dailyQuests.length}
+                         </span>
                      </div>
-                     <div className="space-y-3 relative z-10">
-                         {dailyQuests.map((q, idx) => (
+                     
+                     {/* Compact quest list */}
+                     <div className="space-y-2 relative z-10">
+                         {dailyQuests.map((q) => (
                              <div 
                                  key={q.id} 
-                                 className={`flex items-center justify-between p-3 rounded-2xl transition-all ${
-                                     q.completed 
-                                         ? 'bg-green-500/10 border border-green-500/20' 
-                                         : 'bg-white/5 border border-white/5 hover:bg-white/10'
-                                 }`}
-                                 style={{ animationDelay: `${idx * 100}ms` }}
+                                 className="flex items-center justify-between"
                              >
-                                 <div className="flex items-center gap-3">
-                                     <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all ${
-                                         q.completed 
-                                             ? 'bg-green-500 shadow-lg shadow-green-500/30' 
-                                             : 'bg-slate-800 border border-slate-700'
+                                 <div className="flex items-center gap-2">
+                                     <div className={`w-4 h-4 rounded-md flex items-center justify-center ${
+                                         q.completed ? 'bg-green-500' : 'bg-white/10 border border-white/20'
                                      }`}>
-                                         {q.completed && <Check size={14} className="text-white" strokeWidth={3} />}
+                                         {q.completed && <Check size={10} className="text-white" strokeWidth={3} />}
                                      </div>
-                                     <span className={`text-sm font-medium ${q.completed ? 'text-green-300' : 'text-slate-200'}`}>
+                                     <span className={`text-xs ${q.completed ? 'text-green-400' : 'text-white/60'}`}>
                                          {q.text}
                                      </span>
                                  </div>
-                                 <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg ${
-                                     q.completed ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
-                                 }`}>
-                                     +{q.reward} <Coins size={10} fill="currentColor" />
-                                 </div>
+                                 <span className="text-yellow-400 text-[10px] font-bold">+{q.reward}</span>
                              </div>
                          ))}
                      </div>
                      
-                     {/* Progress bar */}
-                     <div className="mt-4 pt-4 border-t border-white/5 relative z-10">
-                         <div className="flex justify-between text-[10px] text-slate-400 mb-2 uppercase tracking-wider font-bold">
-                             <span>Прогресс</span>
-                             <span>{dailyQuests.filter(q => q.completed).length}/{dailyQuests.length}</span>
-                         </div>
-                         <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                             <div 
-                                 className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
-                                 style={{ width: `${(dailyQuests.filter(q => q.completed).length / dailyQuests.length) * 100}%` }}
-                             ></div>
-                         </div>
+                     {/* Mini progress bar */}
+                     <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden">
+                         <div 
+                             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                             style={{ width: `${(dailyQuests.filter(q => q.completed).length / dailyQuests.length) * 100}%` }}
+                         />
                      </div>
                  </div>
              </div>
 
-             {/* GAME PATH CONTAINER */}
-             <div className="relative mx-auto max-w-sm" style={{ height: mapHeight }}>
-                
-                {/* START MARKER */}
-                <div className="absolute top-10 left-1/2 -translate-x-1/2 z-10 text-center">
-                    <div className="inline-block px-4 py-1.5 rounded-full bg-indigo-600/20 border border-indigo-500/50 text-indigo-300 text-[10px] font-bold uppercase tracking-widest">
-                        Старт
-                    </div>
-                </div>
-
-                {/* SVG Path (Dynamic) */}
+             {/* LESSON PATH - Modern Glass Cards */}
+             <div className="relative mx-auto max-w-sm pb-8" style={{ minHeight: mapHeight }}>
+               
+               {/* SVG Path - Subtle */}
                 <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-0" overflow="visible">
                     <path 
-                        d={`M 192 80 
+                       d={`M 192 40 
                            ${TASKS.map((_, i) => {
-                               const y = START_PADDING + (i * ITEM_SPACING);
+                              const y = START_PADDING + (i * ITEM_SPACING) - 50;
                                const x = i % 2 === 0 ? 280 : 100; 
                                return `L ${x} ${y}`;
                            }).join(" ")}
                         `}
                         fill="none" 
                         stroke="url(#pathGradient)" 
-                        strokeWidth="4"
-                        strokeDasharray="8 4"
+                       strokeWidth="2"
+                       strokeDasharray="6 6"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="opacity-30"
+                       className="opacity-20"
                     />
                     <defs>
                         <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" stopColor="#6366f1" />
-                            <stop offset="50%" stopColor="#a855f7" />
-                            <stop offset="100%" stopColor="#ec4899" />
+                           <stop offset="100%" stopColor="#a855f7" />
                         </linearGradient>
                     </defs>
                 </svg>
 
                 {TASKS.map((task, index) => {
                     const isCompleted = user.completedTaskIds.includes(task.id);
-                    // Unlock logic: First is open, others depend on previous
                     const isLocked = index > 0 && !user.completedTaskIds.includes(TASKS[index-1].id);
                     const isActive = !isCompleted && !isLocked;
 
-                    const topPos = START_PADDING + (index * ITEM_SPACING);
-                    const leftPos = index % 2 === 0 ? '70%' : '30%'; 
+                   const topPos = START_PADDING + (index * ITEM_SPACING) - 50;
+                   const leftPos = index % 2 === 0 ? '65%' : '35%'; 
                     
-                    // WEEK SEPARATOR LOGIC
                     const isNewWeek = index === 0 || task.week > TASKS[index - 1].week;
                     
                     return (
                         <React.Fragment key={task.id}>
-                            {/* WEEK DIVIDER */}
+                           {/* WEEK DIVIDER - Minimal */}
                             {isNewWeek && (
                                 <div 
                                     className="absolute w-full text-center z-0"
-                                    style={{ top: topPos - (ITEM_SPACING / 1.5), left: '50%', transform: 'translateX(-50%)' }}
+                                   style={{ top: topPos - 60, left: '50%', transform: 'translateX(-50%)' }}
                                 >
-                                    <div className="relative flex items-center justify-center">
-                                        <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent absolute"></div>
-                                        <div className="bg-[#020617] px-3 relative z-10 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 border border-white/5 py-1 rounded-full">
+                                   <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/20">
                                             Неделя {task.week}
-                                        </div>
-                                    </div>
+                                   </span>
                                 </div>
                             )}
 
                             <div 
-                                className="absolute flex flex-col items-center z-10 group"
+                               className="absolute z-10"
                                 style={{ top: topPos, left: leftPos, transform: 'translate(-50%, -50%)' }}
                             >
                                 <button
                                     onClick={() => handleTaskClick(task, isLocked)}
                                     disabled={isLocked}
                                     className={`
-                                        relative flex items-center justify-center transition-all duration-500
-                                        ${isLocked ? 'grayscale opacity-50 cursor-not-allowed scale-95' : 'cursor-pointer hover:scale-110 active:scale-95'}
-                                        ${task.isBoss ? 'w-24 h-24' : 'w-20 h-20'}
-                                    `}
-                                >
-                                    {/* Boss Effect */}
-                                    {task.isBoss && !isLocked && !isCompleted && (
-                                        <div className="absolute inset-0 bg-red-500 blur-2xl opacity-40 animate-pulse"></div>
-                                    )}
-                                    
-                                    {/* Active Glow */}
-                                    {isActive && (
-                                        <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-30 animate-pulse"></div>
-                                    )}
-
-                                    {/* Main Circle */}
+                                       relative flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 w-[160px]
+                                       ${isLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
+                                       ${isActive ? 'hover:scale-105' : ''}
+                                   `}
+                                   style={{
+                                     background: isCompleted 
+                                       ? 'linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%)'
+                                       : isActive 
+                                         ? task.isBoss 
+                                           ? 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.08) 100%)'
+                                           : 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(99,102,241,0.08) 100%)'
+                                         : 'rgba(255,255,255,0.03)',
+                                     backdropFilter: 'blur(20px)',
+                                     border: isCompleted 
+                                       ? '1px solid rgba(34,197,94,0.25)'
+                                       : isActive 
+                                         ? task.isBoss 
+                                           ? '1px solid rgba(239,68,68,0.3)'
+                                           : '1px solid rgba(99,102,241,0.25)'
+                                         : '1px solid rgba(255,255,255,0.05)',
+                                   }}
+                               >
+                                   {/* Icon Circle */}
                                     <div className={`
-                                        w-full h-full rounded-[2rem] flex items-center justify-center border-b-[6px] shadow-xl transition-all relative z-10
+                                       w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all
                                         ${isCompleted 
-                                            ? 'bg-emerald-600 border-emerald-800' 
+                                           ? 'bg-green-500' 
                                             : isLocked 
-                                                ? 'bg-slate-800 border-slate-900' 
+                                               ? 'bg-white/5' 
                                                 : task.isBoss 
-                                                    ? 'bg-red-600 border-red-800' 
-                                                    : 'bg-indigo-600 border-indigo-800'
+                                                   ? 'bg-gradient-to-br from-red-500 to-orange-500' 
+                                                   : 'bg-gradient-to-br from-indigo-500 to-purple-500'
                                         }
                                     `}>
                                         {isCompleted 
-                                            ? <Check size={28} strokeWidth={4} className="text-white drop-shadow-md" /> 
+                                           ? <Check size={20} strokeWidth={3} className="text-white" /> 
                                             : isLocked 
-                                                ? <Lock size={20} className="text-slate-500" /> 
+                                               ? <Lock size={16} className="text-white/30" /> 
                                                 : task.isBoss
-                                                    ? <Skull size={28} className="text-white animate-pulse" />
-                                                    : <div className="text-white drop-shadow-md font-black text-2xl font-mono">{index + 1}</div>
+                                                   ? <Skull size={20} className="text-white" />
+                                                   : <span className="text-white font-bold text-lg">{index + 1}</span>
                                         }
                                     </div>
                                     
-                                    {/* Stars for completed */}
-                                    {isCompleted && (
-                                        <div className="absolute -top-1 -right-1 bg-yellow-400 text-yellow-900 p-1 rounded-full border-2 border-white shadow-sm z-20">
-                                            <Star size={10} fill="currentColor" />
+                                   {/* Text */}
+                                   <div className="flex-1 text-left min-w-0">
+                                       <span className={`text-[11px] font-semibold leading-tight block truncate ${
+                                           isCompleted ? 'text-green-400' : isActive ? 'text-white' : 'text-white/30'
+                                       }`}>
+                                           {task.title}
+                                       </span>
+                                       <span className={`text-[9px] ${
+                                           isCompleted ? 'text-green-400/60' : isActive ? 'text-white/40' : 'text-white/20'
+                                       }`}>
+                                           +{task.xpReward} XP
+                                       </span>
                                         </div>
+
+                                   {/* Active indicator */}
+                                   {isActive && !task.isBoss && (
+                                       <div className="absolute -right-1 -top-1 w-3 h-3 rounded-full bg-indigo-500 animate-pulse" />
+                                   )}
+                                   {task.isBoss && isActive && (
+                                       <div className="absolute -right-1 -top-1 w-3 h-3 rounded-full bg-red-500 animate-pulse" />
                                     )}
                                 </button>
-                                
-                                {/* Label */}
-                                <div className={`
-                                    mt-3 px-3 py-1.5 rounded-lg backdrop-blur-md border text-center min-w-[120px] max-w-[140px] transition-all
-                                    ${isActive 
-                                        ? task.isBoss ? 'bg-red-950/80 border-red-500/50 text-white scale-105' : 'bg-indigo-950/80 border-indigo-500/50 text-white scale-105' 
-                                        : 'bg-[#0A0F1C]/80 border-white/5 text-slate-500'
-                                    }
-                                `}>
-                                    <span className={`text-[10px] font-bold leading-tight block ${task.isBoss ? 'text-red-300' : ''}`}>
-                                        {task.title}
-                                    </span>
-                                </div>
                             </div>
                         </React.Fragment>
                     );
@@ -709,13 +668,13 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
             boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.1)',
           }}
         >
-          {[
-            { id: 'LEARN', icon: LayoutGrid, label: 'Путь' },
-            { id: 'LEADERBOARD', icon: Trophy, label: 'Топ' },
-            { id: 'SHOP', icon: ShoppingBag, label: 'Магазин' },
+                {[
+                  { id: 'LEARN', icon: LayoutGrid, label: 'Путь' },
+                  { id: 'LEADERBOARD', icon: Trophy, label: 'Топ' },
+                  { id: 'SHOP', icon: ShoppingBag, label: 'Магазин' },
             { id: 'RELAX', icon: Star, label: 'Чилл' },
-            { id: 'PROFILE', icon: UserIcon, label: 'Я' },
-          ].map((tab) => {
+                  { id: 'PROFILE', icon: UserIcon, label: 'Я' },
+                ].map((tab) => {
                     const isActive = activeTab === tab.id;
                     const Icon = tab.icon;
                     return (
