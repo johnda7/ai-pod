@@ -68,10 +68,10 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
           tg.expand?.();
           tg.ready?.();
           
-          // Get user data
+          // Get user data from initDataUnsafe
           const userData = tg.initDataUnsafe?.user;
           if (userData) {
-            console.log('Telegram user data:', userData);
+            console.log('✅ Telegram user found:', userData);
             setTelegramUser({
               id: userData.id,
               first_name: userData.first_name,
@@ -80,22 +80,39 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
               photo_url: userData.photo_url,
             });
           } else {
-            console.log('No Telegram user data available');
+            console.log('⚠️ No user in initDataUnsafe');
+            
+            // Try to get from URL params (for testing)
+            const urlParams = new URLSearchParams(window.location.search);
+            const userParam = urlParams.get('user');
+            if (userParam) {
+              try {
+                const parsedUser = JSON.parse(userParam);
+                console.log('✅ User from URL params:', parsedUser);
+                setTelegramUser(parsedUser);
+              } catch (e) {
+                console.log('❌ Failed to parse user from URL');
+              }
+            }
           }
         } else {
-          console.log('Telegram WebApp not available');
+          console.log('⚠️ Telegram WebApp not available - running in browser mode');
         }
       } catch (e) {
-        console.error('Error initializing Telegram:', e);
+        console.error('❌ Error initializing Telegram:', e);
       }
     };
 
     // Try immediately
     initTelegram();
     
-    // Also try after a short delay (Telegram SDK may load async)
-    const timer = setTimeout(initTelegram, 500);
-    return () => clearTimeout(timer);
+    // Also try after delays (Telegram SDK may load async)
+    const timer1 = setTimeout(initTelegram, 300);
+    const timer2 = setTimeout(initTelegram, 1000);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
   }, []);
 
   // Show tutorial for new users
@@ -600,7 +617,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                          <div className="flex items-center gap-3">
                              <div className="text-3xl">👋</div>
                              <div className="flex-1">
-                                 <h3 className="text-white font-bold text-sm">Привет, {user.name}!</h3>
+                                 <h3 className="text-white font-bold text-sm">Привет, {telegramUser?.first_name || telegramUser?.username || user.name}!</h3>
                                  <p className="text-white/50 text-xs">С тобой всё нормально ✨</p>
                              </div>
                              <button 
