@@ -2,9 +2,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TASKS, SHOP_ITEMS, ACHIEVEMENTS } from '../constants';
 import { Task, User, ShopItem } from '../types';
-import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info, Award, Flame, Wrench, Trophy, Calendar } from 'lucide-react';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info, Award, Flame, Wrench, Trophy, Calendar, Play } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
+import { ModernLessonView } from './ModernLessonView';
 import { MemoryGame } from './MemoryGame';
 import { ShopView } from './ShopView';
 import { AchievementsView } from './AchievementsView';
@@ -42,6 +43,10 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   const [showDailyRewards, setShowDailyRewards] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
+  
+  // TikTok-style lesson mode (modern view)
+  const [useTikTokMode, setUseTikTokMode] = useState(true); // Default to new modern view
+  const [showModernLesson, setShowModernLesson] = useState(false);
 
   // Show tutorial for new users
   useEffect(() => {
@@ -80,6 +85,9 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   const handleTaskClick = (task: Task, isLocked: boolean) => {
       if (isLocked) return; 
       setSelectedTask(task);
+      if (useTikTokMode) {
+        setShowModernLesson(true);
+      }
   };
 
   const handleGameComplete = (xp: number) => {
@@ -825,10 +833,28 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       </div>
 
       {/* MODALS */}
-      {selectedTask && (
+      {/* Modern TikTok-style lesson view */}
+      {selectedTask && useTikTokMode && showModernLesson && (
+        <ModernLessonView
+            task={selectedTask}
+            isOpen={showModernLesson}
+            onClose={() => {
+              setShowModernLesson(false);
+              setSelectedTask(null);
+            }}
+            onComplete={() => {
+                onTaskComplete(selectedTask);
+                setShowModernLesson(false);
+                setSelectedTask(null);
+            }}
+        />
+      )}
+      
+      {/* Classic lesson view */}
+      {selectedTask && (!useTikTokMode || !showModernLesson) && (
         <TaskModal 
             task={selectedTask} 
-            isOpen={!!selectedTask} 
+            isOpen={!!selectedTask && !showModernLesson} 
             userInterest={user.interest}
             isPreviouslyCompleted={user.completedTaskIds.includes(selectedTask.id)}
             onClose={() => setSelectedTask(null)} 
