@@ -205,7 +205,7 @@ export const MeditationView: React.FC = () => {
       <ZenVisualizer isOpen={showVisualizer} onClose={() => setShowVisualizer(false)} />
 
       {/* Header */}
-      <div className="px-5 pt-28 pb-4 relative z-10">
+      <div className="px-5 pt-4 pb-4 relative z-10">
         <div className="flex justify-between items-center mb-6">
              <div>
             <h1 className="text-3xl font-semibold text-white">Чилл-зона</h1>
