@@ -267,3 +267,5 @@ export const DailyRewards: React.FC<DailyRewardsProps> = ({
 
 export default DailyRewards;
 
+
+

@@ -1449,7 +1449,7 @@ export const TASKS: Task[] = [
       // Matching
       { id: 's16_match', type: 'MATCHING', question: 'Подбери противоядие усталости:', pairs: [
           { id: 'p1', left: 'Устал мозг (учёба)', right: 'Спорт / Движение' },
-          { id: 'p2', left: 'Устали эмоции (люди)', right: 'Одиночество / Книга' },
+           { id: 'p2', left: 'Устали эмоции (люди)', right: 'Одиночество / Книга' },
           { id: 'p3', left: 'Устало тело (тренировка)', right: 'Ванна / Сон' },
           { id: 'p4', left: 'Устал от экранов', right: 'Природа / Прогулка' }
       ]},
@@ -2218,10 +2218,10 @@ export const MOCK_STUDENTS = [
 ];
 
 export const SHOP_ITEMS: ShopItem[] = [
-    { id: 'hp_potion', name: 'Зелье Жизни', description: 'Восстанавливает 1 HP', price: 50, icon: 'hp_potion', type: 'POWERUP' },
-    { id: 'streak_freeze', name: 'Заморозка', description: 'Сохрани стрик на день', price: 100, icon: 'streak_freeze', type: 'POWERUP' },
-    { id: 'mystery_box', name: 'Сюрприз', description: 'Случайная награда', price: 75, icon: 'mystery_box', type: 'POWERUP' },
-    { id: 'frame_gold', name: 'Золотая Рамка', description: 'Украшение аватара', price: 500, icon: 'frame_gold', type: 'COSMETIC' },
+    { id: 'hp_potion', name: 'Зелье Жизни', description: '❤️ +1 HP. Используй когда жизней мало!', price: 50, icon: 'hp_potion', type: 'POWERUP' },
+    { id: 'streak_freeze', name: 'Заморозка', description: '❄️ Защищает серию дней если пропустишь день', price: 100, icon: 'streak_freeze', type: 'POWERUP' },
+    { id: 'mystery_box', name: 'Сюрприз', description: '🎁 Случайно: 50-200 монет, 30-100 XP или +2 HP!', price: 75, icon: 'mystery_box', type: 'POWERUP' },
+    { id: 'frame_gold', name: 'Золотая Рамка', description: '👑 Эксклюзивная рамка для твоего аватара', price: 500, icon: 'frame_gold', type: 'COSMETIC' },
 ];
 
 // Система достижений

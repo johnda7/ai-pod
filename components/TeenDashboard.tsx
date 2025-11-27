@@ -199,11 +199,18 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
     if (activeTab === 'RELAX') return <MeditationView />;
 
     if (activeTab === 'PROFILE') {
-        // Get Telegram user data if available
-        const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+        // Get Telegram user data if available - try multiple ways
+        const tgWebApp = (window as any).Telegram?.WebApp;
+        const tgUser = tgWebApp?.initDataUnsafe?.user;
+        
+        // Try to get name from different sources
         const telegramPhoto = tgUser?.photo_url;
-        const telegramName = tgUser?.first_name || user.name;
+        const telegramFirstName = tgUser?.first_name;
+        const telegramUsername = tgUser?.username;
         const telegramId = tgUser?.id;
+        
+        // Priority: Telegram first_name > Telegram username > user.name from DB
+        const displayName = telegramFirstName || telegramUsername || user.name;
         
         return (
             <div className="px-5 pt-24 pb-32 min-h-screen relative" style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, #0f0f2a 50%, #0a0a1a 100%)' }}>
@@ -239,13 +246,15 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
 
                     {/* Name & ID */}
                     <div className="relative z-10 mb-4">
-                        <h2 className="text-2xl font-black text-white tracking-tight mb-1">{telegramName}</h2>
-                        {telegramId && (
-                          <p className="text-white/40 text-xs font-mono">ID: {telegramId}</p>
+                        <h2 className="text-2xl font-black text-white tracking-tight mb-1">{displayName}</h2>
+                        {telegramId ? (
+                          <p className="text-white/40 text-xs font-mono">@{telegramUsername || `id${telegramId}`}</p>
+                        ) : (
+                          <p className="text-white/40 text-xs">Игрок AI Pod</p>
                         )}
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 mt-2">
                              <ShieldCheck size={12} className="text-indigo-400" />
-                             <span className="text-xs font-bold text-indigo-200 uppercase tracking-widest">{user.role === 'TEEN' ? 'Cadet' : 'Admin'}</span>
+                             <span className="text-xs font-bold text-indigo-200 uppercase tracking-widest">Уровень {user.level}</span>
                         </div>
                     </div>
 
@@ -358,14 +367,14 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                     </div>
                                  </div>
 
-                {/* 3. INVENTORY - Compact */}
+                {/* 3. INVENTORY - Compact with proper icons */}
                 <div className="mb-6">
                     <div className="flex items-center justify-between px-1 mb-3">
                         <h3 className="text-white font-bold text-base flex items-center gap-2">
                             <Sparkles size={16} className="text-amber-400"/> Инвентарь
                         </h3>
                         <span className="text-xs font-bold text-slate-500">{inventoryItems.length} шт</span>
-                             </div>
+                    </div>
                     
                     <div className="flex gap-2 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
                         {inventoryItems.length === 0 ? (
@@ -373,13 +382,35 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                             Пусто. Загляни в магазин!
                           </div>
                         ) : (
-                          inventoryItems.map((item, idx) => (
-                             <div key={idx} className="w-16 h-16 shrink-0 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                                 <span className="text-2xl">
-                                     {item?.type === 'POWERUP' ? '⚡' : '🎁'}
-                                 </span>
-                             </div>
-                          ))
+                          inventoryItems.map((item, idx) => {
+                            // Правильные иконки для каждого предмета
+                            const getItemIcon = (itemId: string | undefined) => {
+                              switch(itemId) {
+                                case 'hp_potion': return '❤️';
+                                case 'streak_freeze': return '❄️';
+                                case 'mystery_box': return '🎁';
+                                case 'frame_gold': return '👑';
+                                default: return '📦';
+                              }
+                            };
+                            const getItemName = (itemId: string | undefined) => {
+                              switch(itemId) {
+                                case 'hp_potion': return 'HP';
+                                case 'streak_freeze': return 'Заморозка';
+                                case 'mystery_box': return 'Сюрприз';
+                                case 'frame_gold': return 'Рамка';
+                                default: return 'Предмет';
+                              }
+                            };
+                            return (
+                              <div key={idx} className="flex flex-col items-center">
+                                <div className="w-14 h-14 shrink-0 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                  <span className="text-2xl">{getItemIcon(item?.id)}</span>
+                                </div>
+                                <span className="text-[9px] text-white/40 mt-1">{getItemName(item?.id)}</span>
+                              </div>
+                            );
+                          })
                         )}
                     </div>
                 </div>

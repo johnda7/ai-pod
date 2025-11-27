@@ -144,12 +144,12 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({ isOpen, onClose }) =
             ))}
           </div>
 
-          {/* Skip button */}
+          {/* Skip button - LOWERED FOR TELEGRAM */}
           <button
             onClick={handleSkip}
-            className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors z-50"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
 
           {/* Content */}

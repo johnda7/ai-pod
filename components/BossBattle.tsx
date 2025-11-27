@@ -500,3 +500,5 @@ export const BossBattle: React.FC<BossBattleProps> = ({
 
 export default BossBattle;
 
+
+

@@ -476,3 +476,5 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
 
 export default NotesTool;
 
+
+

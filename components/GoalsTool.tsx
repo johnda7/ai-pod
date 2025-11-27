@@ -519,3 +519,5 @@ export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplet
 
 export default GoalsTool;
 
+
+

@@ -308,3 +308,5 @@ export const DailyQuoteWidget: React.FC = () => {
 
 export default KatyaQuoteCard;
 
+
+
