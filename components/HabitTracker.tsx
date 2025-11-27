@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Check, Flame, Trophy, Star, Zap, Target, Calendar, TrendingUp } from 'lucide-react';
+import { X, Plus, Check, Flame, Trophy, Star, Zap, Target, Calendar, TrendingUp, Trash2 } from 'lucide-react';
 
 interface HabitTrackerProps {
   isOpen: boolean;
@@ -13,21 +13,22 @@ interface Habit {
   name: string;
   emoji: string;
   color: string;
+  image: string;
   streak: number;
-  completedDays: string[]; // ISO date strings
+  completedDays: string[];
   createdAt: number;
-  goal: number; // days per week
+  goal: number;
 }
 
 const HABIT_PRESETS = [
-  { name: 'Медитация', emoji: '🧘', color: '#8b5cf6' },
-  { name: 'Спорт', emoji: '💪', color: '#22c55e' },
-  { name: 'Чтение', emoji: '📚', color: '#3b82f6' },
-  { name: 'Вода', emoji: '💧', color: '#06b6d4' },
-  { name: 'Сон 8ч', emoji: '😴', color: '#6366f1' },
-  { name: 'Без соцсетей', emoji: '📵', color: '#ef4444' },
-  { name: 'Учёба', emoji: '📖', color: '#f59e0b' },
-  { name: 'Прогулка', emoji: '🚶', color: '#10b981' },
+  { name: 'Медитация', emoji: '🧘', color: '#8b5cf6', image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=200&h=200&fit=crop' },
+  { name: 'Спорт', emoji: '💪', color: '#22c55e', image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop' },
+  { name: 'Чтение', emoji: '📚', color: '#3b82f6', image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=200&h=200&fit=crop' },
+  { name: 'Вода', emoji: '💧', color: '#06b6d4', image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=200&h=200&fit=crop' },
+  { name: 'Сон 8ч', emoji: '😴', color: '#6366f1', image: 'https://images.unsplash.com/photo-1520206183501-b80df61043c2?w=200&h=200&fit=crop' },
+  { name: 'Без соцсетей', emoji: '📵', color: '#ef4444', image: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?w=200&h=200&fit=crop' },
+  { name: 'Учёба', emoji: '📖', color: '#f59e0b', image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=200&h=200&fit=crop' },
+  { name: 'Прогулка', emoji: '🚶', color: '#10b981', image: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=200&h=200&fit=crop' },
 ];
 
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -38,7 +39,6 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
   const [newHabitName, setNewHabitName] = useState('');
   const [selectedPreset, setSelectedPreset] = useState<typeof HABIT_PRESETS[0] | null>(null);
 
-  // Load habits
   useEffect(() => {
     const saved = localStorage.getItem('habit_tracker_data');
     if (saved) {
@@ -46,7 +46,6 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
     }
   }, []);
 
-  // Save habits
   useEffect(() => {
     localStorage.setItem('habit_tracker_data', JSON.stringify(habits));
   }, [habits]);
@@ -62,6 +61,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
       name: newHabitName.trim() || preset.name,
       emoji: preset.emoji,
       color: preset.color,
+      image: preset.image,
       streak: 0,
       completedDays: [],
       createdAt: Date.now(),
@@ -84,14 +84,11 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
       let newStreak = habit.streak;
       
       if (isCompleted) {
-        // Remove today
         newCompletedDays = habit.completedDays.filter(d => d !== today);
         newStreak = Math.max(0, newStreak - 1);
       } else {
-        // Add today
         newCompletedDays = [...habit.completedDays, today];
         
-        // Check if yesterday was completed for streak
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayStr = yesterday.toISOString().split('T')[0];
@@ -100,7 +97,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
           newStreak = habit.streak + 1;
         }
         
-        onComplete(5); // XP for completing habit
+        onComplete(5);
       }
       
       return { ...habit, completedDays: newCompletedDays, streak: newStreak };
@@ -137,17 +134,58 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] bg-[#020617] overflow-hidden"
+        className="fixed inset-0 z-[100] overflow-hidden"
       >
-        {/* Background */}
+        {/* Beautiful Background */}
         <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-green-600/15 rounded-full blur-[100px] animate-pulse" />
-          <div className="absolute bottom-40 right-10 w-80 h-80 bg-emerald-600/10 rounded-full blur-[120px]" />
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(180deg, #0a1a0f 0%, #0f2518 30%, #0a0a1a 100%)',
+            }}
+          />
+          
+          {/* Aurora effects */}
+          <motion.div
+            className="absolute top-0 left-0 w-full h-1/2"
+            style={{
+              background: 'radial-gradient(ellipse at 30% 0%, rgba(34,197,94,0.2) 0%, transparent 60%)',
+              filter: 'blur(60px)',
+            }}
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity }}
+          />
+          <motion.div
+            className="absolute top-20 right-0 w-1/2 h-1/2"
+            style={{
+              background: 'radial-gradient(ellipse at 100% 20%, rgba(16,185,129,0.15) 0%, transparent 60%)',
+              filter: 'blur(50px)',
+            }}
+            animate={{ opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 5, repeat: Infinity, delay: 1 }}
+          />
+
+          {/* Stars */}
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                opacity: 0.3 + Math.random() * 0.4,
+              }}
+              animate={{ opacity: [0.2, 0.8, 0.2] }}
+              transition={{ duration: 2 + Math.random() * 3, repeat: Infinity, delay: Math.random() * 2 }}
+            />
+          ))}
         </div>
 
         {/* Header */}
         <div className="sticky top-0 z-30 px-4 pt-14 pb-4">
-          <div 
+          <motion.div 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
             className="p-4 rounded-3xl"
             style={{
               background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
@@ -158,12 +196,18 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(34,197,94,0.3) 0%, rgba(16,185,129,0.2) 100%)',
-                  }}
+                  className="w-14 h-14 rounded-xl overflow-hidden relative"
+                  style={{ boxShadow: '0 4px 20px rgba(34,197,94,0.3)' }}
                 >
-                  <span className="text-2xl">✅</span>
+                  <img 
+                    src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=100&h=100&fit=crop"
+                    alt="Habits"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-green-600/60 to-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Check size={24} className="text-white" />
+                  </div>
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-white">Привычки</h1>
@@ -173,7 +217,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
               
               <button
                 onClick={onClose}
-                className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center"
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.1)' }}
               >
                 <X size={20} className="text-white" />
               </button>
@@ -181,108 +226,144 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
 
             {/* Stats */}
             <div className="flex gap-3">
-              <div className="flex-1 p-3 rounded-xl bg-green-500/15 text-center">
+              <div 
+                className="flex-1 p-3 rounded-xl text-center"
+                style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.2)' }}
+              >
                 <div className="text-xl font-bold text-green-400 flex items-center justify-center gap-1">
                   {completedToday}
                   <Check size={16} />
                 </div>
                 <div className="text-white/40 text-[10px]">Сегодня</div>
               </div>
-              <div className="flex-1 p-3 rounded-xl bg-orange-500/15 text-center">
+              <div 
+                className="flex-1 p-3 rounded-xl text-center"
+                style={{ background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.2)' }}
+              >
                 <div className="text-xl font-bold text-orange-400 flex items-center justify-center gap-1">
                   {totalStreak}
                   <Flame size={16} />
                 </div>
                 <div className="text-white/40 text-[10px]">Streak</div>
               </div>
-              <div className="flex-1 p-3 rounded-xl bg-indigo-500/15 text-center">
+              <div 
+                className="flex-1 p-3 rounded-xl text-center"
+                style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.2)' }}
+              >
                 <div className="text-xl font-bold text-indigo-400">{habits.length}</div>
                 <div className="text-white/40 text-[10px]">Привычек</div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Content */}
-        <div className="px-4 pb-40 overflow-y-auto h-[calc(100vh-240px)]">
+        <div className="relative z-10 px-4 pb-40 overflow-y-auto h-[calc(100vh-240px)]">
           {habits.length === 0 && !showAddForm ? (
-            <div 
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               className="rounded-3xl p-6 text-center"
               style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.05)',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
-              <span className="text-5xl mb-4 block">🎯</span>
+              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=200&h=200&fit=crop"
+                  alt="Start"
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <h3 className="text-white font-bold text-lg mb-2">Создай первую привычку!</h3>
               <p className="text-white/40 text-sm">21 день — и она станет частью тебя</p>
-            </div>
+            </motion.div>
           ) : (
-            <div className="space-y-3">
-              {habits.map((habit) => {
+            <div className="space-y-4">
+              {habits.map((habit, index) => {
                 const isCompletedToday = habit.completedDays.includes(today);
                 
                 return (
                   <motion.div
                     key={habit.id}
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="rounded-2xl p-4"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="rounded-2xl overflow-hidden"
                     style={{
                       background: isCompletedToday 
                         ? `linear-gradient(135deg, ${habit.color}20 0%, ${habit.color}10 100%)`
-                        : 'rgba(255,255,255,0.05)',
+                        : 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
                       border: `1px solid ${isCompletedToday ? habit.color + '40' : 'rgba(255,255,255,0.1)'}`,
                     }}
                   >
-                    <div className="flex items-center gap-3 mb-3">
+                    {/* Header with image */}
+                    <div className="flex items-center gap-3 p-4">
                       <button
                         onClick={() => toggleHabitToday(habit.id)}
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                          isCompletedToday ? '' : 'border-2 border-dashed border-white/20'
-                        }`}
+                        className="w-14 h-14 rounded-xl overflow-hidden relative shrink-0"
                         style={{
-                          background: isCompletedToday ? habit.color : 'transparent',
+                          boxShadow: isCompletedToday ? `0 4px 15px ${habit.color}40` : 'none',
                         }}
                       >
-                        {isCompletedToday ? (
-                          <Check size={24} className="text-white" strokeWidth={3} />
-                        ) : (
-                          <span className="text-2xl opacity-50">{habit.emoji}</span>
-                        )}
+                        <img 
+                          src={habit.image}
+                          alt={habit.name}
+                          className="w-full h-full object-cover"
+                        />
+                        <div 
+                          className="absolute inset-0 flex items-center justify-center transition-all"
+                          style={{
+                            background: isCompletedToday ? habit.color : 'rgba(0,0,0,0.5)',
+                          }}
+                        >
+                          {isCompletedToday ? (
+                            <Check size={24} className="text-white" strokeWidth={3} />
+                          ) : (
+                            <span className="text-2xl">{habit.emoji}</span>
+                          )}
+                        </div>
                       </button>
                       
                       <div className="flex-1">
                         <h4 className="text-white font-bold">{habit.name}</h4>
                         <div className="flex items-center gap-2 mt-1">
                           {habit.streak > 0 && (
-                            <span className="text-xs px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-400 flex items-center gap-1">
+                            <span 
+                              className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
+                              style={{ background: 'rgba(249,115,22,0.2)', color: '#fb923c' }}
+                            >
                               <Flame size={10} /> {habit.streak} дней
                             </span>
                           )}
                         </div>
                       </div>
                       
-                      <span className="text-2xl">{habit.emoji}</span>
+                      <button
+                        onClick={() => deleteHabit(habit.id)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 hover:bg-red-500/20 transition-colors"
+                      >
+                        <Trash2 size={14} className="text-white/40 hover:text-red-400" />
+                      </button>
                     </div>
 
                     {/* Week Progress */}
-                    <div className="flex gap-1">
+                    <div className="flex gap-1.5 px-4 pb-4">
                       {weekDays.map((day) => {
                         const isCompleted = habit.completedDays.includes(day.date);
                         return (
                           <div key={day.date} className="flex-1 text-center">
                             <div 
-                              className={`w-full aspect-square rounded-lg flex items-center justify-center mb-1 ${
-                                isCompleted 
-                                  ? '' 
-                                  : day.isToday 
-                                    ? 'border border-dashed border-white/30' 
-                                    : 'bg-white/5'
-                              }`}
+                              className="w-full aspect-square rounded-lg flex items-center justify-center mb-1 transition-all"
                               style={{
-                                background: isCompleted ? habit.color : undefined,
+                                background: isCompleted 
+                                  ? habit.color 
+                                  : day.isToday 
+                                    ? 'rgba(255,255,255,0.1)' 
+                                    : 'rgba(255,255,255,0.03)',
+                                border: day.isToday && !isCompleted ? '1px dashed rgba(255,255,255,0.3)' : 'none',
+                                boxShadow: isCompleted ? `0 2px 8px ${habit.color}50` : 'none',
                               }}
                             >
                               {isCompleted && <Check size={12} className="text-white" />}
@@ -310,7 +391,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
               exit={{ opacity: 0, y: 100 }}
               className="fixed inset-x-0 bottom-0 z-50 p-4 pb-8"
               style={{
-                background: 'linear-gradient(to top, #020617 0%, #020617 80%, transparent 100%)',
+                background: 'linear-gradient(to top, #0a0a1a 0%, #0a0a1a 80%, transparent 100%)',
               }}
             >
               <div 
@@ -323,8 +404,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
               >
                 <h3 className="text-white font-bold mb-3">Новая привычка</h3>
                 
-                {/* Presets */}
-                <div className="flex flex-wrap gap-2 mb-4">
+                {/* Presets with images */}
+                <div className="grid grid-cols-4 gap-2 mb-4">
                   {HABIT_PRESETS.map((preset) => (
                     <button
                       key={preset.name}
@@ -332,18 +413,27 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
                         setSelectedPreset(preset);
                         setNewHabitName(preset.name);
                       }}
-                      className={`px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-all ${
-                        selectedPreset?.name === preset.name 
-                          ? 'ring-2 ring-white/50' 
-                          : ''
-                      }`}
+                      className="aspect-square rounded-xl overflow-hidden relative transition-all"
                       style={{
-                        background: `${preset.color}30`,
-                        color: preset.color,
+                        border: selectedPreset?.name === preset.name 
+                          ? `2px solid ${preset.color}` 
+                          : '2px solid transparent',
+                        boxShadow: selectedPreset?.name === preset.name 
+                          ? `0 4px 15px ${preset.color}40` 
+                          : 'none',
                       }}
                     >
-                      <span>{preset.emoji}</span>
-                      {preset.name}
+                      <img 
+                        src={preset.image}
+                        alt={preset.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div 
+                        className="absolute inset-0 flex items-center justify-center"
+                        style={{ background: `${preset.color}60` }}
+                      >
+                        <span className="text-2xl">{preset.emoji}</span>
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -359,7 +449,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowAddForm(false)}
-                    className="flex-1 py-3 rounded-xl bg-white/5 text-white/50 font-medium"
+                    className="flex-1 py-3 rounded-xl font-medium"
+                    style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)' }}
                   >
                     Отмена
                   </button>
@@ -369,6 +460,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
                     className="flex-1 py-3 rounded-xl font-medium text-white disabled:opacity-50"
                     style={{
                       background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                      boxShadow: '0 4px 15px rgba(34,197,94,0.4)',
                     }}
                   >
                     Создать
@@ -382,17 +474,19 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
         {/* Add Button */}
         {!showAddForm && (
           <div className="fixed bottom-24 left-4 right-4 z-40">
-            <button
+            <motion.button
               onClick={() => setShowAddForm(true)}
               className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
               style={{
                 background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
                 boxShadow: '0 8px 32px rgba(34,197,94,0.4)',
               }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               <Plus size={20} />
               Добавить привычку
-            </button>
+            </motion.button>
           </div>
         )}
       </motion.div>
@@ -401,4 +495,3 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
 };
 
 export default HabitTracker;
-

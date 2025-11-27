@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trophy, Flame, Clock, Star, Zap, Target, Check, ChevronRight, Gift } from 'lucide-react';
+import { X, Trophy, Flame, Clock, Star, Zap, Target, Check, ChevronRight, Gift, Sparkles } from 'lucide-react';
 
 interface ChallengeSystemProps {
   isOpen: boolean;
@@ -15,6 +15,7 @@ interface Challenge {
   title: string;
   description: string;
   emoji: string;
+  image: string;
   type: 'daily' | 'weekly' | 'special';
   requirement: {
     type: 'lessons' | 'xp' | 'streak' | 'tools' | 'meditation';
@@ -24,7 +25,6 @@ interface Challenge {
     xp: number;
     coins: number;
   };
-  expiresAt?: number;
   progress?: number;
 }
 
@@ -34,6 +34,7 @@ const DAILY_CHALLENGES: Challenge[] = [
     title: 'Утренний старт',
     description: 'Заверши 1 урок до 12:00',
     emoji: '🌅',
+    image: 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=300&h=200&fit=crop',
     type: 'daily',
     requirement: { type: 'lessons', value: 1 },
     reward: { xp: 30, coins: 15 },
@@ -43,6 +44,7 @@ const DAILY_CHALLENGES: Challenge[] = [
     title: 'Фокус дня',
     description: 'Используй Помодоро 2 раза',
     emoji: '🍅',
+    image: 'https://images.unsplash.com/photo-1495364141860-b0d03eccd065?w=300&h=200&fit=crop',
     type: 'daily',
     requirement: { type: 'tools', value: 2 },
     reward: { xp: 25, coins: 10 },
@@ -52,6 +54,7 @@ const DAILY_CHALLENGES: Challenge[] = [
     title: 'Момент тишины',
     description: 'Проведи 5 минут в медитации',
     emoji: '🧘',
+    image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=300&h=200&fit=crop',
     type: 'daily',
     requirement: { type: 'meditation', value: 5 },
     reward: { xp: 20, coins: 10 },
@@ -64,6 +67,7 @@ const WEEKLY_CHALLENGES: Challenge[] = [
     title: 'Недельный марафон',
     description: 'Заверши 5 уроков за неделю',
     emoji: '🏃',
+    image: 'https://images.unsplash.com/photo-1461896836934- voices-of-the-dead?w=300&h=200&fit=crop',
     type: 'weekly',
     requirement: { type: 'lessons', value: 5 },
     reward: { xp: 150, coins: 75 },
@@ -73,6 +77,7 @@ const WEEKLY_CHALLENGES: Challenge[] = [
     title: 'XP охотник',
     description: 'Набери 500 XP за неделю',
     emoji: '⚡',
+    image: 'https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=300&h=200&fit=crop',
     type: 'weekly',
     requirement: { type: 'xp', value: 500 },
     reward: { xp: 100, coins: 50 },
@@ -82,6 +87,7 @@ const WEEKLY_CHALLENGES: Challenge[] = [
     title: 'Огненная серия',
     description: 'Поддержи streak 7 дней',
     emoji: '🔥',
+    image: 'https://images.unsplash.com/photo-1475552113915-6fcb52652ba2?w=300&h=200&fit=crop',
     type: 'weekly',
     requirement: { type: 'streak', value: 7 },
     reward: { xp: 200, coins: 100 },
@@ -94,6 +100,7 @@ const SPECIAL_CHALLENGES: Challenge[] = [
     title: 'Первые шаги',
     description: 'Заверши свой первый урок',
     emoji: '👣',
+    image: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=300&h=200&fit=crop',
     type: 'special',
     requirement: { type: 'lessons', value: 1 },
     reward: { xp: 50, coins: 25 },
@@ -103,6 +110,7 @@ const SPECIAL_CHALLENGES: Challenge[] = [
     title: 'Исследователь',
     description: 'Попробуй все инструменты',
     emoji: '🔍',
+    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=300&h=200&fit=crop',
     type: 'special',
     requirement: { type: 'tools', value: 6 },
     reward: { xp: 100, coins: 50 },
@@ -112,6 +120,7 @@ const SPECIAL_CHALLENGES: Challenge[] = [
     title: 'Мастер мотивации',
     description: 'Набери 1000 XP',
     emoji: '👑',
+    image: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=300&h=200&fit=crop',
     type: 'special',
     requirement: { type: 'xp', value: 1000 },
     reward: { xp: 250, coins: 125 },
@@ -129,7 +138,6 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
   const [completedChallenges, setCompletedChallenges] = useState<string[]>([]);
   const [claimingId, setClaimingId] = useState<string | null>(null);
 
-  // Load completed challenges
   useEffect(() => {
     const saved = localStorage.getItem('completed_challenges');
     if (saved) {
@@ -137,7 +145,6 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
     }
   }, []);
 
-  // Save completed challenges
   useEffect(() => {
     localStorage.setItem('completed_challenges', JSON.stringify(completedChallenges));
   }, [completedChallenges]);
@@ -182,9 +189,9 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
   };
 
   const tabs = [
-    { id: 'daily', label: 'Дневные', emoji: '☀️' },
-    { id: 'weekly', label: 'Недельные', emoji: '📅' },
-    { id: 'special', label: 'Особые', emoji: '⭐' },
+    { id: 'daily', label: 'Дневные', emoji: '☀️', count: DAILY_CHALLENGES.filter(c => !isClaimed(c.id) && isChallengeComplete(c)).length },
+    { id: 'weekly', label: 'Недельные', emoji: '📅', count: WEEKLY_CHALLENGES.filter(c => !isClaimed(c.id) && isChallengeComplete(c)).length },
+    { id: 'special', label: 'Особые', emoji: '⭐', count: SPECIAL_CHALLENGES.filter(c => !isClaimed(c.id) && isChallengeComplete(c)).length },
   ];
 
   if (!isOpen) return null;
@@ -195,17 +202,58 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] bg-[#020617] overflow-hidden"
+        className="fixed inset-0 z-[100] overflow-hidden"
       >
-        {/* Background */}
+        {/* Beautiful Background */}
         <div className="absolute inset-0">
-          <div className="absolute top-20 right-10 w-72 h-72 bg-amber-600/15 rounded-full blur-[100px] animate-pulse" />
-          <div className="absolute bottom-40 left-10 w-80 h-80 bg-orange-600/10 rounded-full blur-[120px]" />
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(180deg, #1a0a2e 0%, #0f0f2a 50%, #0a0a1a 100%)',
+            }}
+          />
+          
+          {/* Aurora effects */}
+          <motion.div
+            className="absolute top-0 left-0 w-full h-1/2"
+            style={{
+              background: 'radial-gradient(ellipse at 30% 0%, rgba(245,158,11,0.2) 0%, transparent 60%)',
+              filter: 'blur(60px)',
+            }}
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity }}
+          />
+          <motion.div
+            className="absolute top-20 right-0 w-1/2 h-1/2"
+            style={{
+              background: 'radial-gradient(ellipse at 100% 20%, rgba(234,88,12,0.15) 0%, transparent 60%)',
+              filter: 'blur(50px)',
+            }}
+            animate={{ opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 5, repeat: Infinity, delay: 1 }}
+          />
+
+          {/* Stars */}
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                opacity: 0.3 + Math.random() * 0.4,
+              }}
+              animate={{ opacity: [0.2, 0.8, 0.2], scale: [0.8, 1.2, 0.8] }}
+              transition={{ duration: 2 + Math.random() * 3, repeat: Infinity, delay: Math.random() * 2 }}
+            />
+          ))}
         </div>
 
         {/* Header */}
         <div className="sticky top-0 z-30 px-4 pt-14 pb-4">
-          <div 
+          <motion.div 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
             className="p-4 rounded-3xl"
             style={{
               background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
@@ -216,12 +264,18 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(234,88,12,0.2) 100%)',
-                  }}
+                  className="w-14 h-14 rounded-xl overflow-hidden relative"
+                  style={{ boxShadow: '0 4px 20px rgba(245,158,11,0.3)' }}
                 >
-                  <span className="text-2xl">🏆</span>
+                  <img 
+                    src="https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=100&h=100&fit=crop"
+                    alt="Trophy"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-amber-600/60 to-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Trophy size={24} className="text-white" />
+                  </div>
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-white">Челленджи</h1>
@@ -231,7 +285,8 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
               
               <button
                 onClick={onClose}
-                className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center"
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.1)' }}
               >
                 <X size={20} className="text-white" />
               </button>
@@ -243,23 +298,34 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${
-                    activeTab === tab.id 
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' 
-                      : 'bg-white/5 text-white/50'
-                  }`}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-1.5 relative"
+                  style={{
+                    background: activeTab === tab.id 
+                      ? 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)'
+                      : 'rgba(255,255,255,0.05)',
+                    color: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.5)',
+                    boxShadow: activeTab === tab.id ? '0 4px 15px rgba(245,158,11,0.4)' : 'none',
+                  }}
                 >
                   <span>{tab.emoji}</span>
                   {tab.label}
+                  {tab.count > 0 && (
+                    <span 
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center"
+                      style={{ background: '#22c55e', color: 'white' }}
+                    >
+                      {tab.count}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Content */}
-        <div className="px-4 pb-40 overflow-y-auto h-[calc(100vh-220px)]">
-          <div className="space-y-3">
+        <div className="relative z-10 px-4 pb-40 overflow-y-auto h-[calc(100vh-220px)]">
+          <div className="space-y-4">
             {getChallenges().map((challenge, index) => {
               const progress = getChallengeProgress(challenge);
               const isComplete = isChallengeComplete(challenge);
@@ -273,100 +339,115 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`rounded-2xl p-4 ${claimed ? 'opacity-60' : ''}`}
+                  className={`rounded-2xl overflow-hidden ${claimed ? 'opacity-60' : ''}`}
                   style={{
-                    background: isComplete && !claimed
-                      ? 'linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%)'
-                      : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${
-                      isComplete && !claimed 
-                        ? 'rgba(34,197,94,0.3)' 
-                        : 'rgba(255,255,255,0.1)'
-                    }`,
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+                    border: `1px solid ${isComplete && !claimed ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                    boxShadow: isComplete && !claimed ? '0 4px 20px rgba(34,197,94,0.2)' : 'none',
                   }}
                 >
-                  <div className="flex items-start gap-3">
-                    <div 
-                      className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0"
-                      style={{
-                        background: claimed 
-                          ? 'rgba(34,197,94,0.2)'
-                          : 'linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(234,88,12,0.1) 100%)',
-                      }}
-                    >
-                      {claimed ? (
-                        <Check size={24} className="text-green-400" />
-                      ) : (
-                        <span className="text-2xl">{challenge.emoji}</span>
-                      )}
-                    </div>
+                  {/* Image Header */}
+                  <div className="h-24 relative">
+                    <img 
+                      src={challenge.image}
+                      alt={challenge.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                     
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-white font-bold mb-1">{challenge.title}</h4>
-                      <p className="text-white/50 text-sm mb-2">{challenge.description}</p>
-                      
-                      {/* Progress Bar */}
-                      {!claimed && (
-                        <div className="mb-2">
-                          <div className="flex justify-between text-xs mb-1">
-                            <span className="text-white/40">{progress}/{challenge.requirement.value}</span>
-                            <span className={isComplete ? 'text-green-400' : 'text-white/40'}>
-                              {Math.round(progressPercent)}%
-                            </span>
-                          </div>
-                          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${progressPercent}%` }}
-                              className={`h-full rounded-full ${
-                                isComplete ? 'bg-green-500' : 'bg-amber-500'
-                              }`}
-                            />
-                          </div>
+                    {/* Status badge */}
+                    {claimed ? (
+                      <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-green-500/90 text-white text-xs font-bold flex items-center gap-1">
+                        <Check size={12} />
+                        Получено
+                      </div>
+                    ) : isComplete ? (
+                      <motion.div 
+                        className="absolute top-3 right-3 px-2 py-1 rounded-lg text-white text-xs font-bold flex items-center gap-1"
+                        style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
+                        animate={{ scale: [1, 1.05, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      >
+                        <Gift size={12} />
+                        Забери!
+                      </motion.div>
+                    ) : null}
+                    
+                    {/* Title overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{challenge.emoji}</span>
+                        <h4 className="text-white font-bold">{challenge.title}</h4>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="p-4">
+                    <p className="text-white/60 text-sm mb-3">{challenge.description}</p>
+                    
+                    {/* Progress Bar */}
+                    {!claimed && (
+                      <div className="mb-3">
+                        <div className="flex justify-between text-xs mb-1.5">
+                          <span className="text-white/40">{progress}/{challenge.requirement.value}</span>
+                          <span className={isComplete ? 'text-green-400 font-bold' : 'text-white/40'}>
+                            {Math.round(progressPercent)}%
+                          </span>
                         </div>
-                      )}
-                      
-                      {/* Reward */}
+                        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progressPercent}%` }}
+                            className="h-full rounded-full"
+                            style={{
+                              background: isComplete 
+                                ? 'linear-gradient(90deg, #22c55e, #10b981)'
+                                : 'linear-gradient(90deg, #f59e0b, #ea580c)',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Reward & Action */}
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 text-xs">
+                        <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-yellow-500/10">
                           <Zap size={12} className="text-yellow-400" />
                           <span className="text-yellow-400 font-medium">+{challenge.reward.xp} XP</span>
                         </div>
-                        <div className="flex items-center gap-1 text-xs">
+                        <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-yellow-500/10">
                           <span className="text-yellow-400">🪙</span>
                           <span className="text-yellow-400 font-medium">+{challenge.reward.coins}</span>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Claim Button */}
-                    {isComplete && !claimed && (
-                      <button
-                        onClick={() => claimReward(challenge)}
-                        disabled={isClaiming}
-                        className="px-4 py-2 rounded-xl font-medium text-white text-sm shrink-0"
-                        style={{
-                          background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                        }}
-                      >
-                        {isClaiming ? (
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity }}
-                          >
-                            <Gift size={16} />
-                          </motion.div>
-                        ) : (
-                          'Забрать'
-                        )}
-                      </button>
-                    )}
-                    
-                    {claimed && (
-                      <div className="px-3 py-1.5 rounded-lg bg-green-500/20 text-green-400 text-xs font-medium">
-                        Получено
-                      </div>
-                    )}
+                      {isComplete && !claimed && (
+                        <motion.button
+                          onClick={() => claimReward(challenge)}
+                          disabled={isClaiming}
+                          className="px-4 py-2 rounded-xl font-medium text-white text-sm"
+                          style={{
+                            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                            boxShadow: '0 4px 15px rgba(34,197,94,0.4)',
+                          }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {isClaiming ? (
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            >
+                              <Sparkles size={16} />
+                            </motion.div>
+                          ) : (
+                            'Забрать'
+                          )}
+                        </motion.button>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -402,4 +483,3 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
 };
 
 export default ChallengeSystem;
-
