@@ -182,7 +182,7 @@ export const WordScrambleGame: React.FC<WordScrambleGameProps> = ({
         </div>
 
         {/* Header */}
-        <div className="sticky top-0 z-30 px-4 pt-8 pb-4">
+        <div className="sticky top-0 z-30 px-4 pt-4 pb-4">
           <div 
             className="p-4 rounded-3xl"
             style={{

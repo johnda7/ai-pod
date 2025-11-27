@@ -77,7 +77,7 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ user }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] pb-40 pt-28 px-4">
+    <div className="min-h-screen bg-[#020617] pb-40 pt-4 px-4">
       {/* Header */}
       <motion.div 
         className="text-center mb-8"

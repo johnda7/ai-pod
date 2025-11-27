@@ -255,7 +255,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         const telegramId = telegramUser?.id;
         
         return (
-            <div className="px-5 pt-8 pb-32 min-h-screen relative" style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, #0f0f2a 50%, #0a0a1a 100%)' }}>
+            <div className="px-5 pt-4 pb-32 min-h-screen relative" style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, #0f0f2a 50%, #0a0a1a 100%)' }}>
                 
                 {/* 1. HERO IDENTITY CARD - SIMPLIFIED */}
                 <div className="relative w-full rounded-[2rem] overflow-hidden p-6 flex flex-col items-center text-center border border-white/10 mb-6"
