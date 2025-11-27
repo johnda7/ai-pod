@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Timer, Target, BookHeart, Brain, Sparkles, ChevronRight, Clock, BarChart3, Heart, Calendar, FileText, Lightbulb, TreePine, Trophy, Flame, BookOpen, Zap, Star } from 'lucide-react';
+import { Timer, Target, BookHeart, ChevronRight, BarChart3, Heart, Calendar, FileText, TreePine, Trophy, Flame, BookOpen, Zap, Star, Sparkles } from 'lucide-react';
 import { User } from '../types';
 import { PomodoroTimer } from './PomodoroTimer';
 import { BalanceWheel } from './BalanceWheel';
@@ -19,14 +19,27 @@ interface ToolsViewProps {
   onXpEarned?: (xp: number, coins: number) => void;
 }
 
+// High-quality images for each tool
+const TOOL_IMAGES: Record<string, string> = {
+  focus: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=400&h=400&fit=crop', // Beautiful tree
+  challenges: 'https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=400&h=400&fit=crop', // Trophy/achievement
+  habits: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400&h=400&fit=crop', // Checklist
+  lifeskills: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=400&fit=crop', // Galaxy/growth
+  reflection: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=400&h=400&fit=crop', // Journal
+  pomodoro: 'https://images.unsplash.com/photo-1495364141860-b0d03eccd065?w=400&h=400&fit=crop', // Clock
+  planner: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=400&h=400&fit=crop', // Calendar
+  goals: 'https://images.unsplash.com/photo-1533073526757-2c8ca1df9f1c?w=400&h=400&fit=crop', // Target/arrow
+  notes: 'https://images.unsplash.com/photo-1517842645767-c639042777db?w=400&h=400&fit=crop', // Notebook
+  balance: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=400&fit=crop', // Balance/meditation
+  emotions: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400&h=400&fit=crop', // Peaceful
+};
+
 interface Tool {
   id: string;
   name: string;
   description: string;
-  emoji: string;
   icon: React.ElementType;
   color: string;
-  gradient: string;
   xpReward: number;
   isNew?: boolean;
   isHot?: boolean;
@@ -38,10 +51,8 @@ const TOOLS: Tool[] = [
     id: 'focus',
     name: 'Режим Фокуса',
     description: 'Вырасти дерево концентрации',
-    emoji: '🌲',
     icon: TreePine,
     color: '#22c55e',
-    gradient: 'from-green-500 to-emerald-600',
     xpReward: 30,
     isHot: true,
     category: 'featured',
@@ -50,10 +61,8 @@ const TOOLS: Tool[] = [
     id: 'challenges',
     name: 'Челленджи',
     description: 'Выполняй задания — получай награды',
-    emoji: '🏆',
     icon: Trophy,
     color: '#f59e0b',
-    gradient: 'from-amber-500 to-orange-600',
     xpReward: 50,
     isHot: true,
     category: 'featured',
@@ -62,10 +71,8 @@ const TOOLS: Tool[] = [
     id: 'habits',
     name: 'Привычки',
     description: 'Формируй полезные привычки',
-    emoji: '✅',
     icon: Flame,
     color: '#ef4444',
-    gradient: 'from-red-500 to-rose-600',
     xpReward: 15,
     isNew: true,
     category: 'growth',
@@ -74,10 +81,8 @@ const TOOLS: Tool[] = [
     id: 'lifeskills',
     name: 'Life Skills',
     description: 'Навыки для реальной жизни',
-    emoji: '🚀',
     icon: BookOpen,
     color: '#6366f1',
-    gradient: 'from-indigo-500 to-violet-600',
     xpReward: 40,
     isNew: true,
     category: 'growth',
@@ -86,10 +91,8 @@ const TOOLS: Tool[] = [
     id: 'reflection',
     name: 'Рефлексия',
     description: 'Дневник самопознания',
-    emoji: '📔',
     icon: BookHeart,
     color: '#8b5cf6',
-    gradient: 'from-violet-500 to-purple-600',
     xpReward: 25,
     isNew: true,
     category: 'wellness',
@@ -98,10 +101,8 @@ const TOOLS: Tool[] = [
     id: 'pomodoro',
     name: 'Помодоро',
     description: 'Техника фокусировки 25/5',
-    emoji: '🍅',
     icon: Timer,
     color: '#ef4444',
-    gradient: 'from-red-500 to-orange-600',
     xpReward: 20,
     category: 'productivity',
   },
@@ -109,10 +110,8 @@ const TOOLS: Tool[] = [
     id: 'planner',
     name: 'Планировщик',
     description: 'Организуй свой день',
-    emoji: '📝',
     icon: Calendar,
     color: '#22c55e',
-    gradient: 'from-green-500 to-teal-600',
     xpReward: 15,
     category: 'productivity',
   },
@@ -120,10 +119,8 @@ const TOOLS: Tool[] = [
     id: 'goals',
     name: 'Цели',
     description: 'Отслеживай прогресс',
-    emoji: '🎯',
     icon: Target,
     color: '#f59e0b',
-    gradient: 'from-amber-500 to-yellow-600',
     xpReward: 25,
     category: 'growth',
   },
@@ -131,10 +128,8 @@ const TOOLS: Tool[] = [
     id: 'notes',
     name: 'Заметки',
     description: 'Записывай мысли и идеи',
-    emoji: '📓',
     icon: FileText,
     color: '#8b5cf6',
-    gradient: 'from-violet-500 to-fuchsia-600',
     xpReward: 10,
     category: 'productivity',
   },
@@ -142,10 +137,8 @@ const TOOLS: Tool[] = [
     id: 'balance',
     name: 'Колесо Баланса',
     description: 'Оцени сферы жизни',
-    emoji: '⚖️',
     icon: BarChart3,
     color: '#6366f1',
-    gradient: 'from-indigo-500 to-blue-600',
     xpReward: 30,
     category: 'wellness',
   },
@@ -153,10 +146,8 @@ const TOOLS: Tool[] = [
     id: 'emotions',
     name: 'Дневник Эмоций',
     description: 'Отслеживай настроение',
-    emoji: '💜',
     icon: Heart,
     color: '#ec4899',
-    gradient: 'from-pink-500 to-rose-600',
     xpReward: 25,
     category: 'wellness',
   },
@@ -170,29 +161,26 @@ const CATEGORIES = [
   { id: 'wellness', name: 'Баланс', emoji: '🧘' },
 ];
 
-// Статистика использования
+// Get tool statistics from localStorage
 const getToolStats = () => {
   const stats: Record<string, number | string> = {};
   
   try {
-    // Pomodoro
     const pomodoroStats = localStorage.getItem('pomodoro_stats');
-    if (pomodoroStats) {
-      const parsed = JSON.parse(pomodoroStats);
-      stats.pomodoro = parsed.totalTime || 0;
-    }
+    if (pomodoroStats) stats.pomodoro = JSON.parse(pomodoroStats).totalTime || 0;
     
-    // Planner
-    const plannerTasks = localStorage.getItem('planner_tasks');
-    if (plannerTasks) {
-      const parsed = JSON.parse(plannerTasks);
-      const today = new Date().toISOString().split('T')[0];
-      const todayTasks = parsed.filter((t: any) => t.date === today);
-      const completed = todayTasks.filter((t: any) => t.completed).length;
-      stats.planner = todayTasks.length > 0 ? `${completed}/${todayTasks.length}` : 0;
-    }
+    const habits = localStorage.getItem('habit_tracker_data');
+    if (habits) stats.habits = JSON.parse(habits).length || 0;
     
-    // Goals
+    const reflection = localStorage.getItem('reflection_journal');
+    if (reflection) stats.reflection = JSON.parse(reflection).length || 0;
+    
+    const focusStreak = localStorage.getItem('focus_streak');
+    if (focusStreak) stats.focus = JSON.parse(focusStreak).streak || 0;
+    
+    const lifeSkills = localStorage.getItem('life_skills_progress');
+    if (lifeSkills) stats.lifeskills = JSON.parse(lifeSkills).length || 0;
+    
     const goals = localStorage.getItem('goals_tracker');
     if (goals) {
       const parsed = JSON.parse(goals);
@@ -200,54 +188,14 @@ const getToolStats = () => {
       stats.goals = parsed.length > 0 ? `${completed}/${parsed.length}` : 0;
     }
     
-    // Notes
     const notes = localStorage.getItem('notes_journal');
-    if (notes) {
-      const parsed = JSON.parse(notes);
-      stats.notes = parsed.length || 0;
-    }
+    if (notes) stats.notes = JSON.parse(notes).length || 0;
     
-    // Balance Wheel
-    const balanceHistory = localStorage.getItem('balance_wheel_history');
-    if (balanceHistory) {
-      const parsed = JSON.parse(balanceHistory);
-      stats.balance = parsed.length || 0;
-    }
+    const balance = localStorage.getItem('balance_wheel_history');
+    if (balance) stats.balance = JSON.parse(balance).length || 0;
     
-    // Emotion Diary
-    const emotionEntries = localStorage.getItem('emotion_diary_entries');
-    if (emotionEntries) {
-      const parsed = JSON.parse(emotionEntries);
-      stats.emotions = parsed.length || 0;
-    }
-    
-    // Habits
-    const habits = localStorage.getItem('habit_tracker_data');
-    if (habits) {
-      const parsed = JSON.parse(habits);
-      stats.habits = parsed.length || 0;
-    }
-    
-    // Reflection
-    const reflection = localStorage.getItem('reflection_journal');
-    if (reflection) {
-      const parsed = JSON.parse(reflection);
-      stats.reflection = parsed.length || 0;
-    }
-    
-    // Focus
-    const focusStreak = localStorage.getItem('focus_streak');
-    if (focusStreak) {
-      const parsed = JSON.parse(focusStreak);
-      stats.focus = parsed.streak || 0;
-    }
-    
-    // Life Skills
-    const lifeSkills = localStorage.getItem('life_skills_progress');
-    if (lifeSkills) {
-      const parsed = JSON.parse(lifeSkills);
-      stats.lifeskills = parsed.length || 0;
-    }
+    const emotions = localStorage.getItem('emotion_diary_entries');
+    if (emotions) stats.emotions = JSON.parse(emotions).length || 0;
   } catch (e) {
     console.error('Error loading stats:', e);
   }
@@ -255,41 +203,9 @@ const getToolStats = () => {
   return stats;
 };
 
-// Floating particles component
-const FloatingParticles = () => {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(15)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 rounded-full"
-          style={{
-            background: `rgba(${Math.random() > 0.5 ? '99,102,241' : '139,92,246'}, ${0.3 + Math.random() * 0.3})`,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-          }}
-          animate={{
-            y: [0, -30, 0],
-            x: [0, Math.random() * 20 - 10, 0],
-            opacity: [0.3, 0.7, 0.3],
-            scale: [1, 1.5, 1],
-          }}
-          transition={{
-            duration: 3 + Math.random() * 2,
-            repeat: Infinity,
-            delay: Math.random() * 2,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
 export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [hoveredTool, setHoveredTool] = useState<string | null>(null);
   const stats = getToolStats();
 
   const handleToolComplete = (toolId: string, xp: number, coins: number = 0) => {
@@ -300,30 +216,19 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
     const stat = stats[toolId];
     if (!stat) return null;
     
-    switch (toolId) {
-      case 'pomodoro':
-        return `${stat} мин`;
-      case 'planner':
-        return typeof stat === 'string' ? `${stat} задач` : null;
-      case 'goals':
-        return typeof stat === 'string' ? `${stat} целей` : null;
-      case 'notes':
-        return `${stat} записей`;
-      case 'balance':
-        return `${stat} раз`;
-      case 'emotions':
-        return `${stat} записей`;
-      case 'habits':
-        return `${stat} привычек`;
-      case 'reflection':
-        return `${stat} записей`;
-      case 'focus':
-        return stat ? `${stat} 🔥` : null;
-      case 'lifeskills':
-        return `${stat} уроков`;
-      default:
-        return null;
-    }
+    const labels: Record<string, string> = {
+      pomodoro: `${stat} мин`,
+      habits: `${stat} привычек`,
+      reflection: `${stat} записей`,
+      focus: `${stat} 🔥`,
+      lifeskills: `${stat} уроков`,
+      goals: typeof stat === 'string' ? stat : null,
+      notes: `${stat} записей`,
+      balance: `${stat} раз`,
+      emotions: `${stat} записей`,
+    } as Record<string, string>;
+    
+    return labels[toolId] || null;
   };
 
   const filteredTools = selectedCategory === 'all' 
@@ -334,90 +239,127 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
 
   return (
     <div className="min-h-screen pb-40 relative overflow-hidden">
-      {/* iOS 26 LIQUID GLASS BACKGROUND - Enhanced */}
+      {/* CHILL ZONE STYLE BACKGROUND */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0" style={{
-          background: 'radial-gradient(ellipse at top, #1a1a2e 0%, #0f0f1a 50%, #020617 100%)'
-        }} />
-        
-        {/* Animated gradient orbs */}
-        <motion.div 
-          className="absolute top-10 left-0 w-96 h-96 rounded-full blur-[120px]"
-          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)' }}
-          animate={{
-            x: [0, 30, 0],
-            y: [0, 20, 0],
-            scale: [1, 1.1, 1],
+        {/* Base gradient - same as Chill Zone */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(180deg, #0a0a1a 0%, #0f0f2a 30%, #1a1a3a 60%, #0a0a1a 100%)',
           }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div 
-          className="absolute top-40 right-0 w-80 h-80 rounded-full blur-[100px]"
-          style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)' }}
-          animate={{
-            x: [0, -20, 0],
-            y: [0, 30, 0],
-            scale: [1, 1.15, 1],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        />
-        <motion.div 
-          className="absolute bottom-20 left-10 w-72 h-72 rounded-full blur-[80px]"
-          style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.15) 0%, transparent 70%)' }}
-          animate={{
-            x: [0, 25, 0],
-            y: [0, -20, 0],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
         />
         
-        <FloatingParticles />
+        {/* Aurora effect */}
+        <div className="absolute inset-0 opacity-40">
+          <motion.div
+            className="absolute top-0 left-1/4 w-[600px] h-[400px] rounded-full"
+            style={{
+              background: 'radial-gradient(ellipse, rgba(99,102,241,0.3) 0%, transparent 70%)',
+              filter: 'blur(60px)',
+            }}
+            animate={{
+              x: [-50, 50, -50],
+              y: [-20, 30, -20],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute top-20 right-0 w-[500px] h-[350px] rounded-full"
+            style={{
+              background: 'radial-gradient(ellipse, rgba(139,92,246,0.25) 0%, transparent 70%)',
+              filter: 'blur(50px)',
+            }}
+            animate={{
+              x: [30, -30, 30],
+              y: [20, -20, 20],
+              scale: [1.1, 0.9, 1.1],
+            }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          />
+          <motion.div
+            className="absolute bottom-40 left-0 w-[450px] h-[300px] rounded-full"
+            style={{
+              background: 'radial-gradient(ellipse, rgba(236,72,153,0.2) 0%, transparent 70%)',
+              filter: 'blur(55px)',
+            }}
+            animate={{
+              x: [-30, 40, -30],
+              y: [30, -10, 30],
+            }}
+            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+          />
+        </div>
+
+        {/* Stars */}
+        <div className="absolute inset-0">
+          {[...Array(30)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                opacity: 0.3 + Math.random() * 0.4,
+              }}
+              animate={{
+                opacity: [0.2, 0.8, 0.2],
+                scale: [0.8, 1.2, 0.8],
+              }}
+              transition={{
+                duration: 2 + Math.random() * 3,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Header - iOS 26 Liquid Glass */}
+      {/* Header */}
       <div className="sticky top-0 z-20 px-4 pt-14 pb-3">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="p-5 rounded-[2rem]"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 100%)',
-            backdropFilter: 'blur(40px) saturate(200%)',
-            WebkitBackdropFilter: 'blur(40px) saturate(200%)',
-            border: '1px solid rgba(255,255,255,0.18)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.1)',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.03) 100%)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
           }}
         >
           <div className="flex items-center gap-4 mb-4">
-            <motion.div 
-              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+            {/* Tool icon with image */}
+            <div 
+              className="w-14 h-14 rounded-2xl overflow-hidden relative"
               style={{
-                background: 'linear-gradient(135deg, rgba(99,102,241,0.4) 0%, rgba(139,92,246,0.3) 100%)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                boxShadow: '0 4px 15px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
+                boxShadow: '0 4px 20px rgba(99,102,241,0.3)',
               }}
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
             >
-              <span className="text-3xl relative z-10">🛠</span>
-              <motion.div 
-                className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+              <img 
+                src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=100&h=100&fit=crop"
+                alt="Tools"
+                className="w-full h-full object-cover"
               />
-            </motion.div>
+              <div className="absolute inset-0 bg-gradient-to-t from-indigo-600/60 to-transparent" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Sparkles size={24} className="text-white drop-shadow-lg" />
+              </div>
+            </div>
             <div className="flex-1">
               <h1 className="text-2xl font-black text-white tracking-tight">Полезное</h1>
               <p className="text-white/50 text-sm">{TOOLS.length} инструментов для роста</p>
             </div>
             
-            {/* Daily XP indicator */}
+            {/* XP Badge */}
             <motion.div 
               className="px-3 py-1.5 rounded-xl flex items-center gap-1.5"
               style={{
-                background: 'linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(234,88,12,0.1) 100%)',
+                background: 'linear-gradient(135deg, rgba(245,158,11,0.25) 0%, rgba(234,88,12,0.15) 100%)',
                 border: '1px solid rgba(245,158,11,0.3)',
+                boxShadow: '0 4px 15px rgba(245,158,11,0.2)',
               }}
               whileHover={{ scale: 1.05 }}
             >
@@ -426,7 +368,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
             </motion.div>
           </div>
 
-          {/* Category Pills - Horizontal Scroll */}
+          {/* Category Pills */}
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
             {CATEGORIES.map((cat, index) => (
               <motion.button
@@ -435,17 +377,14 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                  selectedCategory === cat.id 
-                    ? 'text-white' 
-                    : 'text-white/50 hover:text-white/70'
-                }`}
+                className="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5"
                 style={{
                   background: selectedCategory === cat.id 
                     ? 'linear-gradient(135deg, rgba(99,102,241,0.5) 0%, rgba(139,92,246,0.4) 100%)'
                     : 'rgba(255,255,255,0.05)',
-                  border: `1px solid ${selectedCategory === cat.id ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.1)'}`,
-                  boxShadow: selectedCategory === cat.id ? '0 4px 15px rgba(99,102,241,0.3)' : 'none',
+                  border: `1px solid ${selectedCategory === cat.id ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                  color: selectedCategory === cat.id ? 'white' : 'rgba(255,255,255,0.5)',
+                  boxShadow: selectedCategory === cat.id ? '0 4px 15px rgba(99,102,241,0.25)' : 'none',
                 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -458,7 +397,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
         </motion.div>
       </div>
 
-      {/* Featured Section - Large Cards */}
+      {/* Featured Section - Large Cards with Images */}
       {selectedCategory === 'all' && (
         <div className="px-4 pt-2 pb-4">
           <motion.div 
@@ -473,6 +412,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
           <div className="grid grid-cols-2 gap-3">
             {featuredTools.map((tool, index) => {
               const stat = getStatLabel(tool.id);
+              const Icon = tool.icon;
               
               return (
                 <motion.button
@@ -481,72 +421,89 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
                   onClick={() => setActiveTool(tool.id)}
-                  onHoverStart={() => setHoveredTool(tool.id)}
-                  onHoverEnd={() => setHoveredTool(null)}
-                  className="relative rounded-[1.5rem] p-4 text-left overflow-hidden aspect-square"
+                  className="relative rounded-[1.5rem] overflow-hidden aspect-[4/5]"
                   style={{
-                    background: `linear-gradient(135deg, ${tool.color}30 0%, ${tool.color}10 100%)`,
-                    border: `1px solid ${tool.color}40`,
-                    boxShadow: `0 8px 32px ${tool.color}20, inset 0 1px 0 rgba(255,255,255,0.1)`,
+                    boxShadow: `0 8px 32px ${tool.color}30`,
                   }}
-                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileHover={{ scale: 1.02, y: -4 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {/* Animated background gradient */}
-                  <motion.div 
-                    className="absolute inset-0 opacity-50"
+                  {/* Background Image */}
+                  <img 
+                    src={TOOL_IMAGES[tool.id]}
+                    alt={tool.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  
+                  {/* Gradient Overlay */}
+                  <div 
+                    className="absolute inset-0"
                     style={{
-                      background: `radial-gradient(circle at 30% 30%, ${tool.color}40 0%, transparent 50%)`,
+                      background: `linear-gradient(180deg, transparent 0%, ${tool.color}90 100%)`,
                     }}
-                    animate={{
-                      scale: hoveredTool === tool.id ? [1, 1.2, 1] : 1,
+                  />
+                  
+                  {/* Glass overlay */}
+                  <div 
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%)',
                     }}
-                    transition={{ duration: 2, repeat: Infinity }}
                   />
                   
                   {/* Hot badge */}
                   <motion.div 
-                    className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"
+                    className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1"
                     style={{
-                      background: 'linear-gradient(135deg, rgba(239,68,68,0.9) 0%, rgba(220,38,38,0.9) 100%)',
-                      boxShadow: '0 2px 10px rgba(239,68,68,0.4)',
+                      background: 'linear-gradient(135deg, rgba(239,68,68,0.95) 0%, rgba(220,38,38,0.95) 100%)',
+                      boxShadow: '0 4px 15px rgba(239,68,68,0.5)',
                     }}
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
                   >
                     <span>🔥</span>
                     <span className="text-white">HOT</span>
                   </motion.div>
                   
-                  {/* Shine effect */}
-                  <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/10 to-transparent rounded-t-[1.5rem]" />
-                  
-                  <div className="relative z-10 h-full flex flex-col">
+                  {/* Content */}
+                  <div className="absolute inset-0 p-4 flex flex-col justify-end">
                     {/* Icon */}
-                    <motion.div 
-                      className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-3 bg-gradient-to-br ${tool.gradient}`}
+                    <div 
+                      className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
                       style={{
-                        boxShadow: `0 8px 25px ${tool.color}50`,
+                        background: 'rgba(255,255,255,0.15)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255,255,255,0.2)',
                       }}
-                      animate={{
-                        rotate: hoveredTool === tool.id ? [0, 5, -5, 0] : 0,
-                      }}
-                      transition={{ duration: 0.5 }}
                     >
-                      <span className="text-3xl">{tool.emoji}</span>
-                    </motion.div>
+                      <Icon size={24} className="text-white" />
+                    </div>
                     
-                    <h3 className="text-white font-bold text-base mb-1">{tool.name}</h3>
-                    <p className="text-white/50 text-xs flex-1 line-clamp-2">{tool.description}</p>
+                    <h3 className="text-white font-bold text-lg mb-1 drop-shadow-lg">{tool.name}</h3>
+                    <p className="text-white/80 text-xs mb-2 drop-shadow">{tool.description}</p>
                     
-                    {/* Stats row */}
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/10">
+                    {/* Stats */}
+                    <div className="flex items-center justify-between">
                       {stat ? (
-                        <span className="text-xs font-medium text-white/70">{stat}</span>
+                        <span 
+                          className="text-xs font-medium px-2 py-1 rounded-lg"
+                          style={{
+                            background: 'rgba(255,255,255,0.2)',
+                            backdropFilter: 'blur(10px)',
+                          }}
+                        >
+                          {stat}
+                        </span>
                       ) : (
-                        <span className="text-xs text-white/40">Начни!</span>
+                        <span className="text-white/60 text-xs">Начни!</span>
                       )}
-                      <span className="text-xs font-bold" style={{ color: tool.color }}>
+                      <span 
+                        className="text-xs font-bold px-2 py-1 rounded-lg"
+                        style={{
+                          background: 'rgba(245,158,11,0.3)',
+                          color: '#fbbf24',
+                        }}
+                      >
                         +{tool.xpReward} XP
                       </span>
                     </div>
@@ -558,7 +515,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
         </div>
       )}
 
-      {/* Tools Grid */}
+      {/* Tools List */}
       <div className="px-4 py-2">
         {selectedCategory === 'all' && (
           <motion.div 
@@ -574,6 +531,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
         <div className="space-y-3">
           {(selectedCategory === 'all' ? TOOLS.filter(t => t.category !== 'featured') : filteredTools).map((tool, index) => {
             const stat = getStatLabel(tool.id);
+            const Icon = tool.icon;
             
             return (
               <motion.button
@@ -582,64 +540,56 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05, type: "spring", stiffness: 200 }}
                 onClick={() => setActiveTool(tool.id)}
-                onHoverStart={() => setHoveredTool(tool.id)}
-                onHoverEnd={() => setHoveredTool(null)}
-                className="w-full text-left rounded-[1.5rem] p-4 transition-all relative overflow-hidden group"
+                className="w-full text-left rounded-[1.5rem] overflow-hidden relative group"
                 style={{
                   background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
-                  backdropFilter: 'blur(40px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                  border: `1px solid ${hoveredTool === tool.id ? tool.color + '50' : 'rgba(255,255,255,0.1)'}`,
-                  boxShadow: hoveredTool === tool.id 
-                    ? `0 8px 32px ${tool.color}25, inset 0 1px 0 rgba(255,255,255,0.1)` 
-                    : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+                  backdropFilter: 'blur(40px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
                 }}
                 whileHover={{ scale: 1.01, x: 4 }}
                 whileTap={{ scale: 0.99 }}
               >
-                {/* Badges */}
-                {tool.isNew && (
-                  <motion.div 
-                    className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
+                <div className="flex items-center gap-4 p-4">
+                  {/* Image thumbnail */}
+                  <div 
+                    className="w-16 h-16 rounded-xl overflow-hidden shrink-0 relative"
                     style={{
-                      background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                      boxShadow: '0 2px 10px rgba(34,197,94,0.4)',
+                      boxShadow: `0 4px 15px ${tool.color}30`,
                     }}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", delay: 0.2 }}
                   >
-                    <span className="text-white">NEW</span>
-                  </motion.div>
-                )}
-                
-                {/* Hover glow effect */}
-                <motion.div 
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{
-                    background: `radial-gradient(circle at 20% 50%, ${tool.color}15 0%, transparent 50%)`,
-                  }}
-                />
-                
-                {/* Shine effect */}
-                <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/5 to-transparent rounded-t-[1.5rem] pointer-events-none" />
-                
-                <div className="flex items-center gap-4 relative z-10">
-                  {/* Icon */}
-                  <motion.div 
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br ${tool.gradient} shrink-0`}
-                    style={{
-                      boxShadow: `0 6px 20px ${tool.color}40`,
-                    }}
-                    whileHover={{ rotate: [0, -5, 5, 0], scale: 1.05 }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <span className="text-2xl">{tool.emoji}</span>
-                  </motion.div>
+                    <img 
+                      src={TOOL_IMAGES[tool.id]}
+                      alt={tool.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div 
+                      className="absolute inset-0"
+                      style={{
+                        background: `linear-gradient(135deg, ${tool.color}40 0%, ${tool.color}20 100%)`,
+                      }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Icon size={24} className="text-white drop-shadow-lg" />
+                    </div>
+                  </div>
                   
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-bold text-white mb-0.5">{tool.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-bold text-white">{tool.name}</h3>
+                      {tool.isNew && (
+                        <span 
+                          className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase"
+                          style={{
+                            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                            color: 'white',
+                          }}
+                        >
+                          NEW
+                        </span>
+                      )}
+                    </div>
                     <p className="text-white/40 text-sm truncate">{tool.description}</p>
                     
                     {/* Stats */}
@@ -665,44 +615,36 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
                   </div>
                   
                   {/* Arrow */}
-                  <motion.div
-                    animate={{ x: hoveredTool === tool.id ? 4 : 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <ChevronRight size={20} className="text-white/30" />
-                  </motion.div>
+                  <ChevronRight size={20} className="text-white/30 group-hover:text-white/50 transition-colors" />
                 </div>
               </motion.button>
             );
           })}
         </div>
 
-        {/* Tips Section - Enhanced */}
+        {/* Tip Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mt-6 rounded-[1.5rem] p-5 relative overflow-hidden"
+          className="mt-6 rounded-[1.5rem] overflow-hidden relative"
           style={{
             background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.08) 100%)',
             backdropFilter: 'blur(40px)',
-            border: '1px solid rgba(99,102,241,0.25)',
-            boxShadow: '0 8px 32px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
+            border: '1px solid rgba(99,102,241,0.2)',
+            boxShadow: '0 8px 32px rgba(99,102,241,0.15)',
           }}
         >
-          {/* Animated gradient */}
-          <motion.div 
-            className="absolute inset-0"
-            style={{
-              background: 'radial-gradient(circle at 80% 20%, rgba(139,92,246,0.2) 0%, transparent 40%)',
-            }}
-            animate={{
-              opacity: [0.5, 0.8, 0.5],
-            }}
-            transition={{ duration: 3, repeat: Infinity }}
-          />
+          {/* Background image */}
+          <div className="absolute inset-0 opacity-20">
+            <img 
+              src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600&h=200&fit=crop"
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          </div>
           
-          <div className="flex items-start gap-3 relative z-10">
+          <div className="relative p-5 flex items-start gap-3">
             <motion.div 
               className="text-2xl"
               animate={{ rotate: [0, 10, -10, 0] }}
