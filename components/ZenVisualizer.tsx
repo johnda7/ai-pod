@@ -359,7 +359,7 @@ export const ZenVisualizer: React.FC<ZenVisualizerProps> = ({ isOpen, onClose })
             {/* Close button - LOWERED FOR TELEGRAM */}
             <button 
               onClick={onClose}
-              className="absolute top-10 right-6 w-12 h-12 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors z-10"
+              className="absolute top-6 right-6 w-12 h-12 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors z-10"
               style={{
                 background: 'rgba(255,255,255,0.1)',
                 backdropFilter: 'blur(20px)',
@@ -370,7 +370,7 @@ export const ZenVisualizer: React.FC<ZenVisualizerProps> = ({ isOpen, onClose })
             </button>
 
             {/* Title */}
-            <div className="absolute top-10 left-6">
+            <div className="absolute top-6 left-6">
               <h2 className="text-white font-bold text-xl">Визуализации</h2>
               <p className="text-white/50 text-sm">Расслабься и наблюдай</p>
             </div>

@@ -140,7 +140,7 @@ export const GratitudeJournal: React.FC<GratitudeJournalProps> = ({ isOpen, onCl
       >
         {/* Header */}
         <div 
-          className="sticky top-0 z-10 px-5 pt-10 pb-3 flex items-center justify-between"
+          className="sticky top-0 z-10 px-5 pt-6 pb-3 flex items-center justify-between"
           style={{
             background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)',
             backdropFilter: 'blur(20px)',
