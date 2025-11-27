@@ -374,7 +374,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                             <Sparkles size={16} className="text-amber-400"/> Инвентарь
                         </h3>
                         <span className="text-xs font-bold text-slate-500">{inventoryItems.length} шт</span>
-                    </div>
+                             </div>
                     
                     <div className="flex gap-2 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
                         {inventoryItems.length === 0 ? (
@@ -408,7 +408,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                                   <span className="text-2xl">{getItemIcon(item?.id)}</span>
                                 </div>
                                 <span className="text-[9px] text-white/40 mt-1">{getItemName(item?.id)}</span>
-                              </div>
+                             </div>
                             );
                           })
                         )}
@@ -418,7 +418,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                 {/* 4. SETTINGS MENU - Simplified */}
                 <div className="space-y-2">
                      {/* How to Play Button */}
-                     <button 
+                         <button 
                         onClick={() => setShowTutorial(true)}
                         className="w-full p-3 rounded-xl flex items-center gap-3 transition-all active:scale-[0.98]"
                         style={{
@@ -428,8 +428,8 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                      >
                          <div className="w-10 h-10 rounded-lg bg-indigo-500/30 flex items-center justify-center">
                              <Info size={18} className="text-indigo-400" />
-                         </div>
-                         <div className="flex-1 text-left">
+                             </div>
+                             <div className="flex-1 text-left">
                              <div className="text-sm font-bold text-white">Как играть?</div>
                          </div>
                          <ChevronRight size={18} className="text-indigo-400/50" />
@@ -444,12 +444,12 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                      >
                          <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
                              <HelpCircle size={18} className="text-white/50" />
-                         </div>
+                             </div>
                          <div className="flex-1 text-left">
                              <div className="text-sm font-bold text-white/80">Поддержка</div>
-                         </div>
+                                 </div>
                          <ChevronRight size={18} className="text-white/30" />
-                     </button>
+                         </button>
                      
                      <button className="w-full mt-6 p-4 rounded-[1.5rem] border border-red-500/20 text-red-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-500/10 transition-all active:scale-95">
                          <LogOut size={18} />
@@ -822,7 +822,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         <div className="fixed inset-0 z-[80] bg-[#020617] overflow-y-auto">
           <button 
             onClick={() => setShowAchievements(false)}
-            className="fixed top-6 right-6 z-[90] w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            className="fixed top-12 right-4 z-[90] w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
           >
             ✕
           </button>
@@ -953,7 +953,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         <div className="fixed inset-0 z-[80] bg-[#020617] overflow-y-auto">
           <button 
             onClick={() => setShowShop(false)}
-            className="fixed top-6 right-6 z-[90] w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            className="fixed top-12 right-4 z-[90] w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
           >
             ✕
           </button>

@@ -191,7 +191,7 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
         </div>
 
         {/* Header */}
-        <div className="sticky top-0 z-30 px-4 pt-14 pb-4">
+        <div className="sticky top-0 z-30 px-4 pt-24 pb-4">
           <div 
             className="p-4 rounded-3xl"
             style={{
@@ -342,7 +342,7 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
               exit={{ opacity: 0, y: 100 }}
               className="fixed inset-0 z-50 bg-[#020617] overflow-y-auto"
             >
-              <div className="px-4 pt-14 pb-8">
+              <div className="px-4 pt-20 pb-8">
                 {/* Editor Header */}
                 <div className="flex items-center justify-between mb-4">
                   <button

@@ -153,7 +153,7 @@ export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplet
         </div>
 
         {/* Header */}
-        <div className="sticky top-0 z-30 px-4 pt-14 pb-4">
+        <div className="sticky top-0 z-30 px-4 pt-24 pb-4">
           <div 
             className="p-4 rounded-3xl"
             style={{
@@ -390,7 +390,7 @@ export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplet
               exit={{ opacity: 0, y: 100 }}
               className="fixed inset-0 z-50 bg-[#020617]/95 backdrop-blur-xl overflow-y-auto"
             >
-              <div className="px-4 pt-14 pb-8">
+              <div className="px-4 pt-20 pb-8">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-white">Новая цель</h2>
                   <button

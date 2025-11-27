@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronRight, Star, Trophy, Zap, Target, Users, Lightbulb, Heart, Shield, Coins, Brain, MessageCircle, Clock, Check, Play, Lock } from 'lucide-react';
+import { X, ChevronRight, Star, Trophy, Zap, Target, Users, Lightbulb, Heart, Shield, Brain, MessageCircle, Clock, Check, Play, Lock, Coins } from 'lucide-react';
 
 interface LifeSkillsModuleProps {
   isOpen: boolean;
@@ -155,11 +155,33 @@ export const LifeSkillsModule: React.FC<LifeSkillsModuleProps> = ({ isOpen, onCl
     return Math.round((completed / skill.lessons.length) * 100);
   };
 
-  const handleLessonComplete = (lesson: SkillLesson) => {
+  const [activeLesson, setActiveLesson] = useState<SkillLesson | null>(null);
+  const [lessonProgress, setLessonProgress] = useState(0);
+
+  const startLesson = (lesson: SkillLesson) => {
     if (completedLessons.includes(lesson.id)) return;
+    setActiveLesson(lesson);
+    setLessonProgress(0);
     
-    setCompletedLessons([...completedLessons, lesson.id]);
-    onComplete(lesson.xp, Math.floor(lesson.xp / 3));
+    // Simulate lesson progress
+    const interval = setInterval(() => {
+      setLessonProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 2;
+      });
+    }, 100);
+  };
+
+  const completeLesson = () => {
+    if (!activeLesson) return;
+    
+    setCompletedLessons([...completedLessons, activeLesson.id]);
+    onComplete(activeLesson.xp, Math.floor(activeLesson.xp / 3));
+    setActiveLesson(null);
+    setLessonProgress(0);
   };
 
   const totalProgress = Math.round(
@@ -221,8 +243,8 @@ export const LifeSkillsModule: React.FC<LifeSkillsModuleProps> = ({ isOpen, onCl
           ))}
         </div>
 
-        {/* Header */}
-        <div className="sticky top-0 z-30 px-4 pt-14 pb-4">
+        {/* Header - MORE PADDING FOR TELEGRAM */}
+        <div className="sticky top-0 z-30 px-4 pt-24 pb-4">
           <motion.div 
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -466,7 +488,7 @@ export const LifeSkillsModule: React.FC<LifeSkillsModuleProps> = ({ isOpen, onCl
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      onClick={() => !isLocked && handleLessonComplete(lesson)}
+                      onClick={() => !isLocked && !isCompleted && startLesson(lesson)}
                       disabled={isLocked}
                       className={`w-full p-4 rounded-2xl text-left transition-all ${
                         isLocked ? 'opacity-50' : 'active:scale-[0.98]'
@@ -533,6 +555,95 @@ export const LifeSkillsModule: React.FC<LifeSkillsModuleProps> = ({ isOpen, onCl
             </motion.div>
           )}
         </div>
+
+        {/* Active Lesson Modal */}
+        <AnimatePresence>
+          {activeLesson && selectedSkill && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="w-full max-w-sm rounded-3xl overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                  backdropFilter: 'blur(40px)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                }}
+              >
+                {/* Lesson Header */}
+                <div className="p-6 text-center">
+                  <span className="text-5xl mb-4 block">{selectedSkill.emoji}</span>
+                  <h3 className="text-xl font-bold text-white mb-2">{activeLesson.title}</h3>
+                  <p className="text-white/50 text-sm">{selectedSkill.name}</p>
+                </div>
+
+                {/* Progress */}
+                <div className="px-6 pb-6">
+                  <div className="h-3 bg-white/10 rounded-full overflow-hidden mb-4">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ 
+                        width: `${lessonProgress}%`,
+                        background: selectedSkill.color,
+                      }}
+                    />
+                  </div>
+                  
+                  {lessonProgress < 100 ? (
+                    <div className="text-center">
+                      <p className="text-white/70 text-sm mb-4">
+                        {lessonProgress < 30 && "Изучаем материал..."}
+                        {lessonProgress >= 30 && lessonProgress < 60 && "Практикуемся..."}
+                        {lessonProgress >= 60 && lessonProgress < 90 && "Закрепляем знания..."}
+                        {lessonProgress >= 90 && "Почти готово!"}
+                      </p>
+                      <button
+                        onClick={() => {
+                          setActiveLesson(null);
+                          setLessonProgress(0);
+                        }}
+                        className="px-4 py-2 rounded-xl text-white/50 text-sm"
+                        style={{ background: 'rgba(255,255,255,0.05)' }}
+                      >
+                        Отмена
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-4 mb-6">
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/20">
+                          <Zap size={18} className="text-yellow-400" />
+                          <span className="text-yellow-400 font-bold">+{activeLesson.xp} XP</span>
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/20">
+                          <Coins size={18} className="text-yellow-400" />
+                          <span className="text-yellow-400 font-bold">+{Math.floor(activeLesson.xp / 3)}</span>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={completeLesson}
+                        className="w-full py-4 rounded-2xl font-bold text-white"
+                        style={{
+                          background: `linear-gradient(135deg, ${selectedSkill.color} 0%, ${selectedSkill.color}cc 100%)`,
+                          boxShadow: `0 8px 32px ${selectedSkill.color}40`,
+                        }}
+                      >
+                        Готово! 🎉
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );
