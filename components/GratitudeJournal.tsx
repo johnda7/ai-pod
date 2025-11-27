@@ -463,3 +463,5 @@ export const GratitudeJournal: React.FC<GratitudeJournalProps> = ({ isOpen, onCl
   );
 };
 
+
+

@@ -241,3 +241,5 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ isOpen, onClose, s
 
 export default WeeklySummary;
 
+
+

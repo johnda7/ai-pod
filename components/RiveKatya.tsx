@@ -342,3 +342,5 @@ const FallbackKatya: React.FC<RiveKatyaProps> = ({ state, size, message, classNa
 
 export default RiveKatya;
 
+
+

@@ -91,3 +91,5 @@ COMMENT ON COLUMN game_results.level IS 'Уровень сложности (1-4)
 COMMENT ON COLUMN game_results.best_score IS 'Лучший результат на этом уровне';
 COMMENT ON COLUMN game_results.max_combo IS 'Максимальное комбо';
 
+
+

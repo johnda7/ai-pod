@@ -672,3 +672,5 @@ const AnimatedKatyaIcon = () => (
 
 export default EnhancedTheorySlide;
 
+
+

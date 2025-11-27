@@ -257,8 +257,8 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
         />
       </div>
 
-      {/* Header */}
-      <div className="sticky top-0 z-20 px-4 pt-20 pb-3">
+      {/* Header - MORE PADDING FOR TELEGRAM */}
+      <div className="sticky top-0 z-20 px-4 pt-24 pb-3">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

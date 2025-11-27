@@ -723,3 +723,5 @@ export const BreathSyncGame: React.FC<BreathSyncProps> = ({ onComplete, cycles =
   );
 };
 
+
+

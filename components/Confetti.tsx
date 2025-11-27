@@ -336,3 +336,5 @@ export const LevelUpAnimation: React.FC<LevelUpProps> = ({ newLevel, isVisible, 
 
 export default Confetti;
 
+
+
