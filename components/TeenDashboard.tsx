@@ -646,9 +646,9 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                                    >
                                      <Flame size={10} className="text-orange-400" />
                                      <span className="text-[10px] font-bold uppercase tracking-wider text-white/60">
-                                       Неделя {task.week}
+                                            Неделя {task.week}
                                      </span>
-                                   </div>
+                                    </div>
                                 </div>
                             )}
 
@@ -688,12 +688,12 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                                    }}
                                >
                                    {/* Shine effect for active */}
-                                   {isActive && (
+                                    {isActive && (
                                      <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
                                        <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent" />
                                      </div>
-                                   )}
-                                   
+                                    )}
+
                                    {/* Icon Circle with emoji */}
                                     <div className={`
                                        w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all relative
@@ -752,7 +752,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                                        <div className="absolute -right-1 -top-1">
                                          <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
                                          <div className="absolute inset-0 w-3 h-3 rounded-full bg-red-500 animate-ping opacity-75" />
-                                       </div>
+                                        </div>
                                     )}
                                 </button>
                             </div>
@@ -765,7 +765,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   };
 
   return (
-    <div className="h-full relative overflow-hidden text-white bg-[#020617]">
+    <div className="h-full relative overflow-hidden text-white" style={{ background: 'linear-gradient(135deg, #0a0f1c 0%, #0d1424 50%, #0f172a 100%)' }}>
       
       {/* Tutorial Modal */}
       <GameTutorial isOpen={showTutorial} onClose={handleCloseTutorial} />
