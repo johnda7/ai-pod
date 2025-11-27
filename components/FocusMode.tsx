@@ -248,8 +248,8 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
           )}
         </div>
 
-        {/* Header */}
-        <div className="sticky top-0 z-30 px-4 pt-14 pb-4">
+        {/* Header - MORE PADDING FOR TELEGRAM */}
+        <div className="sticky top-0 z-30 px-4 pt-24 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div 

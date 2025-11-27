@@ -94,8 +94,8 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }
         <div className="absolute bottom-40 right-20 w-80 h-80 bg-purple-600/10 rounded-full blur-[100px]" />
       </div>
       
-      {/* HEADER - iOS 26 LIQUID GLASS - LOWERED FOR TELEGRAM */}
-      <div className="sticky top-0 z-20 px-4 pt-20 pb-4">
+      {/* HEADER - iOS 26 LIQUID GLASS - MORE LOWERED FOR TELEGRAM */}
+      <div className="sticky top-0 z-20 px-4 pt-24 pb-4">
         <div 
           className="p-5 rounded-3xl"
           style={{
