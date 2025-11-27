@@ -603,37 +603,87 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                  </div>
              </div>
 
-             {/* WELCOME CARD - Compact */}
-             {user.completedTaskIds.length === 0 && (
-                 <div className="mb-4 mx-auto max-w-sm animate-in fade-in slide-in-from-top-4 duration-500">
-                     <div 
-                       className="relative overflow-hidden rounded-2xl p-4"
-                       style={{
-                         background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.06) 100%)',
-                         backdropFilter: 'blur(30px)',
-                         border: '1px solid rgba(99,102,241,0.15)',
-                       }}
-                     >
-                         <div className="flex items-center gap-3">
-                             <div className="text-3xl">👋</div>
-                             <div className="flex-1">
-                                 <h3 className="text-white font-bold text-sm">Привет, {telegramUser?.first_name || telegramUser?.username || user.name}!</h3>
-                                 <p className="text-white/50 text-xs">С тобой всё нормально ✨</p>
-                             </div>
-                             <button 
-                                 onClick={() => setShowTutorial(true)}
-                                 className="px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-300 transition-all active:scale-95"
-                                 style={{
-                                   background: 'rgba(99,102,241,0.2)',
-                                   border: '1px solid rgba(99,102,241,0.3)',
-                                 }}
-                             >
-                                 Как играть?
-                             </button>
+             {/* WELCOME CARD - Always show with progress */}
+             <div className="mb-4 mx-auto max-w-sm animate-in fade-in slide-in-from-top-4 duration-500">
+                 <div 
+                   className="relative overflow-hidden rounded-2xl p-4"
+                   style={{
+                     background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.06) 100%)',
+                     backdropFilter: 'blur(30px)',
+                     border: '1px solid rgba(99,102,241,0.15)',
+                   }}
+                 >
+                     <div className="flex items-center gap-3 mb-3">
+                         <div className="text-3xl">👋</div>
+                         <div className="flex-1">
+                             <h3 className="text-white font-bold text-sm">Привет, {telegramUser?.first_name || telegramUser?.username || user.name}!</h3>
+                             <p className="text-white/50 text-xs">
+                               {user.completedTaskIds.length === 0 
+                                 ? 'Начни своё путешествие! 🚀' 
+                                 : user.streak > 0 
+                                   ? `🔥 ${user.streak} ${user.streak === 1 ? 'день' : user.streak < 5 ? 'дня' : 'дней'} подряд!`
+                                   : 'С тобой всё нормально ✨'
+                               }
+                             </p>
                          </div>
+                         <button 
+                             onClick={() => setShowTutorial(true)}
+                             className="px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-300 transition-all active:scale-95"
+                             style={{
+                               background: 'rgba(99,102,241,0.2)',
+                               border: '1px solid rgba(99,102,241,0.3)',
+                             }}
+                         >
+                             Как играть?
+                         </button>
                      </div>
-                 </div>
-             )}
+                     
+                    {/* Level Progress Bar */}
+                    <div className="relative">
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-white/60 text-[10px] font-medium">Уровень {user.level}</span>
+                            <span className="text-white/40 text-[10px]">{user.xp % 500}/500 XP</span>
+                        </div>
+                        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{
+                                width: `${(user.xp % 500) / 5}%`,
+                                background: 'linear-gradient(90deg, #6366f1 0%, #a855f7 100%)',
+                              }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* WEEKLY PROGRESS - Mini Stats */}
+            <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75">
+                <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { icon: '🎯', label: 'Уроки', value: user.completedTaskIds.length, color: 'from-indigo-500/20 to-purple-500/20' },
+                      { icon: '⚡', label: 'XP', value: user.xp, color: 'from-yellow-500/20 to-orange-500/20' },
+                      { icon: '🔥', label: 'Серия', value: user.streak, color: 'from-red-500/20 to-pink-500/20' },
+                      { icon: '💎', label: 'Монеты', value: user.coins, color: 'from-cyan-500/20 to-blue-500/20' },
+                    ].map((stat, i) => (
+                      <div 
+                        key={i}
+                        className="relative overflow-hidden rounded-xl p-2.5 text-center"
+                        style={{
+                          background: 'rgba(255,255,255,0.03)',
+                          border: '1px solid rgba(255,255,255,0.06)',
+                        }}
+                      >
+                        <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-50`} />
+                        <div className="relative z-10">
+                          <div className="text-lg mb-0.5">{stat.icon}</div>
+                          <div className="text-white font-bold text-sm">{stat.value}</div>
+                          <div className="text-white/40 text-[8px] uppercase tracking-wider">{stat.label}</div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+            </div>
 
              {/* DAILY QUESTS - Compact Glass Card */}
              <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
