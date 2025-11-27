@@ -8,7 +8,7 @@ export const ParentDashboard: React.FC = () => {
   const [selectedLecture, setSelectedLecture] = useState<string | null>(null);
 
   return (
-    <div className="px-4 pb-24 pt-28 min-h-screen bg-gradient-to-b from-teal-950 to-slate-950">
+    <div className="px-4 pb-24 pt-4 min-h-screen bg-gradient-to-b from-teal-950 to-slate-950">
       
       {/* Катино приветствие */}
       <motion.div 
