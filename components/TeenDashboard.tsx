@@ -35,6 +35,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   const [isXpAnimating, setIsXpAnimating] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showShop, setShowShop] = useState(false);
   
   // New UI States
   const [showConfetti, setShowConfetti] = useState(false);
@@ -198,80 +199,112 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
     if (activeTab === 'RELAX') return <MeditationView />;
 
     if (activeTab === 'PROFILE') {
+        // Get Telegram user data if available
+        const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+        const telegramPhoto = tgUser?.photo_url;
+        const telegramName = tgUser?.first_name || user.name;
+        const telegramId = tgUser?.id;
+        
         return (
-            <div className="px-5 pt-28 pb-32 animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-screen relative">
+            <div className="px-5 pt-24 pb-32 min-h-screen relative" style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, #0f0f2a 50%, #0a0a1a 100%)' }}>
                 
-                {/* 1. HERO IDENTITY CARD (Liquid Glass) */}
-                <div className="relative w-full rounded-[3rem] overflow-hidden p-8 flex flex-col items-center text-center shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-white/10 mb-8 group">
-                    
-                    {/* Dynamic Animated Background */}
-                    <div className="absolute inset-0 bg-[#0A0F1C]">
-                        <div className="absolute top-[-50%] left-[-20%] w-[150%] h-[150%] bg-gradient-to-b from-indigo-500/20 via-purple-500/10 to-transparent rounded-full blur-[80px] animate-[spin_15s_linear_infinite] opacity-70"></div>
-                        <div className="absolute bottom-[-20%] right-[-20%] w-[100%] h-[100%] bg-blue-500/10 rounded-full blur-[60px]"></div>
-                        {/* Noise Texture */}
-                        <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+                {/* 1. HERO IDENTITY CARD - SIMPLIFIED */}
+                <div className="relative w-full rounded-[2rem] overflow-hidden p-6 flex flex-col items-center text-center border border-white/10 mb-6"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                    backdropFilter: 'blur(20px)',
+                  }}
+                >
+                    {/* Static background gradient */}
+                    <div className="absolute inset-0 -z-10">
+                        <div className="absolute top-0 right-0 w-[200px] h-[200px] rounded-full opacity-30"
+                          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%)' }}
+                        />
                     </div>
 
-                    {/* Edit Button */}
-                    <button className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:bg-white/10 hover:text-white transition-all backdrop-blur-md z-20">
-                        <Edit3 size={18} />
-                    </button>
-
-                    {/* Avatar with Glow Rings */}
-                    <div className="relative z-10 mt-2 mb-5">
-                        <div className="absolute inset-0 bg-indigo-500 rounded-full blur-2xl opacity-40 animate-pulse"></div>
-                        <div className="relative w-28 h-28 rounded-full p-1.5 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-xl border border-white/20 shadow-2xl">
-                            <img src={user.avatarUrl} className="w-full h-full rounded-full object-cover bg-[#0A0F1C]" alt="Profile" />
-                            
+                    {/* Avatar - Telegram photo or default */}
+                    <div className="relative z-10 mb-4">
+                        <div className="relative w-24 h-24 rounded-full p-1 bg-gradient-to-br from-indigo-500/50 to-purple-500/50 shadow-lg">
+                            <img 
+                              src={telegramPhoto || user.avatarUrl} 
+                              className="w-full h-full rounded-full object-cover bg-[#0A0F1C]" 
+                              alt="Profile" 
+                            />
                             {/* Online Status */}
-                            <div className="absolute bottom-1 right-1 w-5 h-5 bg-[#0A0F1C] rounded-full flex items-center justify-center">
-                                <div className="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-pulse"></div>
+                            <div className="absolute bottom-0 right-0 w-5 h-5 bg-[#0A0F1C] rounded-full flex items-center justify-center">
+                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Name & Badge */}
-                    <div className="relative z-10 mb-8">
-                        <h2 className="text-3xl font-black text-white tracking-tight mb-1 drop-shadow-lg">{user.name}</h2>
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+                    {/* Name & ID */}
+                    <div className="relative z-10 mb-4">
+                        <h2 className="text-2xl font-black text-white tracking-tight mb-1">{telegramName}</h2>
+                        {telegramId && (
+                          <p className="text-white/40 text-xs font-mono">ID: {telegramId}</p>
+                        )}
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 mt-2">
                              <ShieldCheck size={12} className="text-indigo-400" />
                              <span className="text-xs font-bold text-indigo-200 uppercase tracking-widest">{user.role === 'TEEN' ? 'Cadet' : 'Admin'}</span>
                         </div>
                     </div>
 
-                    {/* Stats Grid */}
-                    <div className="relative z-10 grid grid-cols-3 gap-4 w-full mb-8">
-                        <div className="flex flex-col items-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                            <div className="text-2xl font-black text-white">{user.level}</div>
-                            <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">LVL</div>
+                    {/* Stats Grid - Compact */}
+                    <div className="relative z-10 grid grid-cols-4 gap-2 w-full mb-4">
+                        <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
+                            <div className="text-lg font-black text-white">{user.level}</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase">LVL</div>
                         </div>
-                        <div className="flex flex-col items-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                            <div className="text-2xl font-black text-white">{user.xp}</div>
-                            <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">XP</div>
+                        <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
+                            <div className="text-lg font-black text-white">{user.xp}</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase">XP</div>
                         </div>
-                        <div className="flex flex-col items-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                            <div className="text-2xl font-black text-white">{user.streak}</div>
-                            <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">DAYS</div>
+                        <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
+                            <div className="text-lg font-black text-yellow-400">{user.coins || 0}</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase">COINS</div>
+                        </div>
+                        <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
+                            <div className="text-lg font-black text-orange-400">{user.streak}</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase">DAYS</div>
                         </div>
                     </div>
 
-                    {/* Level Progress */}
+                    {/* Level Progress - Simplified */}
                     <div className="relative z-10 w-full">
-                        <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wider">
+                        <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1">
                             <span>Уровень {user.level}</span>
                             <span>{Math.round(levelProgress)}%</span>
                         </div>
-                        <div className="h-2.5 w-full bg-black/40 rounded-full overflow-hidden backdrop-blur-sm border border-white/5">
+                        <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
                             <div 
                                 style={{width: `${levelProgress}%`}} 
-                                className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 bg-[length:200%_100%] animate-[shimmer_2s_linear_infinite] shadow-[0_0_15px_rgba(99,102,241,0.5)] rounded-full"
+                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
                             ></div>
                         </div>
                     </div>
                 </div>
 
+                {/* SHOP BUTTON - Quick Access */}
+                <button 
+                    onClick={() => setShowShop(true)}
+                    className="w-full mb-6 p-4 rounded-2xl flex items-center gap-4 transition-all active:scale-[0.98]"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(234,179,8,0.2) 0%, rgba(234,88,12,0.1) 100%)',
+                      border: '1px solid rgba(234,179,8,0.3)',
+                    }}
+                >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg">
+                        <ShoppingBag size={24} className="text-white" />
+                    </div>
+                    <div className="flex-1 text-left">
+                        <div className="text-white font-bold">Магазин</div>
+                        <div className="text-yellow-400/70 text-sm">Потрать свои {user.coins || 0} монет</div>
+                    </div>
+                    <ChevronRight size={20} className="text-yellow-400/50" />
+                </button>
+
                 {/* 2. ACHIEVEMENTS PREVIEW */}
-                <div className="mb-8 animate-in slide-in-from-bottom-8 duration-700 delay-75">
+                <div className="mb-6">
                     <div className="flex items-center justify-between px-2 mb-4">
                         <h3 className="text-white font-bold text-lg flex items-center gap-2">
                             <Trophy size={18} className="text-yellow-400"/> Достижения
@@ -323,86 +356,69 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                             <span className="text-[9px] font-bold uppercase">Все</span>
                         </button>
                     </div>
-                </div>
-
-                {/* 3. INVENTORY SHELF */}
-                <div className="mb-8 animate-in slide-in-from-bottom-8 duration-700 delay-100">
-                    <div className="flex items-center justify-between px-2 mb-4">
-                        <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                            <Sparkles size={18} className="text-amber-400"/> Инвентарь
-                        </h3>
-                        <span className="text-xs font-bold text-slate-500 bg-white/5 px-2 py-1 rounded-lg">{inventoryItems.length}</span>
-                    </div>
-                    
-                    <div className="flex gap-3 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide">
-                        {/* New Slot Button */}
-                        <button 
-                            onClick={() => setActiveTab('SHOP')}
-                            className="w-20 h-20 shrink-0 rounded-[1.2rem] bg-white/5 border border-white/10 border-dashed flex flex-col items-center justify-center gap-1 text-slate-500 hover:text-white hover:bg-white/10 transition-all active:scale-95"
-                        >
-                            <ShoppingBag size={20} />
-                            <span className="text-[9px] font-bold uppercase">Магазин</span>
-                        </button>
-
-                        {/* Items */}
-                        {inventoryItems.map((item, idx) => (
-                             <div key={idx} className="w-20 h-20 shrink-0 rounded-[1.2rem] bg-[#151925] border border-white/10 flex items-center justify-center relative group overflow-hidden shadow-lg">
-                                 <div className="absolute inset-0 bg-indigo-500/20 blur-xl opacity-0 group-hover:opacity-50 transition-opacity"></div>
-                                 <div className="relative z-10 text-2xl group-hover:scale-110 transition-transform">
-                                     {item?.type === 'POWERUP' ? <Zap className="text-yellow-400" /> : <Gift className="text-purple-400" />}
                                  </div>
-                                 <div className="absolute bottom-1 right-2 text-[8px] font-bold text-slate-400 uppercase">{item?.id === 'hp_potion' ? 'HP' : 'ITEM'}</div>
+
+                {/* 3. INVENTORY - Compact */}
+                <div className="mb-6">
+                    <div className="flex items-center justify-between px-1 mb-3">
+                        <h3 className="text-white font-bold text-base flex items-center gap-2">
+                            <Sparkles size={16} className="text-amber-400"/> Инвентарь
+                        </h3>
+                        <span className="text-xs font-bold text-slate-500">{inventoryItems.length} шт</span>
                              </div>
-                        ))}
-                        
-                        {/* Empty Slots Filler */}
-                        {[1,2,3].map(i => (
-                             <div key={`empty-${i}`} className="w-20 h-20 shrink-0 rounded-[1.2rem] bg-black/20 border border-white/5 flex items-center justify-center">
-                                 <div className="w-2 h-2 rounded-full bg-white/5"></div>
+                    
+                    <div className="flex gap-2 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
+                        {inventoryItems.length === 0 ? (
+                          <div className="w-full py-4 text-center text-white/30 text-sm">
+                            Пусто. Загляни в магазин!
+                          </div>
+                        ) : (
+                          inventoryItems.map((item, idx) => (
+                             <div key={idx} className="w-16 h-16 shrink-0 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                 <span className="text-2xl">
+                                     {item?.type === 'POWERUP' ? '⚡' : '🎁'}
+                                 </span>
                              </div>
-                        ))}
+                          ))
+                        )}
                     </div>
                 </div>
 
-                {/* 3. SETTINGS MENU */}
-                <div className="space-y-3 animate-in slide-in-from-bottom-8 duration-700 delay-200">
+                {/* 4. SETTINGS MENU - Simplified */}
+                <div className="space-y-2">
                      {/* How to Play Button */}
                      <button 
                         onClick={() => setShowTutorial(true)}
-                        className="w-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 backdrop-blur-md border border-indigo-500/30 p-4 rounded-[1.5rem] flex items-center gap-4 transition-all hover:from-indigo-500/30 hover:to-purple-500/30 active:scale-[0.98] group"
+                        className="w-full p-3 rounded-xl flex items-center gap-3 transition-all active:scale-[0.98]"
+                        style={{
+                          background: 'rgba(99,102,241,0.15)',
+                          border: '1px solid rgba(99,102,241,0.2)',
+                        }}
                      >
-                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-                             <Info size={20} />
+                         <div className="w-10 h-10 rounded-lg bg-indigo-500/30 flex items-center justify-center">
+                             <Info size={18} className="text-indigo-400" />
                          </div>
                          <div className="flex-1 text-left">
                              <div className="text-sm font-bold text-white">Как играть?</div>
-                             <div className="text-xs text-indigo-300">Туториал по механикам</div>
                          </div>
-                         <Sparkles size={18} className="text-indigo-400" />
+                         <ChevronRight size={18} className="text-indigo-400/50" />
                      </button>
 
-                     {[
-                         { icon: ShieldCheck, label: 'Настройки аккаунта', badge: null },
-                         { icon: HelpCircle, label: 'Поддержка', badge: null },
-                     ].map((item, idx) => (
-                         <button 
-                            key={idx}
-                            className="w-full bg-[#151925]/80 backdrop-blur-md border border-white/5 p-4 rounded-[1.5rem] flex items-center gap-4 transition-all hover:bg-white/10 active:scale-[0.98] group"
-                         >
-                             <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-300 group-hover:text-white group-hover:bg-indigo-500/20 group-hover:scale-110 transition-all">
-                                 <item.icon size={20} />
-                             </div>
-                             <div className="flex-1 text-left">
-                                 <div className="text-sm font-bold text-white group-hover:text-indigo-200 transition-colors">{item.label}</div>
-                             </div>
-                             {item.badge && (
-                                 <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-red-500/40">
-                                     {item.badge}
-                                 </div>
-                             )}
-                             <ChevronRight size={18} className="text-slate-600 group-hover:text-white transition-colors" />
-                         </button>
-                     ))}
+                     <button 
+                        className="w-full p-3 rounded-xl flex items-center gap-3 transition-all active:scale-[0.98]"
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                        }}
+                     >
+                         <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
+                             <HelpCircle size={18} className="text-white/50" />
+                         </div>
+                         <div className="flex-1 text-left">
+                             <div className="text-sm font-bold text-white/80">Поддержка</div>
+                         </div>
+                         <ChevronRight size={18} className="text-white/30" />
+                     </button>
                      
                      <button className="w-full mt-6 p-4 rounded-[1.5rem] border border-red-500/20 text-red-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-500/10 transition-all active:scale-95">
                          <LogOut size={18} />
@@ -423,13 +439,13 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
     return (
         <div className="relative pt-2 pb-40 px-4 min-h-screen overflow-x-hidden">
              
-             {/* TOP BAR - iOS 26 LIQUID GLASS - COMPACT */}
-             <div className="flex justify-between items-center mb-4 relative z-40 pt-16 sticky top-0 pb-3 -mx-4 px-4 transition-all duration-300">
+             {/* TOP BAR - iOS 26 LIQUID GLASS - COMPACT - LOWERED */}
+             <div className="flex justify-between items-center mb-4 relative z-40 pt-20 sticky top-0 pb-3 -mx-4 px-4 transition-all duration-300">
                  {/* Glass background */}
                  <div 
-                   className="absolute inset-0 -top-10"
+                   className="absolute inset-0 -top-16"
                    style={{
-                     background: 'linear-gradient(to bottom, rgba(2,6,23,1) 0%, rgba(2,6,23,0.9) 70%, transparent 100%)',
+                     background: 'linear-gradient(to bottom, rgba(10,15,28,1) 0%, rgba(10,15,28,0.95) 60%, transparent 100%)',
                    }}
                  />
                  
@@ -900,6 +916,19 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         onClaim={handleDailyRewardClaim}
         currentStreak={user.streak}
       />
+      
+      {/* Shop Modal */}
+      {showShop && (
+        <div className="fixed inset-0 z-[80] bg-[#020617] overflow-y-auto">
+          <button 
+            onClick={() => setShowShop(false)}
+            className="fixed top-6 right-6 z-[90] w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+          >
+            ✕
+          </button>
+          <ShopView user={user} onBuy={handleBuyItem} />
+        </div>
+      )}
     </div>
   );
 };

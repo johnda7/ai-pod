@@ -238,86 +238,27 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
   const featuredTools = TOOLS.filter(t => t.category === 'featured');
 
   return (
-    <div className="min-h-screen pb-40 relative overflow-hidden">
-      {/* CHILL ZONE STYLE BACKGROUND */}
-      <div className="fixed inset-0 -z-10">
-        {/* Base gradient - same as Chill Zone */}
+    <div className="min-h-screen pb-40 relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, #0f0f2a 50%, #0a0a1a 100%)' }}>
+      {/* Static background - optimized for performance */}
+      <div className="fixed inset-0 -z-10 pointer-events-none">
         <div 
-          className="absolute inset-0"
+          className="absolute top-0 left-1/4 w-[400px] h-[300px] rounded-full opacity-30"
           style={{
-            background: 'linear-gradient(180deg, #0a0a1a 0%, #0f0f2a 30%, #1a1a3a 60%, #0a0a1a 100%)',
+            background: 'radial-gradient(ellipse, rgba(99,102,241,0.3) 0%, transparent 70%)',
+            filter: 'blur(60px)',
           }}
         />
-        
-        {/* Aurora effect */}
-        <div className="absolute inset-0 opacity-40">
-          <motion.div
-            className="absolute top-0 left-1/4 w-[600px] h-[400px] rounded-full"
-            style={{
-              background: 'radial-gradient(ellipse, rgba(99,102,241,0.3) 0%, transparent 70%)',
-              filter: 'blur(60px)',
-            }}
-            animate={{
-              x: [-50, 50, -50],
-              y: [-20, 30, -20],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute top-20 right-0 w-[500px] h-[350px] rounded-full"
-            style={{
-              background: 'radial-gradient(ellipse, rgba(139,92,246,0.25) 0%, transparent 70%)',
-              filter: 'blur(50px)',
-            }}
-            animate={{
-              x: [30, -30, 30],
-              y: [20, -20, 20],
-              scale: [1.1, 0.9, 1.1],
-            }}
-            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          />
-          <motion.div
-            className="absolute bottom-40 left-0 w-[450px] h-[300px] rounded-full"
-            style={{
-              background: 'radial-gradient(ellipse, rgba(236,72,153,0.2) 0%, transparent 70%)',
-              filter: 'blur(55px)',
-            }}
-            animate={{
-              x: [-30, 40, -30],
-              y: [30, -10, 30],
-            }}
-            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-          />
-        </div>
-
-        {/* Stars */}
-        <div className="absolute inset-0">
-          {[...Array(30)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-white rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                opacity: 0.3 + Math.random() * 0.4,
-              }}
-              animate={{
-                opacity: [0.2, 0.8, 0.2],
-                scale: [0.8, 1.2, 0.8],
-              }}
-              transition={{
-                duration: 2 + Math.random() * 3,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-              }}
-            />
-          ))}
-        </div>
+        <div 
+          className="absolute top-20 right-0 w-[350px] h-[250px] rounded-full opacity-25"
+          style={{
+            background: 'radial-gradient(ellipse, rgba(139,92,246,0.25) 0%, transparent 70%)',
+            filter: 'blur(50px)',
+          }}
+        />
       </div>
 
       {/* Header */}
-      <div className="sticky top-0 z-20 px-4 pt-14 pb-3">
+      <div className="sticky top-0 z-20 px-4 pt-20 pb-3">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
