@@ -142,7 +142,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }
       </div>
       
       {/* HEADER - iOS 26 LIQUID GLASS */}
-      <div className="sticky top-0 z-20 px-4 pt-10 pb-4">
+      <div className="sticky top-0 z-20 px-4 pt-6 pb-4">
         <motion.div 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

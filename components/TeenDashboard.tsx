@@ -255,7 +255,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         const telegramId = telegramUser?.id;
         
         return (
-            <div className="px-5 pt-12 pb-32 min-h-screen relative" style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, #0f0f2a 50%, #0a0a1a 100%)' }}>
+            <div className="px-5 pt-8 pb-32 min-h-screen relative" style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, #0f0f2a 50%, #0a0a1a 100%)' }}>
                 
                 {/* 1. HERO IDENTITY CARD - SIMPLIFIED */}
                 <div className="relative w-full rounded-[2rem] overflow-hidden p-6 flex flex-col items-center text-center border border-white/10 mb-6"
@@ -513,7 +513,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         <div className="relative pt-2 pb-40 px-4 min-h-screen overflow-x-hidden">
              
              {/* TOP BAR - iOS 26 LIQUID GLASS - COMPACT - LOWERED */}
-             <div className="flex justify-between items-center mb-4 relative z-40 pt-10 sticky top-0 pb-3 -mx-4 px-4 transition-all duration-300">
+             <div className="flex justify-between items-center mb-4 relative z-40 pt-6 sticky top-0 pb-3 -mx-4 px-4 transition-all duration-300">
                  {/* Glass background */}
                  <div 
                    className="absolute inset-0 -top-16"

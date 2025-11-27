@@ -230,7 +230,7 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
       </button>
 
       {/* Content */}
-      <div className="relative z-10 h-full overflow-y-auto pt-10 pb-8 px-4">
+      <div className="relative z-10 h-full overflow-y-auto pt-6 pb-8 px-4">
         <AnimatePresence mode="wait">
           {/* INTRO */}
           {step === 'intro' && (

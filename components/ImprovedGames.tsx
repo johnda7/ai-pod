@@ -261,7 +261,7 @@ export const BubblePopGame: React.FC<BubblePopProps> = ({
       }}
     >
       {/* HUD - LOWERED FOR TELEGRAM */}
-      <div className="absolute top-10 left-4 right-4 flex justify-between items-center z-20">
+      <div className="absolute top-6 left-4 right-4 flex justify-between items-center z-20">
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/30 backdrop-blur-sm">
           <Target size={16} className="text-yellow-400" />
           <span className="text-white font-bold">{score}/{targetScore}</span>
