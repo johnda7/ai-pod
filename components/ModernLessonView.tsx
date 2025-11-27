@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { 
-  X, ChevronUp, ChevronDown, Heart, MessageCircle, Share2, Bookmark, 
-  Play, Pause, Volume2, VolumeX, Sparkles, Zap, Trophy, Star, 
-  CheckCircle, AlertCircle, Brain, Target, Battery, Moon, Flame,
-  ArrowRight, RotateCcw, Send, ThumbsUp, Eye, Clock, Gift,
-  Lightbulb, Rocket, Award, TrendingUp, Users, Headphones,
-  Camera, Video, Image, Mic, PenTool, Gamepad2, Timer, Compass
+  X, ChevronUp, ChevronDown, 
+  Sparkles, Zap, Trophy, Star, 
+  CheckCircle, Brain, Target, Battery,
+  Clock, Users, PenTool, Gamepad2
 } from 'lucide-react';
 import { Task, LessonSlide } from '../types';
 import { KatyaMentor } from './KatyaMentor';
@@ -111,8 +109,8 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
   const markSlideComplete = (bonusXp: number = 10) => {
     const newCompleted = [...slideCompleted];
     if (!newCompleted[currentIndex]) {
-      newCompleted[currentIndex] = true;
-      setSlideCompleted(newCompleted);
+    newCompleted[currentIndex] = true;
+    setSlideCompleted(newCompleted);
       setXpEarned(prev => prev + bonusXp);
       setComboCount(prev => prev + 1);
       setShowXpPopup(true);
@@ -158,65 +156,28 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
         style={{ y, opacity }}
         onDoubleClick={handleDoubleTap}
       >
-        {/* Premium Background */}
+        {/* Premium Background - Static for performance */}
         <div className="absolute inset-0 z-0">
           <div className={`absolute inset-0 bg-gradient-to-b ${getBackgroundGradient()}`} />
           
-          {/* Animated mesh gradient */}
-          <div className="absolute inset-0 overflow-hidden">
-            <motion.div
-              className="absolute w-[600px] h-[600px] rounded-full"
+          {/* Static gradient orbs - no animation for better performance */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div
+              className="absolute w-[400px] h-[400px] rounded-full opacity-30"
               style={{
-                background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)',
-                top: '-200px',
-                right: '-200px',
+                background: 'radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 70%)',
+                top: '-150px',
+                right: '-150px',
               }}
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.3, 0.5, 0.3],
-              }}
-              transition={{ duration: 8, repeat: Infinity }}
             />
-            <motion.div
-              className="absolute w-[400px] h-[400px] rounded-full"
+            <div
+              className="absolute w-[300px] h-[300px] rounded-full opacity-30"
               style={{
-                background: 'radial-gradient(circle, rgba(236,72,153,0.3) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(236,72,153,0.4) 0%, transparent 70%)',
                 bottom: '-100px',
                 left: '-100px',
               }}
-              animate={{
-                scale: [1, 1.3, 1],
-                opacity: [0.3, 0.6, 0.3],
-              }}
-              transition={{ duration: 6, repeat: Infinity, delay: 1 }}
             />
-          </div>
-          
-          {/* Floating particles */}
-          <div className="absolute inset-0 overflow-hidden">
-            {[...Array(30)].map((_, i) => (
-              <motion.div
-                key={i}
-                className={`absolute rounded-full ${
-                  i % 3 === 0 ? 'w-2 h-2 bg-white/10' : 
-                  i % 3 === 1 ? 'w-1 h-1 bg-purple-400/20' : 
-                  'w-1.5 h-1.5 bg-pink-400/20'
-                }`}
-                initial={{ 
-                  x: Math.random() * window.innerWidth, 
-                  y: window.innerHeight + 10 
-                }}
-                animate={{ 
-                  y: -10,
-                  x: Math.random() * window.innerWidth
-                }}
-                transition={{ 
-                  duration: 4 + Math.random() * 6,
-                  repeat: Infinity,
-                  delay: Math.random() * 4
-                }}
-              />
-            ))}
           </div>
         </div>
 
@@ -243,55 +204,47 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
             ))}
           </div>
           
-          {/* Header with glass effect */}
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <motion.div 
-                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500/80 to-purple-600/80 flex items-center justify-center backdrop-blur-xl border border-white/20 shadow-lg"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+          {/* Header with glass effect - COMPACT */}
+          <div className="flex items-center justify-between px-4 py-2">
+            {/* Left - Back button + Title */}
+            <div className="flex items-center gap-2">
+              {/* Back button */}
+              <button 
+                onClick={() => currentIndex > 0 ? handleSwipe('down') : onClose()}
+                className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
               >
-                {task.isBoss ? (
-                  <Trophy size={24} className="text-yellow-300" />
-                ) : (
-                  <span className="text-xl">{getSlideIcon(currentSlide?.type)}</span>
-                )}
-              </motion.div>
-              <div>
-                <p className="text-white font-bold text-sm">{task.title}</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-white/60 text-xs">
-                    {currentIndex + 1}/{totalSlides}
+                <ChevronDown size={18} className="text-white" />
+              </button>
+              
+              {/* Title - compact */}
+              <div className="flex items-center gap-2">
+                <span className="text-white/60 text-xs font-medium">
+                  {currentIndex + 1}/{totalSlides}
+                </span>
+                {comboCount > 1 && (
+                  <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold">
+                    🔥 x{comboCount}
                   </span>
-                  {comboCount > 1 && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold"
-                    >
-                      🔥 x{comboCount}
-                    </motion.span>
-                  )}
-                </div>
+                )}
               </div>
-            </div>
+              </div>
             
-            {/* XP Counter */}
-            <div className="flex items-center gap-3">
+            {/* Right - XP & Close */}
+            <div className="flex items-center gap-2">
               <motion.div 
-                className="px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center gap-2"
+                className="px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center gap-1.5"
                 animate={showXpPopup ? { scale: [1, 1.2, 1] } : {}}
               >
-                <Zap size={14} className="text-yellow-400" />
-                <span className="text-white font-bold text-sm">+{xpEarned}</span>
+                <Zap size={12} className="text-yellow-400" />
+                <span className="text-white font-bold text-xs">+{xpEarned}</span>
               </motion.div>
               
-              <button 
-                onClick={onClose}
-                className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
-              >
-                <X size={20} className="text-white" />
-              </button>
+            <button 
+              onClick={onClose}
+                className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
+            >
+                <X size={18} className="text-white" />
+            </button>
             </div>
           </div>
         </div>
@@ -315,79 +268,6 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
           </motion.div>
         </AnimatePresence>
 
-        {/* Right sidebar (TikTok style actions) */}
-        <div className="absolute right-4 bottom-36 flex flex-col items-center gap-5 z-50">
-          {/* Like */}
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => {
-              const newLiked = [...liked];
-              newLiked[currentIndex] = !newLiked[currentIndex];
-              setLiked(newLiked);
-            }}
-            className="flex flex-col items-center"
-          >
-            <motion.div 
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center backdrop-blur-xl border ${
-                liked[currentIndex] 
-                  ? 'bg-red-500/80 border-red-400/50' 
-                  : 'bg-white/10 border-white/20'
-              }`}
-              animate={liked[currentIndex] ? { scale: [1, 1.2, 1] } : {}}
-            >
-              <Heart 
-                size={22} 
-                className={liked[currentIndex] ? 'text-white fill-white' : 'text-white'} 
-              />
-            </motion.div>
-            <span className="text-white text-xs mt-1 font-medium">
-              {liked[currentIndex] ? '💜' : ''}
-            </span>
-          </motion.button>
-
-          {/* Bookmark */}
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => {
-              const newSaved = [...saved];
-              newSaved[currentIndex] = !newSaved[currentIndex];
-              setSaved(newSaved);
-            }}
-            className="flex flex-col items-center"
-          >
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center backdrop-blur-xl border ${
-              saved[currentIndex] 
-                ? 'bg-yellow-500/80 border-yellow-400/50' 
-                : 'bg-white/10 border-white/20'
-            }`}>
-              <Bookmark 
-                size={22} 
-                className={saved[currentIndex] ? 'text-white fill-white' : 'text-white'} 
-              />
-            </div>
-          </motion.button>
-
-          {/* Share */}
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            className="flex flex-col items-center"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center">
-              <Share2 size={22} className="text-white" />
-            </div>
-          </motion.button>
-
-          {/* Comments */}
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setShowComments(true)}
-            className="flex flex-col items-center"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center">
-              <MessageCircle size={22} className="text-white" />
-            </div>
-          </motion.button>
-        </div>
 
         {/* Bottom navigation hint */}
         <div className="absolute bottom-6 left-0 right-0 flex flex-col items-center z-50">
@@ -420,7 +300,7 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
         </AnimatePresence>
 
         {/* XP Popup */}
-        <AnimatePresence>
+      <AnimatePresence>
           {showXpPopup && (
             <motion.div
               initial={{ y: 50, opacity: 0 }}
@@ -432,16 +312,10 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
                 <span className="text-white font-black text-2xl">+10 XP</span>
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* Comments modal */}
-      <AnimatePresence>
-        {showComments && (
-          <CommentsModal onClose={() => setShowComments(false)} />
         )}
       </AnimatePresence>
+      </motion.div>
+
     </div>
   );
 };
@@ -549,8 +423,8 @@ const TheorySlide: React.FC<{ slide: LessonSlide; onNext: () => void; task: Task
           >
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
               <Zap size={72} className="text-amber-300" />
             </motion.div>
           </motion.div>
@@ -580,8 +454,8 @@ const TheorySlide: React.FC<{ slide: LessonSlide; onNext: () => void; task: Task
                 scale: [1, 1.1, 1],
                 opacity: [0.8, 1, 0.8]
               }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
+            transition={{ duration: 2, repeat: Infinity }}
+          >
               <Battery size={72} className="text-emerald-300" />
             </motion.div>
           </motion.div>
@@ -652,8 +526,8 @@ const TheorySlide: React.FC<{ slide: LessonSlide; onNext: () => void; task: Task
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
-              >
-                <Sparkles size={18} className="text-yellow-400 shrink-0" />
+            >
+              <Sparkles size={18} className="text-yellow-400 shrink-0" />
               </motion.div>
               <span className="text-white/90 text-sm text-left font-medium">{tip}</span>
             </motion.div>
@@ -747,10 +621,10 @@ const QuizSlide: React.FC<{ slide: LessonSlide; onComplete: (xp?: number) => voi
               <div className="flex items-center gap-3">
                 <motion.div 
                   className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black ${
-                    showResult && index === correctIndex 
-                      ? 'bg-green-500 text-white' 
-                      : showResult && index === selected && index !== correctIndex
-                        ? 'bg-red-500 text-white'
+                  showResult && index === correctIndex 
+                    ? 'bg-green-500 text-white' 
+                    : showResult && index === selected && index !== correctIndex
+                      ? 'bg-red-500 text-white'
                         : 'bg-white/20 text-white/80'
                   }`}
                   animate={showResult && index === correctIndex ? { scale: [1, 1.2, 1] } : {}}
@@ -1017,14 +891,14 @@ const SortingSlide: React.FC<{ slide: LessonSlide; onComplete: (xp?: number) => 
   return (
     <div className="w-full max-w-md">
       {/* Badge */}
-      <motion.div
+    <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         className="flex items-center justify-center gap-2 mb-4"
       >
         <div className="px-4 py-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center gap-2 shadow-lg">
           <span className="text-white font-black text-sm">📊 СОРТИРОВКА</span>
-        </div>
+      </div>
       </motion.div>
 
       <h2 className="text-xl font-bold text-white text-center mb-4">{slideData.question}</h2>
@@ -1082,8 +956,8 @@ const SortingSlide: React.FC<{ slide: LessonSlide; onComplete: (xp?: number) => 
               className="flex-1 py-3 rounded-xl bg-green-500/30 border border-green-400/50 text-green-300 font-bold hover:bg-green-500/50 transition-colors"
             >
               {slideData.rightCategoryLabel?.split(' ')[0]} →
-            </button>
-          </div>
+        </button>
+      </div>
         </motion.div>
       )}
 
@@ -1112,7 +986,7 @@ const SortingSlide: React.FC<{ slide: LessonSlide; onComplete: (xp?: number) => 
           <p className="text-center text-white/70 text-sm mt-1">+{score * 5} XP</p>
         </motion.div>
       )}
-    </div>
+            </div>
   );
 };
 
@@ -1143,7 +1017,7 @@ const InputSlide: React.FC<{ slide: LessonSlide; onComplete: (xp?: number) => vo
         <div className="px-4 py-2 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-500 flex items-center gap-2 shadow-lg">
           <PenTool size={16} className="text-white" />
           <span className="text-white font-black text-sm">РЕФЛЕКСИЯ</span>
-        </div>
+              </div>
       </motion.div>
 
       <motion.h2
@@ -1183,7 +1057,7 @@ const InputSlide: React.FC<{ slide: LessonSlide; onComplete: (xp?: number) => vo
             >
               Отправить
             </motion.button>
-          </div>
+            </div>
         </motion.div>
       ) : (
         <motion.div
@@ -1280,8 +1154,8 @@ const MatchingSlide: React.FC<{ slide: LessonSlide; onComplete: (xp?: number) =>
             >
               {pair.left}
             </motion.button>
-          ))}
-        </div>
+        ))}
+      </div>
 
         {/* Right column */}
         <div className="space-y-2">
@@ -1301,7 +1175,7 @@ const MatchingSlide: React.FC<{ slide: LessonSlide; onComplete: (xp?: number) =>
               {pair.right}
             </motion.button>
           ))}
-        </div>
+      </div>
       </div>
 
       {/* Result */}
@@ -1317,7 +1191,7 @@ const MatchingSlide: React.FC<{ slide: LessonSlide; onComplete: (xp?: number) =>
             {correct === pairs.length ? '🎉 Идеально!' : '💪 Неплохо!'} {correct}/{pairs.length}
           </p>
           <p className="text-white/70 text-sm">+{correct * 5} XP</p>
-        </motion.div>
+    </motion.div>
       )}
     </div>
   );
@@ -1622,85 +1496,6 @@ const GameSlide: React.FC<{ slide: LessonSlide; onComplete: (xp?: number) => voi
         </p>
       </div>
     </div>
-  );
-};
-
-// Comments Modal
-const CommentsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const [comment, setComment] = useState('');
-  const [comments] = useState([
-    { user: 'Аня', text: 'Круто объяснили! 🔥', likes: 23, avatar: '🦊' },
-    { user: 'Макс', text: 'Теперь понятно про дофамин', likes: 15, avatar: '🐺' },
-    { user: 'Катя', text: 'Лучшее приложение! 💜', likes: 42, avatar: '🦋' },
-    { user: 'Дима', text: 'Игры топ!', likes: 8, avatar: '🦁' },
-  ]);
-
-  return (
-    <motion.div
-      initial={{ y: '100%' }}
-      animate={{ y: 0 }}
-      exit={{ y: '100%' }}
-      transition={{ type: 'spring', damping: 25 }}
-      className="absolute inset-x-0 bottom-0 h-[60%] bg-[#1a1a2e]/95 backdrop-blur-xl rounded-t-3xl z-[70] border-t border-white/10"
-    >
-      {/* Handle */}
-      <div className="flex justify-center py-3">
-        <div className="w-12 h-1.5 bg-white/30 rounded-full" />
-      </div>
-
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pb-3 border-b border-white/10">
-        <h3 className="text-white font-bold text-lg">Комментарии</h3>
-        <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-          <X size={18} className="text-white/60" />
-        </button>
-      </div>
-
-      {/* Comments list */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[300px]">
-        {comments.map((c, i) => (
-          <motion.div 
-            key={i} 
-            className="flex gap-3"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.1 }}
-          >
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500/50 to-purple-600/50 flex items-center justify-center text-xl backdrop-blur-xl border border-white/20">
-              {c.avatar}
-            </div>
-            <div className="flex-1">
-              <p className="text-white font-medium text-sm">{c.user}</p>
-              <p className="text-white/70 text-sm">{c.text}</p>
-              <div className="flex items-center gap-4 mt-1">
-                <button className="flex items-center gap-1 text-white/50 text-xs hover:text-red-400 transition-colors">
-                  <Heart size={12} /> {c.likes}
-                </button>
-                <button className="text-white/50 text-xs hover:text-white/80 transition-colors">Ответить</button>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Input */}
-      <div className="p-4 border-t border-white/10 flex gap-3">
-        <input
-          type="text"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder="Добавить комментарий..."
-          className="flex-1 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full px-4 py-2.5 text-white placeholder:text-white/40 outline-none focus:border-purple-400 transition-colors"
-        />
-        <motion.button 
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="w-11 h-11 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center shadow-lg"
-        >
-          <Send size={18} className="text-white" />
-        </motion.button>
-      </div>
-    </motion.div>
   );
 };
 
