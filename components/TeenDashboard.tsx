@@ -685,8 +685,13 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                 </div>
             </div>
 
-             {/* DAILY QUESTS - Compact Glass Card */}
-             <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+            {/* DAILY QUOTE FROM KATYA */}
+            <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+                <DailyQuoteWidget />
+            </div>
+
+            {/* DAILY QUESTS - Compact Glass Card */}
+            <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
                  <div 
                    className="relative overflow-hidden rounded-2xl p-4"
                    style={{
