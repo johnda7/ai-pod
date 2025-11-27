@@ -49,6 +49,55 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   const [useTikTokMode, setUseTikTokMode] = useState(true); // Default to new modern view
   const [showModernLesson, setShowModernLesson] = useState(false);
 
+  // Telegram user data state
+  const [telegramUser, setTelegramUser] = useState<{
+    id?: number;
+    first_name?: string;
+    last_name?: string;
+    username?: string;
+    photo_url?: string;
+  } | null>(null);
+
+  // Initialize Telegram WebApp and get user data
+  useEffect(() => {
+    const initTelegram = () => {
+      try {
+        const tg = (window as any).Telegram?.WebApp;
+        if (tg) {
+          // Expand to full height
+          tg.expand?.();
+          tg.ready?.();
+          
+          // Get user data
+          const userData = tg.initDataUnsafe?.user;
+          if (userData) {
+            console.log('Telegram user data:', userData);
+            setTelegramUser({
+              id: userData.id,
+              first_name: userData.first_name,
+              last_name: userData.last_name,
+              username: userData.username,
+              photo_url: userData.photo_url,
+            });
+          } else {
+            console.log('No Telegram user data available');
+          }
+        } else {
+          console.log('Telegram WebApp not available');
+        }
+      } catch (e) {
+        console.error('Error initializing Telegram:', e);
+      }
+    };
+
+    // Try immediately
+    initTelegram();
+    
+    // Also try after a short delay (Telegram SDK may load async)
+    const timer = setTimeout(initTelegram, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Show tutorial for new users
   useEffect(() => {
     const hasSeenTutorial = localStorage.getItem('ai_pod_tutorial_seen');
@@ -199,18 +248,11 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
     if (activeTab === 'RELAX') return <MeditationView />;
 
     if (activeTab === 'PROFILE') {
-        // Get Telegram user data if available - try multiple ways
-        const tgWebApp = (window as any).Telegram?.WebApp;
-        const tgUser = tgWebApp?.initDataUnsafe?.user;
-        
-        // Try to get name from different sources
-        const telegramPhoto = tgUser?.photo_url;
-        const telegramFirstName = tgUser?.first_name;
-        const telegramUsername = tgUser?.username;
-        const telegramId = tgUser?.id;
-        
-        // Priority: Telegram first_name > Telegram username > user.name from DB
-        const displayName = telegramFirstName || telegramUsername || user.name;
+        // Use Telegram user data from state
+        const displayName = telegramUser?.first_name || telegramUser?.username || user.name;
+        const telegramPhoto = telegramUser?.photo_url;
+        const telegramUsername = telegramUser?.username;
+        const telegramId = telegramUser?.id;
         
         return (
             <div className="px-5 pt-24 pb-32 min-h-screen relative" style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, #0f0f2a 50%, #0a0a1a 100%)' }}>

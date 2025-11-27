@@ -100,9 +100,9 @@ export const DailyRewards: React.FC<DailyRewardsProps> = ({
             
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+              className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center hover:bg-white/20 transition-colors z-50"
             >
-              <X size={16} className="text-white" />
+              <X size={18} className="text-white" />
             </button>
             
             <motion.div

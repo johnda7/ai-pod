@@ -114,8 +114,8 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({ isOpen, onClose, onCompl
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#020617]/95 backdrop-blur-md animate-in fade-in duration-300">
         <div className="relative w-full max-w-sm mx-4 bg-[#151925] border border-white/10 rounded-3xl p-6 shadow-2xl">
             
-            <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white">
-                <X size={24} />
+            <button onClick={onClose} className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/20 transition-colors">
+                <X size={20} />
             </button>
 
             <div className="text-center mb-8">
