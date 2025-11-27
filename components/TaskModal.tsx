@@ -745,7 +745,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
         </div>
 
         {/* HEADER - LOWERED FOR TELEGRAM */}
-        <div className={`px-6 pt-20 pb-4 flex items-center gap-4 relative z-10 bg-gradient-to-b from-[#0A0F1C] to-transparent`}>
+        <div className={`px-6 pt-14 pb-4 flex items-center gap-4 relative z-10 bg-gradient-to-b from-[#0A0F1C] to-transparent`}>
             <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center text-slate-300 hover:bg-white/20 hover:text-white transition-colors border border-white/10">
                 <X size={20} />
             </button>
