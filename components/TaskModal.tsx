@@ -744,9 +744,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
             <div className="absolute bottom-[-10%] right-[-20%] w-[100%] h-[60%] bg-purple-600/30 rounded-full blur-[120px] animate-[pulse_10s_infinite_reverse]"></div>
         </div>
 
-        {/* HEADER */}
-        <div className={`px-6 pt-10 pb-4 flex items-center gap-4 relative z-10 bg-gradient-to-b from-[#0A0F1C] to-transparent`}>
-            <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-300 hover:bg-white/10 hover:text-white transition-colors backdrop-blur-md border border-white/5">
+        {/* HEADER - LOWERED FOR TELEGRAM */}
+        <div className={`px-6 pt-20 pb-4 flex items-center gap-4 relative z-10 bg-gradient-to-b from-[#0A0F1C] to-transparent`}>
+            <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center text-slate-300 hover:bg-white/20 hover:text-white transition-colors border border-white/10">
                 <X size={20} />
             </button>
             

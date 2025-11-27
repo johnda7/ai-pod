@@ -260,8 +260,8 @@ export const BubblePopGame: React.FC<BubblePopProps> = ({
         background: 'linear-gradient(180deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%)',
       }}
     >
-      {/* HUD */}
-      <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-20">
+      {/* HUD - LOWERED FOR TELEGRAM */}
+      <div className="absolute top-20 left-4 right-4 flex justify-between items-center z-20">
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/30 backdrop-blur-sm">
           <Target size={16} className="text-yellow-400" />
           <span className="text-white font-bold">{score}/{targetScore}</span>

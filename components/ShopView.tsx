@@ -379,12 +379,13 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }
               </button>
             </div>
             
-            {/* Close button */}
+            {/* Close button - LOWERED FOR TELEGRAM */}
             <button 
               onClick={closeRewardModal}
-              className="absolute top-5 right-5 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+              className="absolute top-20 right-6 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
               style={{
                 background: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(20px)',
                 border: '1px solid rgba(255,255,255,0.1)',
               }}
             >

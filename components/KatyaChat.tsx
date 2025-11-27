@@ -178,9 +178,9 @@ export const KatyaChat: React.FC = () => {
            <div className="relative bg-gradient-to-b from-indigo-50 to-white/50 p-6 pb-4 border-b border-slate-100 z-10">
               <button 
                 onClick={() => setIsOpen(false)} 
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/60 hover:bg-white flex items-center justify-center text-slate-500 transition-colors backdrop-blur-sm shadow-sm"
+                className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/80 hover:bg-white flex items-center justify-center text-slate-500 transition-colors backdrop-blur-sm shadow-md z-50"
               >
-                  <X size={18} />
+                  <X size={20} />
               </button>
 
               <div className="flex flex-col items-center">

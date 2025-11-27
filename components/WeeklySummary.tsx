@@ -71,9 +71,9 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ isOpen, onClose, s
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"
+              className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center z-50"
             >
-              <X size={16} className="text-white" />
+              <X size={18} className="text-white" />
             </button>
             
             <div className="flex items-center justify-center gap-2 mb-3">
