@@ -250,7 +250,7 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
         </div>
 
         {/* Header */}
-        <div className="sticky top-0 z-30 px-4 pt-24 pb-4">
+        <div className="sticky top-0 z-30 px-4 pt-16 pb-4">
           <motion.div 
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}

@@ -195,7 +195,7 @@ export const GameSystem: React.FC<GameSystemProps> = ({ userId, onReward, onClos
       <div className="min-h-screen bg-[#020617] p-4 pb-32">
         <div className="max-w-md mx-auto">
           {/* Header */}
-          <div className="text-center mb-8 pt-20">
+          <div className="text-center mb-8 pt-14">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -283,7 +283,7 @@ export const GameSystem: React.FC<GameSystemProps> = ({ userId, onReward, onClos
   if (!selectedLevel && !isPlaying) {
     return (
       <div className="min-h-screen bg-[#020617] p-4 pb-32">
-        <div className="max-w-md mx-auto pt-20">
+        <div className="max-w-md mx-auto pt-14">
           {/* Back button */}
           <button
             onClick={() => setSelectedGame(null)}
