@@ -864,7 +864,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         <div className="fixed inset-0 z-[80] bg-[#020617] overflow-y-auto">
           <button 
             onClick={() => setShowAchievements(false)}
-            className="fixed top-12 right-4 z-[90] w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            className="fixed top-4 left-4 z-[90] w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
           >
             ✕
           </button>
@@ -995,7 +995,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         <div className="fixed inset-0 z-[80] bg-[#020617] overflow-y-auto">
           <button 
             onClick={() => setShowShop(false)}
-            className="fixed top-12 right-4 z-[90] w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            className="fixed top-4 left-4 z-[90] w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
           >
             ✕
           </button>
