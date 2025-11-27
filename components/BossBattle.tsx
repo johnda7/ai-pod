@@ -319,13 +319,13 @@ export const BossBattle: React.FC<BossBattleProps> = ({
       {/* Close button - LOWERED FOR TELEGRAM */}
       <button
         onClick={onClose}
-        className="absolute top-14 right-4 z-20 w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center"
+        className="absolute top-10 right-4 z-20 w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center"
       >
         <X size={20} className="text-white/60" />
       </button>
       
       {/* Battle Arena */}
-      <div className="relative z-10 flex-1 flex flex-col p-4 pt-16">
+      <div className="relative z-10 flex-1 flex flex-col p-4 pt-12">
         
         {/* Boss Section */}
         <div className="flex-1 flex flex-col items-center justify-center">
