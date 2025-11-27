@@ -94,32 +94,7 @@ const App: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-[#020617] relative overflow-hidden animate-in fade-in duration-500">
       
-      {/* CONNECTION STATUS - Minimal */}
-      <div className="absolute top-14 left-4 z-50 flex gap-1.5 pointer-events-none opacity-40 hover:opacity-100 transition-opacity">
-        {isSupabaseEnabled ? (
-          <div 
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-green-400 font-medium"
-            style={{
-              background: 'rgba(34,197,94,0.1)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(34,197,94,0.2)',
-            }}
-          >
-            <Wifi size={8} /> Sync
-          </div>
-        ) : (
-          <div 
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-yellow-400 font-medium"
-            style={{
-              background: 'rgba(234,179,8,0.1)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(234,179,8,0.2)',
-            }}
-          >
-            <AlertCircle size={8} /> Local
-          </div>
-        )}
-      </div>
+      {/* CONNECTION STATUS - Hidden in production */}
 
       {/* Top Bar - Only for Non-Teen Roles */}
       {currentUser.role !== UserRole.TEEN && (
