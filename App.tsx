@@ -14,30 +14,32 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
-  // --- INITIALIZATION ---
+  // --- INITIALIZATION (Optimized - no delay) ---
   useEffect(() => {
+    let mounted = true;
+    
     const init = async () => {
-      // 1. Initialize Telegram
+      // 1. Initialize Telegram (fast)
       initTelegramApp();
       
-      // 2. Get User (Delay slightly to ensure TG is ready)
-      setTimeout(async () => {
-          const tgUser = getTelegramUser();
-          
-          try {
-            console.log("App Init: Fetching user...");
-            const user = await getOrCreateUser(tgUser);
-            console.log("App Init: User loaded:", user);
-            setCurrentUser(user);
-          } catch (e) {
-            console.error("Failed to load user", e);
-          } finally {
-            setIsLoadingData(false);
-          }
-      }, 300);
+      // 2. Get User immediately
+      const tgUser = getTelegramUser();
+      
+      try {
+        const user = await getOrCreateUser(tgUser);
+        if (mounted) {
+          setCurrentUser(user);
+          setIsLoadingData(false);
+        }
+      } catch (e) {
+        console.error("Failed to load user", e);
+        if (mounted) setIsLoadingData(false);
+      }
     };
     
     init();
+    
+    return () => { mounted = false; };
   }, []);
 
   const handleTaskComplete = async (task: Task) => {
@@ -67,23 +69,70 @@ const App: React.FC = () => {
     }
   };
 
-  // Simple loading - no boot sequence
+  // Skeleton Loading - instant perceived performance (Perplexity Principle #4)
   if (isLoadingData || !currentUser) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#020617] relative overflow-hidden">
+      <div className="h-screen w-screen flex flex-col bg-[#020617] relative overflow-hidden">
         {/* Ambient background */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-500/20 rounded-full blur-[120px]" />
           <div className="absolute bottom-1/4 left-1/3 w-[400px] h-[300px] bg-purple-500/15 rounded-full blur-[100px]" />
         </div>
         
-        {/* Loader */}
-        <div className="relative z-10 flex flex-col items-center">
-          <div className="relative">
-            <div className="w-16 h-16 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
-            <div className="absolute inset-0 w-16 h-16 rounded-full border-2 border-purple-500/20 border-b-purple-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+        {/* Skeleton UI - looks like real app */}
+        <div className="relative z-10 flex-1 p-4 space-y-4">
+          {/* Header skeleton */}
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-white/5 animate-pulse" />
+              <div className="w-16 h-4 rounded bg-white/5 animate-pulse" />
+            </div>
+            <div className="flex gap-2">
+              <div className="w-16 h-6 rounded-full bg-white/5 animate-pulse" />
+              <div className="w-16 h-6 rounded-full bg-white/5 animate-pulse" />
+            </div>
           </div>
-          <p className="mt-6 text-white/50 text-sm font-medium">Загрузка...</p>
+          
+          {/* Welcome card skeleton */}
+          <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-white/10" />
+              <div className="space-y-2 flex-1">
+                <div className="w-32 h-5 rounded bg-white/10" />
+                <div className="w-48 h-3 rounded bg-white/5" />
+              </div>
+            </div>
+          </div>
+          
+          {/* Stats skeleton */}
+          <div className="grid grid-cols-4 gap-2">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="p-3 rounded-xl bg-white/5 animate-pulse">
+                <div className="w-8 h-8 mx-auto rounded-full bg-white/10 mb-2" />
+                <div className="w-8 h-4 mx-auto rounded bg-white/10" />
+              </div>
+            ))}
+          </div>
+          
+          {/* Lessons skeleton */}
+          <div className="space-y-2 mt-4">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="p-4 rounded-xl bg-white/5 animate-pulse flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/10" />
+                <div className="flex-1 space-y-2">
+                  <div className="w-32 h-4 rounded bg-white/10" />
+                  <div className="w-20 h-3 rounded bg-white/5" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Tab bar skeleton */}
+        <div className="flex justify-around py-3 border-t border-white/10 bg-black/20 backdrop-blur-xl">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="w-12 h-12 rounded-xl bg-white/5 animate-pulse" />
+          ))}
         </div>
       </div>
     );

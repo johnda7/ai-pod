@@ -18,6 +18,11 @@ interface TelegramWebApp {
   ThemeParams: any;
   enableClosingConfirmation: () => void;
   isExpanded: boolean;
+  HapticFeedback?: {
+    impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => void;
+    notificationOccurred: (type: 'error' | 'success' | 'warning') => void;
+    selectionChanged: () => void;
+  };
 }
 
 declare global {
@@ -77,4 +82,70 @@ export const initTelegramApp = () => {
         window.Telegram.WebApp.enableClosingConfirmation();
     } catch(e) {}
   }
+};
+
+// ==================== HAPTIC FEEDBACK ====================
+// Вибрация телефона при нажатии - создаёт premium ощущение!
+
+/**
+ * Лёгкая вибрация - для обычных нажатий кнопок
+ */
+export const hapticLight = () => {
+  try {
+    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
+  } catch (e) {}
+};
+
+/**
+ * Средняя вибрация - для важных действий (выбор урока)
+ */
+export const hapticMedium = () => {
+  try {
+    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium');
+  } catch (e) {}
+};
+
+/**
+ * Сильная вибрация - для очень важных действий (завершение урока)
+ */
+export const hapticHeavy = () => {
+  try {
+    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('heavy');
+  } catch (e) {}
+};
+
+/**
+ * Успех - зелёная галочка, урок пройден!
+ */
+export const hapticSuccess = () => {
+  try {
+    window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
+  } catch (e) {}
+};
+
+/**
+ * Ошибка - неправильный ответ
+ */
+export const hapticError = () => {
+  try {
+    window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error');
+  } catch (e) {}
+};
+
+/**
+ * Предупреждение - streak заканчивается
+ */
+export const hapticWarning = () => {
+  try {
+    window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('warning');
+  } catch (e) {}
+};
+
+/**
+ * Выбор изменён - для свайпов и переключателей
+ */
+export const hapticSelection = () => {
+  try {
+    window.Telegram?.WebApp?.HapticFeedback?.selectionChanged();
+  } catch (e) {}
 };
