@@ -663,3 +663,125 @@ function saveUserToStorage(user: User) {
   else users.push(user);
   localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
 }
+
+// ==========================================
+// TOOLS DATA SYNC (Привычки, Цели, Заметки)
+// ==========================================
+
+// Ключи всех инструментов в localStorage
+const TOOLS_STORAGE_KEYS = [
+  'habit_tracker_data',
+  'goals_tracker',
+  'notes_tool_data',
+  'balance_wheel_data',
+  'emotion_diary_entries',
+  'gratitude_entries',
+  'reflection_entries',
+  'planner_tasks',
+  'focus_sessions',
+  'challenges_data',
+  'life_skills_progress'
+];
+
+// Собрать все данные инструментов в один объект
+export const getToolsData = (): Record<string, any> => {
+  const data: Record<string, any> = {};
+  TOOLS_STORAGE_KEYS.forEach(key => {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      try {
+        data[key] = JSON.parse(stored);
+      } catch (e) {
+        data[key] = stored;
+      }
+    }
+  });
+  return data;
+};
+
+// Сохранить данные инструментов из объекта в localStorage
+export const setToolsData = (data: Record<string, any>): void => {
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+  });
+};
+
+// Синхронизировать данные инструментов с Supabase
+export const syncToolsDataToSupabase = async (userId: string): Promise<boolean> => {
+  if (!isSupabaseEnabled) return false;
+  
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+  if (!isValidUUID) return false;
+  
+  try {
+    const toolsData = getToolsData();
+    
+    const { error } = await supabase
+      .from('users')
+      .update({ tools_data: toolsData })
+      .eq('id', userId);
+    
+    if (error) {
+      console.error('❌ Tools sync failed:', error.message);
+      return false;
+    }
+    
+    console.log('✅ Tools data synced to Supabase');
+    return true;
+  } catch (e) {
+    console.error('❌ Tools sync error:', e);
+    return false;
+  }
+};
+
+// Загрузить данные инструментов из Supabase
+export const loadToolsDataFromSupabase = async (userId: string): Promise<boolean> => {
+  if (!isSupabaseEnabled) return false;
+  
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+  if (!isValidUUID) return false;
+  
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('tools_data')
+      .eq('id', userId)
+      .single();
+    
+    if (error || !data?.tools_data) {
+      console.log('ℹ️ No tools data in Supabase yet');
+      return false;
+    }
+    
+    // Merge: Cloud data + Local data (Local wins for conflicts)
+    const cloudData = data.tools_data as Record<string, any>;
+    const localData = getToolsData();
+    
+    // Merge strategy: if local has more data, keep it
+    const mergedData: Record<string, any> = { ...cloudData };
+    Object.entries(localData).forEach(([key, value]) => {
+      if (Array.isArray(value) && Array.isArray(cloudData[key])) {
+        // For arrays: merge unique items
+        const cloudArray = cloudData[key] as any[];
+        const localArray = value as any[];
+        const mergedArray = [...cloudArray];
+        localArray.forEach(item => {
+          const exists = mergedArray.some(c => c.id === item.id);
+          if (!exists) mergedArray.push(item);
+        });
+        mergedData[key] = mergedArray;
+      } else if (value && (!cloudData[key] || JSON.stringify(value).length > JSON.stringify(cloudData[key]).length)) {
+        mergedData[key] = value;
+      }
+    });
+    
+    setToolsData(mergedData);
+    console.log('✅ Tools data loaded from Supabase');
+    return true;
+  } catch (e) {
+    console.error('❌ Load tools error:', e);
+    return false;
+  }
+};
