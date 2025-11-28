@@ -351,19 +351,97 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                         </div>
                     </div>
 
-                    {/* Level Progress - Simplified */}
+                    {/* Level Progress - Enhanced */}
                     <div className="relative z-10 w-full">
                         <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1">
                             <span>Уровень {user.level}</span>
-                            <span>{Math.round(levelProgress)}%</span>
+                            <span>{user.xp - prevLevelXp}/{nextLevelXp - prevLevelXp} XP</span>
                         </div>
                         <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
                             <div 
                                 style={{width: `${levelProgress}%`}} 
-                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
                             ></div>
                         </div>
                     </div>
+                </div>
+
+                {/* 🎁 LEVEL REWARDS ROADMAP */}
+                <div className="mb-6 p-4 rounded-2xl border border-white/10" 
+                  style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%)' }}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                      <Gift size={16} className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-bold text-sm">Награды за уровни</h3>
+                      <p className="text-white/40 text-xs">Следующая на уровне {user.level + 1}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Level Milestones */}
+                  <div className="flex justify-between items-center relative">
+                    {/* Progress Line */}
+                    <div className="absolute top-4 left-4 right-4 h-0.5 bg-white/10 rounded-full">
+                      <div 
+                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (user.level / 10) * 100)}%` }}
+                      />
+                    </div>
+                    
+                    {/* Milestone Points */}
+                    {[
+                      { lvl: 1, reward: '🎁 100', icon: '💰', label: 'Монет' },
+                      { lvl: 3, reward: '❄️ 1', icon: '❄️', label: 'Заморозка' },
+                      { lvl: 5, reward: '🎁 500', icon: '💰', label: 'Монет' },
+                      { lvl: 7, reward: '⚡ x2', icon: '⚡', label: 'XP Буст' },
+                      { lvl: 10, reward: '👑', icon: '👑', label: 'Рамка' },
+                    ].map((m, i) => {
+                      const isUnlocked = user.level >= m.lvl;
+                      const isCurrent = user.level === m.lvl - 1;
+                      return (
+                        <div key={i} className="relative z-10 flex flex-col items-center">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                            isUnlocked 
+                              ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/30' 
+                              : isCurrent
+                                ? 'bg-white/20 text-white border-2 border-indigo-500 animate-pulse'
+                                : 'bg-white/10 text-white/40'
+                          }`}>
+                            {isUnlocked ? '✓' : m.lvl}
+                          </div>
+                          <span className={`text-[9px] mt-1 font-bold ${isUnlocked ? 'text-indigo-400' : 'text-white/30'}`}>
+                            {m.icon}
+                          </span>
+                          <span className="text-[8px] text-white/40">{m.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Next Reward Info */}
+                  {user.level < 10 && (
+                    <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/10">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">
+                            {user.level < 3 ? '❄️' : user.level < 5 ? '💰' : user.level < 7 ? '⚡' : '👑'}
+                          </span>
+                          <div>
+                            <p className="text-white text-xs font-bold">
+                              {user.level < 3 ? 'Заморозка серии' : user.level < 5 ? '500 монет' : user.level < 7 ? 'XP Буст x2' : 'Золотая рамка'}
+                            </p>
+                            <p className="text-white/40 text-[10px]">
+                              Ещё {(user.level < 3 ? 3 : user.level < 5 ? 5 : user.level < 7 ? 7 : 10) * 500 - user.xp} XP до награды
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-xs font-bold text-indigo-400 bg-indigo-500/20 px-2 py-1 rounded-lg">
+                          LVL {user.level < 3 ? 3 : user.level < 5 ? 5 : user.level < 7 ? 7 : 10}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* SHOP BUTTON - Quick Access */}
