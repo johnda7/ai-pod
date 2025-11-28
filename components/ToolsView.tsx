@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Timer, Target, BookHeart, ChevronRight, BarChart3, Heart, Calendar, FileText, TreePine, Trophy, Flame, BookOpen, Zap, Star, Sparkles } from 'lucide-react';
+import { Timer, Target, BookHeart, ChevronRight, BarChart3, Heart, Calendar, FileText, TreePine, Trophy, Flame, BookOpen, Zap, Star, Sparkles, Cloud, CheckCircle } from 'lucide-react';
+import { syncToolsDataToSupabase, loadToolsDataFromSupabase } from '../services/db';
 import { User } from '../types';
 import { PomodoroTimer } from './PomodoroTimer';
 import { BalanceWheel } from './BalanceWheel';
@@ -206,7 +207,26 @@ const getToolStats = () => {
 export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
   const stats = getToolStats();
+
+  // Загрузка данных из Supabase при первом рендере
+  useEffect(() => {
+    if (user?.id) {
+      loadToolsDataFromSupabase(user.id);
+    }
+  }, [user?.id]);
+
+  // Синхронизация при закрытии инструмента
+  useEffect(() => {
+    if (!activeTool && user?.id) {
+      setSyncStatus('syncing');
+      syncToolsDataToSupabase(user.id).then(() => {
+        setSyncStatus('synced');
+        setTimeout(() => setSyncStatus('idle'), 2000);
+      });
+    }
+  }, [activeTool, user?.id]);
 
   const handleToolComplete = (toolId: string, xp: number, coins: number = 0) => {
     onXpEarned?.(xp, coins);
@@ -294,19 +314,44 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
               <p className="text-white/50 text-sm">{TOOLS.length} инструментов для роста</p>
             </div>
             
-            {/* XP Badge */}
-            <motion.div 
-              className="px-3 py-1.5 rounded-xl flex items-center gap-1.5"
-              style={{
-                background: 'linear-gradient(135deg, rgba(245,158,11,0.25) 0%, rgba(234,88,12,0.15) 100%)',
-                border: '1px solid rgba(245,158,11,0.3)',
-                boxShadow: '0 4px 15px rgba(245,158,11,0.2)',
-              }}
-              whileHover={{ scale: 1.05 }}
-            >
-              <Zap size={14} className="text-amber-400" />
-              <span className="text-amber-400 font-bold text-sm">{user.xp}</span>
-            </motion.div>
+            {/* Sync & XP Badge */}
+            <div className="flex items-center gap-2">
+              {/* Sync Status */}
+              <AnimatePresence>
+                {syncStatus !== 'idle' && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="p-2 rounded-xl"
+                    style={{
+                      background: syncStatus === 'synced' 
+                        ? 'rgba(34,197,94,0.2)' 
+                        : 'rgba(99,102,241,0.2)',
+                    }}
+                  >
+                    {syncStatus === 'syncing' ? (
+                      <Cloud size={16} className="text-indigo-400 animate-pulse" />
+                    ) : (
+                      <CheckCircle size={16} className="text-green-400" />
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              <motion.div 
+                className="px-3 py-1.5 rounded-xl flex items-center gap-1.5"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(245,158,11,0.25) 0%, rgba(234,88,12,0.15) 100%)',
+                  border: '1px solid rgba(245,158,11,0.3)',
+                  boxShadow: '0 4px 15px rgba(245,158,11,0.2)',
+                }}
+                whileHover={{ scale: 1.05 }}
+              >
+                <Zap size={14} className="text-amber-400" />
+                <span className="text-amber-400 font-bold text-sm">{user.xp}</span>
+              </motion.div>
+            </div>
           </div>
 
           {/* Category Pills */}
