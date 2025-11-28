@@ -248,6 +248,36 @@
   animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
+/* Slow Bounce - for navigation hints */
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
+/* Fade Slide Up - fast slide transition */
+@keyframes fade-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-up {
+  animation: fade-slide-up 0.15s ease-out;
+}
+
 /* ==================== UTILITY CLASSES ==================== */
 
 .glass-rounded-sm { border-radius: 8px; }
