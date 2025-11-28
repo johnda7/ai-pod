@@ -334,7 +334,129 @@ export const LevelUpAnimation: React.FC<LevelUpProps> = ({ newLevel, isVisible, 
   );
 };
 
+// Floating XP Animation - flies up when earned
+interface FloatingXPProps {
+  amount: number;
+  isVisible: boolean;
+  position?: { x: number; y: number };
+}
+
+export const FloatingXP: React.FC<FloatingXPProps> = ({ amount, isVisible, position }) => {
+  return (
+    <AnimatePresence>
+      {isVisible && amount > 0 && (
+        <motion.div
+          initial={{ opacity: 1, y: 0, scale: 1 }}
+          animate={{ 
+            opacity: [1, 1, 0],
+            y: -100,
+            scale: [1, 1.3, 1],
+          }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          className="fixed z-[250] pointer-events-none"
+          style={{
+            left: position?.x ?? '50%',
+            top: position?.y ?? '40%',
+            transform: 'translateX(-50%)',
+          }}
+        >
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 shadow-lg shadow-yellow-500/50">
+            <span className="text-xl">⚡</span>
+            <span className="text-white font-black text-xl">+{amount} XP</span>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+// Floating Coins Animation
+interface FloatingCoinsProps {
+  amount: number;
+  isVisible: boolean;
+}
+
+export const FloatingCoins: React.FC<FloatingCoinsProps> = ({ amount, isVisible }) => {
+  return (
+    <AnimatePresence>
+      {isVisible && amount > 0 && (
+        <motion.div
+          initial={{ opacity: 1, y: 0, scale: 1 }}
+          animate={{ 
+            opacity: [1, 1, 0],
+            y: -80,
+            scale: [1, 1.2, 1],
+          }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+          className="fixed top-[45%] left-1/2 -translate-x-1/2 z-[250] pointer-events-none"
+        >
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 shadow-lg shadow-orange-500/50">
+            <span className="text-xl">🪙</span>
+            <span className="text-white font-black text-xl">+{amount}</span>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+// Streak Animation
+interface StreakAnimationProps {
+  days: number;
+  isVisible: boolean;
+  onComplete?: () => void;
+}
+
+export const StreakAnimation: React.FC<StreakAnimationProps> = ({ days, isVisible, onComplete }) => {
+  useEffect(() => {
+    if (isVisible && onComplete) {
+      const timer = setTimeout(onComplete, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, onComplete]);
+
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.5 }}
+          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[200] pointer-events-none"
+        >
+          <div 
+            className="px-8 py-6 rounded-3xl text-center"
+            style={{
+              background: 'linear-gradient(135deg, rgba(239,68,68,0.95) 0%, rgba(249,115,22,0.95) 100%)',
+              boxShadow: '0 20px 60px rgba(239,68,68,0.5)',
+            }}
+          >
+            <motion.div
+              animate={{ 
+                scale: [1, 1.3, 1],
+                rotate: [0, 10, -10, 0],
+              }}
+              transition={{ duration: 0.5, repeat: 2 }}
+              className="text-6xl mb-3"
+            >
+              🔥
+            </motion.div>
+            
+            <h3 className="text-white font-bold text-xl mb-2">
+              Серия продолжается!
+            </h3>
+            
+            <div className="flex items-center justify-center gap-2 text-white">
+              <span className="text-4xl font-black">{days}</span>
+              <span className="text-lg opacity-80">дней подряд</span>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 export default Confetti;
-
-
-

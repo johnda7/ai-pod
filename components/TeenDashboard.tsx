@@ -14,7 +14,7 @@ import { purchaseItem } from '../services/db';
 import { isSupabaseEnabled } from '../services/supabaseClient';
 import { GameTutorial } from './GameTutorial';
 import { hapticMedium, hapticSuccess, hapticLight } from '../services/telegramService';
-import { Confetti, RewardPopup, Toast } from './Confetti';
+import { Confetti, RewardPopup, Toast, FloatingXP, FloatingCoins, LevelUpAnimation, StreakAnimation } from './Confetti';
 import { DailyRewards } from './DailyRewards';
 import { ActivityChart } from './ActivityChart';
 import { DailyQuoteWidget } from './KatyaQuotes';
@@ -45,6 +45,15 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   const [showDailyRewards, setShowDailyRewards] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
+  
+  // Enhanced Animation States
+  const [showFloatingXP, setShowFloatingXP] = useState(false);
+  const [floatingXPAmount, setFloatingXPAmount] = useState(0);
+  const [showFloatingCoins, setShowFloatingCoins] = useState(false);
+  const [floatingCoinsAmount, setFloatingCoinsAmount] = useState(0);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [newLevel, setNewLevel] = useState(1);
+  const [showStreak, setShowStreak] = useState(false);
   
   // TikTok-style lesson mode (modern view)
   const [useTikTokMode, setUseTikTokMode] = useState(true); // Default to new modern view
@@ -161,6 +170,56 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
 
   const handleGameComplete = (xp: number) => {
       setIsGameOpen(false);
+  };
+
+  // Enhanced lesson completion with animations
+  const handleLessonComplete = (task: Task) => {
+    // 1. Haptic feedback
+    hapticSuccess();
+    
+    // 2. Calculate rewards
+    const xpReward = task.xpReward || 100;
+    const coinsReward = task.coinsReward || Math.floor(xpReward * 0.5);
+    
+    // 3. Show floating XP animation
+    setFloatingXPAmount(xpReward);
+    setShowFloatingXP(true);
+    setTimeout(() => setShowFloatingXP(false), 1500);
+    
+    // 4. Show floating coins animation
+    setFloatingCoinsAmount(coinsReward);
+    setShowFloatingCoins(true);
+    setTimeout(() => setShowFloatingCoins(false), 1700);
+    
+    // 5. Check for level up (500 XP per level)
+    const currentLevel = Math.floor(user.xp / 500) + 1;
+    const newLevelAfter = Math.floor((user.xp + xpReward) / 500) + 1;
+    
+    if (newLevelAfter > currentLevel) {
+      setTimeout(() => {
+        setNewLevel(newLevelAfter);
+        setShowLevelUp(true);
+        setShowConfetti(true);
+        setTimeout(() => {
+          setShowLevelUp(false);
+          setShowConfetti(false);
+        }, 3500);
+      }, 800);
+    }
+    
+    // 6. Show reward popup
+    setRewardData({ xp: xpReward, coins: coinsReward });
+    setTimeout(() => {
+      setShowReward(true);
+      setTimeout(() => setShowReward(false), 2500);
+    }, 400);
+    
+    // 7. Complete the task
+    onTaskComplete(task);
+    
+    // 8. Close lesson view
+    setShowModernLesson(false);
+    setSelectedTask(null);
   };
 
   // Refresh user data from localStorage
@@ -915,7 +974,8 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                                     className={`
                                        relative flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 w-[165px]
                                        ${isLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
-                                       ${isActive ? 'hover:scale-105 hover:shadow-xl' : ''}
+                                       ${isActive ? 'hover:scale-105 hover:shadow-xl animate-pulse-soft' : ''}
+                                       ${isActive && !isCompleted ? 'ring-2 ring-indigo-400/50 ring-offset-2 ring-offset-transparent' : ''}
                                    `}
                                    style={{
                                      background: isCompleted 
@@ -1095,12 +1155,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
               setShowModernLesson(false);
               setSelectedTask(null);
             }}
-            onComplete={() => {
-                hapticSuccess(); // 📳 Успешная вибрация!
-                onTaskComplete(selectedTask);
-                setShowModernLesson(false);
-                setSelectedTask(null);
-            }}
+            onComplete={() => handleLessonComplete(selectedTask)}
         />
       )}
       
@@ -1113,8 +1168,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
             isPreviouslyCompleted={user.completedTaskIds.includes(selectedTask.id)}
             onClose={() => setSelectedTask(null)} 
             onComplete={() => {
-                onTaskComplete(selectedTask);
-                setSelectedTask(null);
+                handleLessonComplete(selectedTask);
             }} 
         />
       )}
@@ -1145,6 +1199,32 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         message={toastMessage}
         isVisible={showToast}
         onClose={() => setShowToast(false)}
+      />
+      
+      {/* Floating XP Animation */}
+      <FloatingXP 
+        amount={floatingXPAmount}
+        isVisible={showFloatingXP}
+      />
+      
+      {/* Floating Coins Animation */}
+      <FloatingCoins 
+        amount={floatingCoinsAmount}
+        isVisible={showFloatingCoins}
+      />
+      
+      {/* Level Up Animation */}
+      <LevelUpAnimation 
+        newLevel={newLevel}
+        isVisible={showLevelUp}
+        onComplete={() => setShowLevelUp(false)}
+      />
+      
+      {/* Streak Animation */}
+      <StreakAnimation 
+        days={user.streak}
+        isVisible={showStreak}
+        onComplete={() => setShowStreak(false)}
       />
       
       {/* Daily Rewards Modal */}
