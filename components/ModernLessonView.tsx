@@ -4,7 +4,7 @@ import {
   X, ChevronUp, ChevronDown, 
   Sparkles, Zap, Trophy, Star, 
   CheckCircle, Brain, Target, Battery,
-  Clock, Users, PenTool, Gamepad2
+  Clock, Users, PenTool, Gamepad2, Heart
 } from 'lucide-react';
 import { Task, LessonSlide } from '../types';
 import { KatyaMentor } from './KatyaMentor';
@@ -175,15 +175,16 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100] bg-black">
-      {/* Main Container */}
+      {/* Main Container - OPTIMIZED: reduced drag elasticity for snappier feel */}
       <motion.div
         ref={containerRef}
-        className="w-full h-full relative overflow-hidden"
+        className="w-full h-full relative overflow-hidden will-change-transform"
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
-        dragElastic={0.2}
+        dragElastic={0.1}
+        dragTransition={{ bounceStiffness: 600, bounceDamping: 30 }}
         onDragEnd={handleDragEnd}
-        style={{ y, opacity }}
+        style={{ y }}
         onDoubleClick={handleDoubleTap}
       >
         {/* Premium Background - Static for performance */}
@@ -213,22 +214,20 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
 
         {/* Top bar with iOS 26 liquid glass */}
         <div className="absolute top-0 left-0 right-0 z-50 safe-area-top">
-          {/* Progress bars (TikTok style) */}
+          {/* Progress bars (TikTok style) - OPTIMIZED with CSS transitions */}
           <div className="flex gap-1 px-3 pt-3">
             {slides.map((_, idx) => (
-              <div key={idx} className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
-                <motion.div
-                  className={`h-full rounded-full ${
+              <div key={idx} className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-100 ease-out ${
                     slideCompleted[idx] 
                       ? 'bg-gradient-to-r from-green-400 to-emerald-500' 
                       : 'bg-gradient-to-r from-white/80 to-white'
                   }`}
-                  initial={{ width: 0 }}
-                  animate={{ 
+                  style={{ 
                     width: idx < currentIndex ? '100%' : 
                            idx === currentIndex ? `${progress}%` : '0%' 
                   }}
-                  transition={{ duration: 0.1 }}
                 />
               </div>
             ))}
@@ -261,13 +260,12 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
             
             {/* Right - XP & Close */}
             <div className="flex items-center gap-2">
-              <motion.div 
-                className="px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center gap-1.5"
-                animate={showXpPopup ? { scale: [1, 1.2, 1] } : {}}
+              <div 
+                className={`px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center gap-1.5 transition-transform duration-200 ${showXpPopup ? 'scale-110' : 'scale-100'}`}
               >
                 <Zap size={12} className="text-yellow-400" />
                 <span className="text-white font-bold text-xs">+{xpEarned}</span>
-              </motion.div>
+              </div>
               
             <button 
               onClick={onClose}
@@ -279,15 +277,15 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
           </div>
         </div>
 
-        {/* Main Content */}
-        <AnimatePresence mode="wait">
+        {/* Main Content - OPTIMIZED: faster transitions */}
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={currentIndex}
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            transition={{ duration: 0.3 }}
-            className="absolute inset-0 flex flex-col justify-center items-center px-5 pt-28 pb-36"
+            exit={{ opacity: 0, y: -30 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute inset-0 flex flex-col justify-center items-center px-5 pt-28 pb-36 will-change-transform"
           >
             <SlideContent 
               slide={currentSlide} 
@@ -299,20 +297,16 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
         </AnimatePresence>
 
 
-        {/* Bottom navigation hint */}
+        {/* Bottom navigation hint - OPTIMIZED: CSS animation instead of JS */}
         <div className="absolute bottom-6 left-0 right-0 flex flex-col items-center z-50">
-          <motion.div
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="flex flex-col items-center"
-          >
+          <div className="flex flex-col items-center animate-bounce-slow">
             <div className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center gap-2">
               <ChevronUp size={18} className="text-white/80" />
               <span className="text-white/80 text-sm font-medium">
                 {currentIndex === totalSlides - 1 ? 'Завершить урок' : 'Свайпни вверх'}
               </span>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Quick reaction animation */}

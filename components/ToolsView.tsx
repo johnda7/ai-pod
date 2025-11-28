@@ -358,15 +358,15 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
               return (
                 <motion.button
                   key={tool.id}
-                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
+                  transition={{ delay: index * 0.05, type: "spring", stiffness: 300 }}
                   onClick={() => setActiveTool(tool.id)}
-                  className="relative rounded-[1.5rem] overflow-hidden aspect-[4/5]"
+                  className="relative rounded-2xl overflow-hidden aspect-square"
                   style={{
-                    boxShadow: `0 8px 32px ${tool.color}30`,
+                    boxShadow: `0 6px 24px ${tool.color}25`,
                   }}
-                  whileHover={{ scale: 1.02, y: -4 }}
+                  whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   {/* Background Image */}
