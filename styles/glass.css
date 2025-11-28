@@ -196,15 +196,13 @@
   animation: glass-pulse 2s ease-in-out infinite;
 }
 
-/* Soft Pulse for Buttons - subtle glow effect */
+/* Soft Pulse for Buttons - subtle glow effect (no transform for click stability) */
 @keyframes pulse-soft {
   0%, 100% {
     box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
-    transform: scale(1);
   }
   50% {
     box-shadow: 0 0 20px 4px rgba(99, 102, 241, 0.3);
-    transform: scale(1.02);
   }
 }
 
