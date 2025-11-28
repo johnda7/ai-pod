@@ -1,0 +1,260 @@
+/* 
+  LIQUID GLASS DESIGN SYSTEM
+  iOS 26 + Telegram Style
+  AI Pod - Premium Glass Effects
+*/
+
+/* ==================== BASE GLASS CLASSES ==================== */
+
+/* Primary Glass Panel - Cards, Modals */
+.glass-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+}
+
+/* Subtle Glass - Buttons, Tags */
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+/* Strong Glass - Headers, Important elements */
+.glass-strong {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+}
+
+/* Glass Button */
+.glass-button {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.glass-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.glass-button:active {
+  transform: translateY(0);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Glass Input */
+.glass-input {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: white;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.glass-input:focus {
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+/* ==================== GRADIENT OVERLAYS ==================== */
+
+.glass-gradient-purple {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.15) 0%,
+    rgba(168, 85, 247, 0.1) 50%,
+    rgba(192, 38, 211, 0.05) 100%
+  );
+}
+
+.glass-gradient-blue {
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.15) 0%,
+    rgba(37, 99, 235, 0.1) 50%,
+    rgba(79, 70, 229, 0.05) 100%
+  );
+}
+
+.glass-gradient-green {
+  background: linear-gradient(
+    135deg,
+    rgba(52, 211, 153, 0.15) 0%,
+    rgba(16, 185, 129, 0.1) 50%,
+    rgba(5, 150, 105, 0.05) 100%
+  );
+}
+
+/* ==================== GLOW EFFECTS ==================== */
+
+.glass-glow-purple {
+  box-shadow: 
+    0 8px 32px rgba(139, 92, 246, 0.25),
+    0 0 60px rgba(139, 92, 246, 0.1);
+}
+
+.glass-glow-blue {
+  box-shadow: 
+    0 8px 32px rgba(59, 130, 246, 0.25),
+    0 0 60px rgba(59, 130, 246, 0.1);
+}
+
+.glass-glow-green {
+  box-shadow: 
+    0 8px 32px rgba(52, 211, 153, 0.25),
+    0 0 60px rgba(52, 211, 153, 0.1);
+}
+
+/* ==================== BORDERS ==================== */
+
+.glass-border-light {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-border-medium {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.glass-border-strong {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ==================== ANIMATIONS ==================== */
+
+/* Spring Animation */
+@keyframes glass-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.glass-animate-in {
+  animation: glass-appear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Shimmer Effect */
+@keyframes glass-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.glass-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: glass-shimmer 2s infinite;
+}
+
+/* Pulse Glow */
+@keyframes glass-pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.5);
+  }
+}
+
+.glass-pulse {
+  animation: glass-pulse 2s ease-in-out infinite;
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+
+.glass-rounded-sm { border-radius: 8px; }
+.glass-rounded { border-radius: 12px; }
+.glass-rounded-md { border-radius: 16px; }
+.glass-rounded-lg { border-radius: 20px; }
+.glass-rounded-xl { border-radius: 24px; }
+.glass-rounded-full { border-radius: 9999px; }
+
+/* Text on Glass */
+.glass-text-primary { color: rgba(255, 255, 255, 0.95); }
+.glass-text-secondary { color: rgba(255, 255, 255, 0.7); }
+.glass-text-muted { color: rgba(255, 255, 255, 0.5); }
+
+/* Glass Divider */
+.glass-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 100%
+  );
+}
+
+/* ==================== TAB BAR STYLES ==================== */
+
+.glass-tab-bar {
+  background: rgba(20, 20, 30, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-tab-item {
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s ease;
+}
+
+.glass-tab-item.active {
+  color: rgba(255, 255, 255, 1);
+}
+
+/* ==================== MODAL OVERLAY ==================== */
+
+.glass-overlay {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.glass-modal {
+  background: rgba(30, 30, 40, 0.95);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  box-shadow: 
+    0 24px 80px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+

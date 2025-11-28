@@ -13,6 +13,7 @@ import { ToolsView } from './ToolsView';
 import { purchaseItem } from '../services/db';
 import { isSupabaseEnabled } from '../services/supabaseClient';
 import { GameTutorial } from './GameTutorial';
+import { hapticMedium, hapticSuccess, hapticLight } from '../services/telegramService';
 import { Confetti, RewardPopup, Toast } from './Confetti';
 import { DailyRewards } from './DailyRewards';
 import { ActivityChart } from './ActivityChart';
@@ -151,6 +152,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
 
   const handleTaskClick = (task: Task, isLocked: boolean) => {
       if (isLocked) return; 
+      hapticMedium(); // 📳 Вибрация при выборе урока
       setSelectedTask(task);
       if (useTikTokMode) {
         setShowModernLesson(true);
@@ -172,6 +174,18 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
           }
       }
   };
+
+  // 🚀 ОПТИМИЗАЦИЯ: Мемоизация списка уроков (пересчитывается только при изменении completedTaskIds)
+  const tasksWithStatus = useMemo(() => {
+    return TASKS.map((task, index) => ({
+      task,
+      index,
+      isCompleted: user.completedTaskIds.includes(task.id),
+      isLocked: false, // Все уроки открыты для тестирования
+      isActive: !user.completedTaskIds.includes(task.id),
+      isNewWeek: index === 0 || task.week > TASKS[index - 1].week,
+    }));
+  }, [user.completedTaskIds]);
 
   // Check for daily rewards on mount
   useEffect(() => {
@@ -1004,6 +1018,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
               setSelectedTask(null);
             }}
             onComplete={() => {
+                hapticSuccess(); // 📳 Успешная вибрация!
                 onTaskComplete(selectedTask);
                 setShowModernLesson(false);
                 setSelectedTask(null);

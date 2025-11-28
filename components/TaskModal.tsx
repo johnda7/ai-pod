@@ -129,11 +129,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
   const handleSorting = (item: SortingItem, direction: 'LEFT' | 'RIGHT') => {
       if (currentSlide.type !== 'SORTING') return;
       if (swipeDirection) return; // Wait for animation
+      if (!item) return; // Safety check
 
       // Trigger animation
       setSwipeDirection(direction);
 
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
           if (item.category === direction) {
               const newSorted = [...sortedItems, item];
               setSortedItems(newSorted);
@@ -147,6 +148,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
               setSwipeDirection(null); // Reset
           }
       }, 300); // Wait for animation to finish
+
+      // Fallback: reset swipeDirection after 1s if something goes wrong
+      setTimeout(() => {
+          setSwipeDirection(prev => prev === direction ? null : prev);
+      }, 1000);
   };
 
   const onTouchStart = (e: React.TouchEvent) => {

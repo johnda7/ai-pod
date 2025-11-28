@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Task, LessonSlide } from '../types';
 import { KatyaMentor } from './KatyaMentor';
+import { hapticSelection, hapticSuccess, hapticLight } from '../services/telegramService';
 
 interface ModernLessonViewProps {
   task: Task;
@@ -78,6 +79,8 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
   }, [currentIndex, currentSlide]);
 
   const handleSwipe = useCallback((direction: 'up' | 'down') => {
+    hapticSelection(); // 📳 Вибрация при свайпе
+    
     if (direction === 'up' && currentIndex < totalSlides - 1) {
       setCurrentIndex(prev => prev + 1);
       setProgress(0);
@@ -85,6 +88,7 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
       setCurrentIndex(prev => prev - 1);
       setProgress(0);
     } else if (direction === 'up' && currentIndex === totalSlides - 1) {
+      hapticSuccess(); // 📳 Успех при завершении!
       onComplete();
     }
   }, [currentIndex, totalSlides, onComplete]);
@@ -97,6 +101,32 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
       handleSwipe('down');
     }
   };
+
+  // Keyboard navigation for browser testing (ArrowUp/Down, Space, Escape)
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowUp':
+        case ' ':
+          e.preventDefault();
+          handleSwipe('up');
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          handleSwipe('down');
+          break;
+        case 'Escape':
+          e.preventDefault();
+          onClose();
+          break;
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, handleSwipe, onClose]);
 
   const handleDoubleTap = () => {
     const newLiked = [...liked];
