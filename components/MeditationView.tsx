@@ -558,7 +558,7 @@ export const MeditationView: React.FC = () => {
             {/* Close Button */}
             <button
               onClick={() => { setSelectedMeditation(null); setMeditationPlaying(false); }}
-              className="absolute top-6 right-6 z-10 w-12 h-12 rounded-full flex items-center justify-center text-white/60 hover:text-white transition-colors"
+              className="absolute top-6 right-6 z-[100] w-12 h-12 rounded-full flex items-center justify-center text-white/60 hover:text-white transition-colors"
               style={{
                 background: 'rgba(255,255,255,0.1)',
                 backdropFilter: 'blur(20px)',
