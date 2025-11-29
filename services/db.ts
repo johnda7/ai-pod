@@ -241,6 +241,104 @@ export const getOrCreateUser = async (telegramUser: any | null): Promise<User> =
   return localUser || newUserTemplate;
 };
 
+// ==========================================
+// 🎮 ПРОДВИНУТЫЕ ИГРОВЫЕ МЕХАНИКИ
+// ==========================================
+
+// Бонус за уровень: чем выше уровень, тем больше XP
+const getLevelBonus = (level: number): number => {
+  if (level >= 10) return 0.5;  // +50% XP
+  if (level >= 7) return 0.3;   // +30% XP
+  if (level >= 5) return 0.2;   // +20% XP
+  if (level >= 3) return 0.1;   // +10% XP
+  return 0;
+};
+
+// Бонус за серию уроков за день
+const getDailyStreakBonus = (tasksToday: number): number => {
+  if (tasksToday >= 5) return 0.3;  // +30% за 5+ уроков в день
+  if (tasksToday >= 3) return 0.2;  // +20% за 3+ уроков
+  if (tasksToday >= 2) return 0.1;  // +10% за 2+ уроков
+  return 0;
+};
+
+// Случайный бонус (surprise reward) - 20% шанс
+const getSurpriseBonus = (): { xp: number; coins: number; message: string } | null => {
+  if (Math.random() > 0.2) return null; // 80% - нет бонуса
+  
+  const surprises = [
+    { xp: 50, coins: 0, message: '🎁 Сюрприз! +50 XP!' },
+    { xp: 0, coins: 25, message: '💰 Бонус! +25 монет!' },
+    { xp: 100, coins: 0, message: '⭐ Удача! +100 XP!' },
+    { xp: 0, coins: 50, message: '🪙 Джекпот! +50 монет!' },
+    { xp: 75, coins: 25, message: '🌟 Супер! +75 XP и +25 монет!' },
+  ];
+  
+  return surprises[Math.floor(Math.random() * surprises.length)];
+};
+
+// Подсчёт уроков за сегодня
+const getTasksCompletedToday = (completedTaskIds: string[]): number => {
+  const today = new Date().toDateString();
+  const todayKey = `tasks_completed_${today}`;
+  const stored = localStorage.getItem(todayKey);
+  return stored ? parseInt(stored, 10) : 0;
+};
+
+const incrementTasksToday = () => {
+  const today = new Date().toDateString();
+  const todayKey = `tasks_completed_${today}`;
+  const current = getTasksCompletedToday([]);
+  localStorage.setItem(todayKey, (current + 1).toString());
+};
+
+// Расчёт финальных наград с бонусами
+export const calculateRewards = (baseXP: number, baseCoins: number, level: number, completedTaskIds: string[]): {
+  finalXP: number;
+  finalCoins: number;
+  bonusXP: number;
+  bonusCoins: number;
+  bonusMessages: string[];
+} => {
+  let bonusXP = 0;
+  let bonusCoins = 0;
+  const bonusMessages: string[] = [];
+
+  // 1. Бонус за уровень
+  const levelBonus = getLevelBonus(level);
+  if (levelBonus > 0) {
+    const levelBonusXP = Math.floor(baseXP * levelBonus);
+    bonusXP += levelBonusXP;
+    bonusMessages.push(`⬆️ Уровень ${level}: +${Math.round(levelBonus * 100)}% XP`);
+  }
+
+  // 2. Бонус за серию уроков за день
+  const tasksToday = getTasksCompletedToday(completedTaskIds);
+  const dailyBonus = getDailyStreakBonus(tasksToday);
+  if (dailyBonus > 0) {
+    const dailyBonusXP = Math.floor(baseXP * dailyBonus);
+    bonusXP += dailyBonusXP;
+    bonusMessages.push(`🔥 ${tasksToday} уроков сегодня: +${Math.round(dailyBonus * 100)}% XP`);
+  }
+
+  // 3. Случайный бонус
+  const surprise = getSurpriseBonus();
+  if (surprise) {
+    bonusXP += surprise.xp;
+    bonusCoins += surprise.coins;
+    bonusMessages.push(surprise.message);
+    localStorage.setItem('last_surprise_bonus', JSON.stringify(surprise));
+  }
+
+  return {
+    finalXP: baseXP + bonusXP,
+    finalCoins: baseCoins + bonusCoins,
+    bonusXP,
+    bonusCoins,
+    bonusMessages
+  };
+};
+
 export const completeTask = async (userId: string, task: Task): Promise<void> => {
   // 1. UPDATE LOCAL
   const users = getUsersFromStorage();
@@ -250,10 +348,28 @@ export const completeTask = async (userId: string, task: Task): Promise<void> =>
   if (userIndex !== -1) {
       const u = users[userIndex];
       if (!u.completedTaskIds.includes(task.id)) {
+        // 🎮 Расчёт бонусов!
+        const rewards = calculateRewards(
+          task.xpReward,
+          task.coinsReward || 0,
+          u.level,
+          u.completedTaskIds
+        );
+        
         u.completedTaskIds.push(task.id);
-        u.xp += task.xpReward;
-        u.coins = (u.coins || 0) + (task.coinsReward || 0);
+        u.xp += rewards.finalXP;
+        u.coins = (u.coins || 0) + rewards.finalCoins;
         u.level = Math.floor(u.xp / 500) + 1;
+        
+        // Сохраняем бонус-сообщения для UI
+        if (rewards.bonusMessages.length > 0) {
+          localStorage.setItem('last_bonus_messages', JSON.stringify(rewards.bonusMessages));
+          console.log('🎮 Бонусы:', rewards.bonusMessages);
+        }
+        
+        // Увеличиваем счётчик уроков за день
+        incrementTasksToday();
+        
         users[userIndex] = u;
         localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
         updatedUser = u;

@@ -9,6 +9,7 @@ import { KatyaCharacter } from './KatyaCharacter';
 import { BubblePopGame, EmotionMatchGame, BreathSyncGame } from './ImprovedGames';
 import { RiveKatya } from './RiveKatya';
 import { KatyaMentor } from './KatyaMentor';
+import { hapticLight, hapticMedium, hapticSuccess, hapticError, hapticSelection } from '../services/telegramService';
 
 interface TaskModalProps {
   task: Task;
@@ -88,18 +89,22 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
   };
 
   const handleNext = () => {
+      hapticLight(); // 📳 Переход к следующему слайду
       if (currentSlideIndex < slides.length - 1) {
           setCurrentSlideIndex(prev => prev + 1);
       } else {
+          hapticSuccess(); // 📳 Урок завершён!
           onComplete();
       }
   };
 
   const handleCorrect = () => {
+      hapticSuccess(); // 📳 Правильный ответ!
       setFeedbackStatus('CORRECT');
   };
 
   const handleWrong = () => {
+      hapticError(); // 📳 Неправильный ответ
       setFeedbackStatus('WRONG');
       setLives(prev => Math.max(0, prev - 1));
       setIsShake(true);
@@ -131,6 +136,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
       if (swipeDirection) return; // Wait for animation
       if (!item) return; // Safety check
 
+      hapticSelection(); // 📳 Свайп выбора
       // Trigger animation
       setSwipeDirection(direction);
 
