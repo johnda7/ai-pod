@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, ChevronRight, RotateCcw, Sparkles, TrendingUp, Award, Lightbulb } from 'lucide-react';
+import { X, Check, ChevronRight, RotateCcw, Sparkles, TrendingUp, Award, Lightbulb, Cloud, CheckCircle } from 'lucide-react';
+import { syncToolsDataToSupabase, loadToolsDataFromSupabase } from '../services/db';
+import { getTelegramUser } from '../services/telegramService';
 
 interface BalanceWheelProps {
   isOpen: boolean;
@@ -105,12 +107,21 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
   );
   const [history, setHistory] = useState<{ date: string; scores: AreaScore[] }[]>([]);
   const [showTip, setShowTip] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
 
   useEffect(() => {
-    const saved = localStorage.getItem('balance_wheel_history');
-    if (saved) {
-      setHistory(JSON.parse(saved));
-    }
+    const loadData = async () => {
+      const saved = localStorage.getItem('balance_wheel_history');
+      if (saved) setHistory(JSON.parse(saved));
+      
+      const tgUser = getTelegramUser();
+      if (tgUser?.id) {
+        await loadToolsDataFromSupabase(tgUser.id.toString());
+        const fresh = localStorage.getItem('balance_wheel_history');
+        if (fresh) setHistory(JSON.parse(fresh));
+      }
+    };
+    loadData();
   }, []);
 
   const currentArea = LIFE_AREAS[currentAreaIndex];
@@ -123,7 +134,7 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
     ));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentAreaIndex < LIFE_AREAS.length - 1) {
       setCurrentAreaIndex(prev => prev + 1);
     } else {
@@ -134,6 +145,15 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
       const updatedHistory = [newEntry, ...history].slice(0, 10);
       setHistory(updatedHistory);
       localStorage.setItem('balance_wheel_history', JSON.stringify(updatedHistory));
+      
+      // Sync to Supabase
+      const tgUser = getTelegramUser();
+      if (tgUser?.id) {
+        setSyncStatus('syncing');
+        const success = await syncToolsDataToSupabase(tgUser.id.toString());
+        setSyncStatus(success ? 'synced' : 'idle');
+        if (success) setTimeout(() => setSyncStatus('idle'), 2000);
+      }
       
       setStep('result');
       onComplete?.(scores);

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Check, Flame, Trophy, Star, Zap, Target, Calendar, TrendingUp, Trash2 } from 'lucide-react';
+import { X, Plus, Check, Flame, Trophy, Star, Zap, Target, Calendar, TrendingUp, Trash2, Cloud, CheckCircle } from 'lucide-react';
+import { syncToolsDataToSupabase, loadToolsDataFromSupabase } from '../services/db';
+import { getTelegramUser } from '../services/telegramService';
 
 interface HabitTrackerProps {
   isOpen: boolean;
@@ -38,16 +40,52 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
   const [showAddForm, setShowAddForm] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
   const [selectedPreset, setSelectedPreset] = useState<typeof HABIT_PRESETS[0] | null>(null);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
 
+  // Загрузка данных при открытии
   useEffect(() => {
-    const saved = localStorage.getItem('habit_tracker_data');
-    if (saved) {
-      setHabits(JSON.parse(saved));
-    }
+    const loadData = async () => {
+      // Сначала из localStorage
+      const saved = localStorage.getItem('habit_tracker_data');
+      if (saved) {
+        setHabits(JSON.parse(saved));
+      }
+      
+      // Потом пробуем загрузить из Supabase
+      const tgUser = getTelegramUser();
+      if (tgUser?.id) {
+        const loaded = await loadToolsDataFromSupabase(tgUser.id.toString());
+        if (loaded) {
+          const fresh = localStorage.getItem('habit_tracker_data');
+          if (fresh) setHabits(JSON.parse(fresh));
+        }
+      }
+    };
+    loadData();
   }, []);
 
+  // Сохранение и синхронизация при изменении
   useEffect(() => {
+    if (habits.length === 0) return;
+    
     localStorage.setItem('habit_tracker_data', JSON.stringify(habits));
+    
+    // Синхронизация с Supabase
+    const syncToCloud = async () => {
+      const tgUser = getTelegramUser();
+      if (tgUser?.id) {
+        setSyncStatus('syncing');
+        const success = await syncToolsDataToSupabase(tgUser.id.toString());
+        setSyncStatus(success ? 'synced' : 'idle');
+        if (success) {
+          setTimeout(() => setSyncStatus('idle'), 2000);
+        }
+      }
+    };
+    
+    // Debounce синхронизации
+    const timeoutId = setTimeout(syncToCloud, 1000);
+    return () => clearTimeout(timeoutId);
   }, [habits]);
 
   const today = new Date().toISOString().split('T')[0];
@@ -125,6 +163,29 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
   const weekDays = getWeekDays();
   const completedToday = habits.filter(h => h.completedDays.includes(today)).length;
   const totalStreak = habits.reduce((sum, h) => sum + h.streak, 0);
+  
+  // Прогресс за неделю
+  const getWeekProgress = () => {
+    if (habits.length === 0) return { completed: 0, total: 0, percentage: 0 };
+    let totalCompleted = 0;
+    const totalPossible = habits.length * 7; // 7 дней * количество привычек
+    
+    weekDays.forEach(day => {
+      habits.forEach(habit => {
+        if (habit.completedDays.includes(day.date)) {
+          totalCompleted++;
+        }
+      });
+    });
+    
+    return {
+      completed: totalCompleted,
+      total: totalPossible,
+      percentage: Math.round((totalCompleted / totalPossible) * 100)
+    };
+  };
+  
+  const weekProgress = getWeekProgress();
 
   if (!isOpen) return null;
 
@@ -211,7 +272,26 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-white">Привычки</h1>
-                  <p className="text-white/50 text-xs">{completedToday}/{habits.length} сегодня</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-white/50 text-xs">{completedToday}/{habits.length} сегодня</p>
+                    {/* Cloud Sync Indicator */}
+                    <AnimatePresence>
+                      {syncStatus !== 'idle' && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.5 }}
+                          className="flex items-center gap-1"
+                        >
+                          {syncStatus === 'syncing' ? (
+                            <Cloud size={12} className="text-blue-400 animate-pulse" />
+                          ) : (
+                            <CheckCircle size={12} className="text-green-400" />
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
               
@@ -224,31 +304,79 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
               </button>
             </div>
 
+            {/* Week Progress Bar */}
+            <div 
+              className="mb-4 p-3 rounded-2xl"
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Calendar size={14} className="text-green-400" />
+                  <span className="text-white/70 text-xs font-medium">Прогресс недели</span>
+                </div>
+                <span className="text-green-400 font-bold text-sm">{weekProgress.percentage}%</span>
+              </div>
+              <div 
+                className="h-3 rounded-full overflow-hidden"
+                style={{ background: 'rgba(255,255,255,0.08)' }}
+              >
+                <motion.div
+                  className="h-full rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${weekProgress.percentage}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                  style={{
+                    background: 'linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
+                    boxShadow: '0 0 15px rgba(34,197,94,0.5)',
+                  }}
+                />
+              </div>
+              <div className="flex justify-between mt-1.5">
+                <span className="text-white/30 text-[10px]">{weekProgress.completed} из {weekProgress.total} выполнено</span>
+                <span className="text-white/30 text-[10px]">Цель: 100%</span>
+              </div>
+            </div>
+
             {/* Stats */}
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <div 
                 className="flex-1 p-3 rounded-xl text-center"
-                style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.2)' }}
+                style={{ 
+                  background: 'rgba(34,197,94,0.1)', 
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(34,197,94,0.2)' 
+                }}
               >
                 <div className="text-xl font-bold text-green-400 flex items-center justify-center gap-1">
                   {completedToday}
-                  <Check size={16} />
+                  <Check size={14} />
                 </div>
                 <div className="text-white/40 text-[10px]">Сегодня</div>
               </div>
               <div 
                 className="flex-1 p-3 rounded-xl text-center"
-                style={{ background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.2)' }}
+                style={{ 
+                  background: 'rgba(249,115,22,0.1)', 
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(249,115,22,0.2)' 
+                }}
               >
                 <div className="text-xl font-bold text-orange-400 flex items-center justify-center gap-1">
                   {totalStreak}
-                  <Flame size={16} />
+                  <Flame size={14} />
                 </div>
                 <div className="text-white/40 text-[10px]">Streak</div>
               </div>
               <div 
                 className="flex-1 p-3 rounded-xl text-center"
-                style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.2)' }}
+                style={{ 
+                  background: 'rgba(99,102,241,0.1)', 
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(99,102,241,0.2)' 
+                }}
               >
                 <div className="text-xl font-bold text-indigo-400">{habits.length}</div>
                 <div className="text-white/40 text-[10px]">Привычек</div>
