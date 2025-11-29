@@ -327,8 +327,8 @@ export const MeditationView: React.FC = () => {
           )}
         </div>
         
-        {/* Horizontal scroll cards */}
-        <div className="flex gap-3 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide">
+        {/* COMPACT Sound Grid - 4 columns */}
+        <div className="grid grid-cols-4 gap-2">
           {SOUNDSCAPES.map((sound) => {
             const isActive = activeSoundId === sound.id && isPlaying;
 
@@ -336,41 +336,29 @@ export const MeditationView: React.FC = () => {
               <motion.button
                 key={sound.id}
                 onClick={() => handleSoundClick(sound.id)}
-                whileTap={{ scale: 0.98 }}
-                className="relative flex-shrink-0 w-32 h-44 rounded-2xl overflow-hidden group"
+                whileTap={{ scale: 0.95 }}
+                className="relative rounded-xl overflow-hidden aspect-square group"
               >
                 <img 
                   src={SOUNDSCAPE_IMAGES[sound.iconType]}
                   alt={sound.title}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
                 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 
                 {isActive && (
-                  <div className="absolute inset-0 bg-blue-500/20" />
-                )}
-                
-                <div className="absolute top-3 left-3">
-                  <div 
-                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                      isActive ? 'bg-white text-black' : 'bg-black/40 text-white backdrop-blur-sm'
-                    }`}
-                  >
-                    {isActive ? (
-                      <div className="flex gap-0.5 items-end h-3">
-                        <div className="w-0.5 h-2 bg-black rounded-full animate-[bounce_0.8s_infinite]" />
-                        <div className="w-0.5 h-3 bg-black rounded-full animate-[bounce_1s_infinite]" />
-                        <div className="w-0.5 h-1.5 bg-black rounded-full animate-[bounce_0.6s_infinite]" />
-                      </div>
-                    ) : (
-                      <Play size={12} fill="white" className="ml-0.5" />
-                        )}
+                  <div className="absolute inset-0 bg-blue-500/30 flex items-center justify-center">
+                    <div className="flex gap-0.5 items-end h-3">
+                      <div className="w-0.5 h-2 bg-white rounded-full animate-[bounce_0.8s_infinite]" />
+                      <div className="w-0.5 h-3 bg-white rounded-full animate-[bounce_1s_infinite]" />
+                      <div className="w-0.5 h-1.5 bg-white rounded-full animate-[bounce_0.6s_infinite]" />
                     </div>
-                </div>
+                  </div>
+                )}
 
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <h3 className="text-white font-semibold text-sm">{sound.title}</h3>
+                <div className="absolute bottom-0 left-0 right-0 p-1.5">
+                  <h3 className="text-white font-medium text-[10px] text-center truncate">{sound.title}</h3>
                 </div>
               </motion.button>
             );
@@ -421,9 +409,9 @@ export const MeditationView: React.FC = () => {
         </div>
       </div>
 
-      {/* Meditations Grid - UNIQUE IMAGES */}
+      {/* Meditations Grid - COMPACT 3 columns */}
       <div className="px-5 relative z-10 pb-8">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-2">
           <AnimatePresence mode="popLayout">
             {filteredMeditations.map((meditation, idx) => (
               <motion.button
@@ -432,30 +420,31 @@ export const MeditationView: React.FC = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2, delay: idx * 0.02 }}
-                className="relative overflow-hidden rounded-2xl group text-left aspect-square"
-                onClick={() => { setSelectedMeditation(meditation); setMeditationPlaying(true); }}
+                transition={{ duration: 0.15 }}
+                className="relative overflow-hidden rounded-xl group text-left aspect-[3/4]"
+                onClick={() => { setSelectedMeditation(meditation); setMeditationPlaying(true); hapticLight(); }}
               >
                 {/* UNIQUE image for each meditation */}
                 <img 
                   src={MEDITATION_UNIQUE_IMAGES[meditation.id]}
                   alt={meditation.title}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
                 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 
-                <div className="absolute top-3 left-3">
-                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                    <Play size={12} fill="white" className="text-white ml-0.5" />
+                {/* Play icon - smaller */}
+                <div className="absolute top-2 left-2">
+                  <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Play size={10} fill="white" className="text-white ml-0.5" />
                   </div>
                 </div>
 
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <h3 className="text-white font-semibold text-sm mb-0.5 leading-tight">
+                <div className="absolute bottom-0 left-0 right-0 p-2">
+                  <h3 className="text-white font-medium text-[11px] leading-tight truncate">
                     {meditation.title}
                   </h3>
-                  <p className="text-white/60 text-xs">{meditation.duration}</p>
+                  <p className="text-white/50 text-[9px]">{meditation.duration}</p>
                 </div>
               </motion.button>
             ))}
