@@ -3,6 +3,7 @@ import { SHOP_ITEMS } from '../constants';
 import { User, ShopItem } from '../types';
 import { ShoppingBag, Coins, Heart, Snowflake, Gift, Crown, Check, Sparkles, X, Zap, Star, Package, Flame, Shield, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { hapticMedium, hapticSuccess, hapticLight, hapticError } from '../services/telegramService';
 
 interface ShopViewProps {
   user: User;
@@ -56,8 +57,14 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }
   };
 
   const handleBuy = async (item: ShopItem) => {
+    if (user.coins < item.price) {
+      hapticError(); // 📳 Недостаточно монет
+      return;
+    }
+    hapticMedium(); // 📳 Начало покупки
     setIsPurchasing(true);
     await onBuy(item);
+    hapticSuccess(); // 📳 Успешная покупка!
     setIsPurchasing(false);
   };
   

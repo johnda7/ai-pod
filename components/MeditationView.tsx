@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { GratitudeJournal } from './GratitudeJournal';
 import { ZenVisualizer } from './ZenVisualizer';
+import { hapticLight, hapticMedium, hapticSuccess } from '../services/telegramService';
 
 // Unique images for each soundscape
 const SOUNDSCAPE_IMAGES: Record<string, string> = {
@@ -85,6 +86,7 @@ export const MeditationView: React.FC = () => {
   ];
 
   const handleSoundClick = (id: string) => {
+      hapticLight(); // 📳 Выбор звука
       if (activeSoundId === id) {
           setIsPlaying(!isPlaying);
       } else {
