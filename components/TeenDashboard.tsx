@@ -19,6 +19,7 @@ import { Confetti, RewardPopup, Toast, FloatingXP, FloatingCoins, LevelUpAnimati
 import { DailyRewards } from './DailyRewards';
 import { ActivityChart } from './ActivityChart';
 import { DailyQuoteWidget } from './KatyaQuotes';
+import { HabitsWidget } from './HabitsWidget';
 
 interface TeenDashboardProps {
   user: User;
@@ -905,6 +906,18 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
             {/* DAILY QUOTE FROM KATYA */}
             <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
                 <DailyQuoteWidget />
+            </div>
+
+            {/* HABITS WIDGET */}
+            <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-125">
+                <HabitsWidget 
+                  onOpenHabits={() => setActiveTab('TOOLS')}
+                  onXpReward={(xp) => {
+                    setUser(prev => ({ ...prev, xp: prev.xp + xp }));
+                    setFloatingXPAmount(xp);
+                    setShowFloatingXP(true);
+                  }}
+                />
             </div>
 
             {/* DAILY QUESTS - Compact Glass Card */}
