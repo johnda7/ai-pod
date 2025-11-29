@@ -403,94 +403,87 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
               return (
                 <motion.button
                   key={tool.id}
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: index * 0.05, type: "spring", stiffness: 300 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.03 }}
                   onClick={() => setActiveTool(tool.id)}
-                  className="relative rounded-2xl overflow-hidden aspect-square"
+                  className="relative rounded-2xl overflow-hidden aspect-[4/3]"
                   style={{
-                    boxShadow: `0 6px 24px ${tool.color}25`,
+                    background: 'rgba(255,255,255,0.08)',
+                    backdropFilter: 'blur(20px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
                   }}
-                  whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {/* Background Image */}
+                  {/* Background Image - smaller */}
                   <img 
                     src={TOOL_IMAGES[tool.id]}
                     alt={tool.name}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover opacity-40"
                   />
                   
-                  {/* Gradient Overlay */}
+                  {/* iOS 26 Liquid Glass Overlay */}
                   <div 
                     className="absolute inset-0"
                     style={{
-                      background: `linear-gradient(180deg, transparent 0%, ${tool.color}90 100%)`,
+                      background: 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%)',
                     }}
                   />
                   
-                  {/* Glass overlay */}
+                  {/* Hot badge - compact */}
                   <div 
-                    className="absolute inset-0"
+                    className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"
                     style={{
-                      background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%)',
+                      background: 'rgba(239,68,68,0.9)',
+                      backdropFilter: 'blur(10px)',
                     }}
-                  />
-                  
-                  {/* Hot badge */}
-                  <motion.div 
-                    className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(239,68,68,0.95) 0%, rgba(220,38,38,0.95) 100%)',
-                      boxShadow: '0 4px 15px rgba(239,68,68,0.5)',
-                    }}
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
                   >
                     <span>🔥</span>
                     <span className="text-white">HOT</span>
-                  </motion.div>
+                  </div>
                   
-                  {/* Content */}
-                  <div className="absolute inset-0 p-4 flex flex-col justify-end">
-                    {/* Icon */}
+                  {/* Content - compact */}
+                  <div className="absolute inset-0 p-3 flex flex-col justify-end">
+                    {/* Icon - smaller */}
                     <div 
-                      className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
+                      className="w-9 h-9 rounded-xl flex items-center justify-center mb-2"
                       style={{
                         background: 'rgba(255,255,255,0.15)',
                         backdropFilter: 'blur(10px)',
                         border: '1px solid rgba(255,255,255,0.2)',
                       }}
                     >
-                      <Icon size={24} className="text-white" />
+                      <Icon size={18} className="text-white" />
                     </div>
                     
-                    <h3 className="text-white font-bold text-lg mb-1 drop-shadow-lg">{tool.name}</h3>
-                    <p className="text-white/80 text-xs mb-2 drop-shadow">{tool.description}</p>
+                    <h3 className="text-white font-bold text-sm mb-0.5">{tool.name}</h3>
+                    <p className="text-white/60 text-[10px] mb-1.5 line-clamp-1">{tool.description}</p>
                     
-                    {/* Stats */}
+                    {/* Stats - compact */}
                     <div className="flex items-center justify-between">
                       {stat ? (
                         <span 
-                          className="text-xs font-medium px-2 py-1 rounded-lg"
+                          className="text-[10px] font-medium px-1.5 py-0.5 rounded"
                           style={{
-                            background: 'rgba(255,255,255,0.2)',
+                            background: 'rgba(255,255,255,0.15)',
                             backdropFilter: 'blur(10px)',
                           }}
                         >
                           {stat}
                         </span>
                       ) : (
-                        <span className="text-white/60 text-xs">Начни!</span>
+                        <span className="text-white/40 text-[10px]">Начни!</span>
                       )}
                       <span 
-                        className="text-xs font-bold px-2 py-1 rounded-lg"
+                        className="text-[10px] font-bold px-1.5 py-0.5 rounded"
                         style={{
-                          background: 'rgba(245,158,11,0.3)',
+                          background: 'rgba(245,158,11,0.25)',
                           color: '#fbbf24',
                         }}
                       >
-                        +{tool.xpReward} XP
+                        +{tool.xpReward}
                       </span>
                     </div>
                   </div>
@@ -514,7 +507,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
           </motion.div>
         )}
         
-        <div className="space-y-3">
+        <div className="space-y-2">
           {(selectedCategory === 'all' ? TOOLS.filter(t => t.category !== 'featured') : filteredTools).map((tool, index) => {
             const stat = getStatLabel(tool.id);
             const Icon = tool.icon;
@@ -522,86 +515,61 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
             return (
               <motion.button
                 key={tool.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05, type: "spring", stiffness: 200 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.02 }}
                 onClick={() => setActiveTool(tool.id)}
-                className="w-full text-left rounded-[1.5rem] overflow-hidden relative group"
+                className="w-full text-left rounded-xl overflow-hidden relative"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
-                  backdropFilter: 'blur(40px)',
+                  background: 'rgba(255,255,255,0.06)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
                   border: '1px solid rgba(255,255,255,0.08)',
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
                 }}
-                whileHover={{ scale: 1.01, x: 4 }}
                 whileTap={{ scale: 0.99 }}
               >
-                <div className="flex items-center gap-4 p-4">
-                  {/* Image thumbnail */}
+                <div className="flex items-center gap-3 p-3">
+                  {/* Icon thumbnail - compact */}
                   <div 
-                    className="w-16 h-16 rounded-xl overflow-hidden shrink-0 relative"
+                    className="w-11 h-11 rounded-xl overflow-hidden shrink-0 relative"
                     style={{
-                      boxShadow: `0 4px 15px ${tool.color}30`,
+                      background: `linear-gradient(135deg, ${tool.color}30 0%, ${tool.color}10 100%)`,
+                      border: `1px solid ${tool.color}30`,
                     }}
                   >
-                    <img 
-                      src={TOOL_IMAGES[tool.id]}
-                      alt={tool.name}
-                      className="w-full h-full object-cover"
-                    />
-                    <div 
-                      className="absolute inset-0"
-                      style={{
-                        background: `linear-gradient(135deg, ${tool.color}40 0%, ${tool.color}20 100%)`,
-                      }}
-                    />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <Icon size={24} className="text-white drop-shadow-lg" />
+                      <Icon size={20} style={{ color: tool.color }} />
                     </div>
                   </div>
                   
-                  {/* Content */}
+                  {/* Content - compact */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-bold text-white">{tool.name}</h3>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-sm font-bold text-white">{tool.name}</h3>
                       {tool.isNew && (
                         <span 
-                          className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase"
-                          style={{
-                            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                            color: 'white',
-                          }}
+                          className="px-1 py-0.5 rounded text-[8px] font-bold"
+                          style={{ background: '#22c55e', color: 'white' }}
                         >
                           NEW
                         </span>
                       )}
                     </div>
-                    <p className="text-white/40 text-sm truncate">{tool.description}</p>
-                    
-                    {/* Stats */}
-                    <div className="flex items-center gap-3 mt-1.5">
-                      {stat ? (
-                        <span 
-                          className="text-xs font-medium px-2 py-0.5 rounded-lg"
-                          style={{
-                            background: `${tool.color}20`,
-                            color: tool.color,
-                          }}
-                        >
-                          {stat}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-white/30">Начни!</span>
-                      )}
-                      <span className="text-xs text-white/30 flex items-center gap-1">
-                        <Zap size={10} className="text-amber-400" />
-                        +{tool.xpReward}
-                      </span>
-                    </div>
+                    <p className="text-white/40 text-xs truncate">{tool.description}</p>
                   </div>
                   
-                  {/* Arrow */}
-                  <ChevronRight size={20} className="text-white/30 group-hover:text-white/50 transition-colors" />
+                  {/* XP Badge */}
+                  <div 
+                    className="px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1"
+                    style={{
+                      background: 'rgba(245,158,11,0.15)',
+                      color: '#fbbf24',
+                    }}
+                  >
+                    <Zap size={10} />
+                    +{tool.xpReward}
+                  </div>
                 </div>
               </motion.button>
             );
