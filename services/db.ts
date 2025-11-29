@@ -563,6 +563,133 @@ export const purchaseItem = async (userId: string, item: any): Promise<boolean> 
     return true;
 };
 
+// ==========================================
+// STREAK SYSTEM - Auto-update on daily login
+// ==========================================
+
+const STREAK_STORAGE_KEY = 'ai_teenager_last_activity';
+
+export const checkAndUpdateStreak = async (userId: string): Promise<{ newStreak: number; bonus: number; message: string } | null> => {
+  const users = getUsersFromStorage();
+  const user = users.find(u => u.id === userId);
+  if (!user) return null;
+
+  const lastActivity = localStorage.getItem(STREAK_STORAGE_KEY);
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  
+  // Already logged in today
+  if (lastActivity === today) {
+    return null;
+  }
+  
+  let newStreak = user.streak || 0;
+  let bonus = 0;
+  let message = '';
+
+  if (lastActivity === yesterday) {
+    // Streak continues! +1
+    newStreak += 1;
+    bonus = Math.min(newStreak * 10, 100); // Max 100 bonus coins
+    message = `🔥 ${newStreak} дней подряд! +${bonus} монет`;
+  } else if (!lastActivity) {
+    // First time ever
+    newStreak = 1;
+    bonus = 10;
+    message = '🔥 Первый день! +10 монет';
+  } else {
+    // Streak broken - reset but encourage
+    newStreak = 1;
+    bonus = 5;
+    message = '🔥 Новый старт! +5 монет';
+  }
+
+  // Update user
+  user.streak = newStreak;
+  user.coins = (user.coins || 0) + bonus;
+  
+  // Save to localStorage
+  localStorage.setItem(STREAK_STORAGE_KEY, today);
+  const userIndex = users.findIndex(u => u.id === userId);
+  if (userIndex !== -1) {
+    users[userIndex] = user;
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+  }
+
+  // Sync to Supabase
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+  if (isSupabaseEnabled && isValidUUID) {
+    try {
+      await supabase.from('users').update({
+        streak: newStreak,
+        coins: user.coins,
+        last_activity: today
+      }).eq('id', userId);
+      console.log(`✅ Streak synced: ${newStreak} days`);
+    } catch (e) {
+      console.error('Streak sync failed:', e);
+    }
+  }
+
+  return { newStreak, bonus, message };
+};
+
+// Milestone rewards (5, 10, 15 lessons completed)
+export const checkMilestoneReward = async (userId: string): Promise<{ milestone: number; xpBonus: number; coinsBonus: number } | null> => {
+  const users = getUsersFromStorage();
+  const user = users.find(u => u.id === userId);
+  if (!user) return null;
+
+  const completedCount = user.completedTaskIds?.length || 0;
+  const milestones = [
+    { count: 5, xp: 200, coins: 100, key: 'milestone_5' },
+    { count: 10, xp: 500, coins: 250, key: 'milestone_10' },
+    { count: 15, xp: 800, coins: 400, key: 'milestone_15' },
+    { count: 20, xp: 1000, coins: 500, key: 'milestone_20' },
+    { count: 25, xp: 1500, coins: 750, key: 'milestone_25' },
+    { count: 30, xp: 2000, coins: 1000, key: 'milestone_30' },
+  ];
+
+  const claimedMilestones = JSON.parse(localStorage.getItem('claimed_milestones') || '[]');
+  
+  for (const m of milestones) {
+    if (completedCount >= m.count && !claimedMilestones.includes(m.key)) {
+      // Claim this milestone!
+      user.xp += m.xp;
+      user.coins += m.coins;
+      user.level = Math.floor(user.xp / 500) + 1;
+      
+      claimedMilestones.push(m.key);
+      localStorage.setItem('claimed_milestones', JSON.stringify(claimedMilestones));
+      
+      // Save user
+      const userIndex = users.findIndex(u => u.id === userId);
+      if (userIndex !== -1) {
+        users[userIndex] = user;
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+      }
+
+      // Sync to Supabase
+      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+      if (isSupabaseEnabled && isValidUUID) {
+        try {
+          await supabase.from('users').update({
+            xp: user.xp,
+            coins: user.coins,
+            level: user.level
+          }).eq('id', userId);
+        } catch (e) {
+          console.error('Milestone sync failed:', e);
+        }
+      }
+
+      return { milestone: m.count, xpBonus: m.xp, coinsBonus: m.coins };
+    }
+  }
+
+  return null;
+};
+
 export const getAllStudentsStats = async (): Promise<StudentStats[]> => {
   if (isSupabaseEnabled) {
       try {

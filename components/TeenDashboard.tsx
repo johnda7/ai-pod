@@ -10,7 +10,7 @@ import { MemoryGame } from './MemoryGame';
 import { ShopView } from './ShopView';
 import { AchievementsView } from './AchievementsView';
 import { ToolsView } from './ToolsView';
-import { purchaseItem } from '../services/db';
+import { purchaseItem, checkAndUpdateStreak, checkMilestoneReward } from '../services/db';
 import { isSupabaseEnabled } from '../services/supabaseClient';
 import { GameTutorial } from './GameTutorial';
 import { hapticMedium, hapticSuccess, hapticLight } from '../services/telegramService';
@@ -142,6 +142,63 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   useEffect(() => {
       setUser(initialUser);
   }, [initialUser]);
+
+  // 🔥 Check and update streak on daily login
+  useEffect(() => {
+    const checkStreak = async () => {
+      if (!user?.id) return;
+      const result = await checkAndUpdateStreak(user.id);
+      if (result) {
+        // Show streak animation
+        setShowStreak(true);
+        // Update user locally
+        setUser(prev => ({ ...prev, streak: result.newStreak, coins: prev.coins + result.bonus }));
+        // Show toast
+        setToastMessage(result.message);
+        setTimeout(() => {
+          setToastMessage('');
+          setShowStreak(false);
+        }, 3000);
+        // Call parent update if available
+        if (onUserUpdate) {
+          onUserUpdate({ ...user, streak: result.newStreak, coins: user.coins + result.bonus });
+        }
+      }
+    };
+    checkStreak();
+  }, [user?.id]);
+
+  // 🏆 Check milestone rewards after lesson completion
+  useEffect(() => {
+    const checkMilestone = async () => {
+      if (!user?.id || user.completedTaskIds.length === 0) return;
+      const result = await checkMilestoneReward(user.id);
+      if (result) {
+        // Show celebration!
+        setShowConfetti(true);
+        setUser(prev => ({
+          ...prev,
+          xp: prev.xp + result.xpBonus,
+          coins: prev.coins + result.coinsBonus,
+          level: Math.floor((prev.xp + result.xpBonus) / 500) + 1
+        }));
+        setToastMessage(`🏆 ${result.milestone} уроков! +${result.xpBonus} XP, +${result.coinsBonus} монет!`);
+        setTimeout(() => {
+          setShowConfetti(false);
+          setToastMessage('');
+        }, 4000);
+        if (onUserUpdate) {
+          onUserUpdate({
+            ...user,
+            xp: user.xp + result.xpBonus,
+            coins: user.coins + result.coinsBonus,
+            level: Math.floor((user.xp + result.xpBonus) / 500) + 1
+          });
+        }
+      }
+    };
+    checkMilestone();
+  }, [user?.completedTaskIds?.length]);
 
   // Daily Quests State (Mock for now)
   const [dailyQuests, setDailyQuests] = useState([
