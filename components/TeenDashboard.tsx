@@ -14,6 +14,7 @@ import { purchaseItem, checkAndUpdateStreak, checkMilestoneReward } from '../ser
 import { isSupabaseEnabled } from '../services/supabaseClient';
 import { GameTutorial } from './GameTutorial';
 import { hapticMedium, hapticSuccess, hapticLight } from '../services/telegramService';
+import { playXPSound, playCoinSound, playLevelUpSound, playStreakSound, playSurpriseSound } from '../services/soundService';
 import { Confetti, RewardPopup, Toast, FloatingXP, FloatingCoins, LevelUpAnimation, StreakAnimation } from './Confetti';
 import { DailyRewards } from './DailyRewards';
 import { ActivityChart } from './ActivityChart';
@@ -151,6 +152,8 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       if (result) {
         // Show streak animation
         setShowStreak(true);
+        playStreakSound(); // 🔊 Звук streak!
+        playCoinSound(); // 🔊 Звук монет
         // Update user locally
         setUser(prev => ({ ...prev, streak: result.newStreak, coins: prev.coins + result.bonus }));
         // Show toast
@@ -176,6 +179,9 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       if (result) {
         // Show celebration!
         setShowConfetti(true);
+        playLevelUpSound(); // 🔊 Торжественный звук!
+        playXPSound(); // 🔊 XP
+        playCoinSound(); // 🔊 Монеты
         setUser(prev => ({
           ...prev,
           xp: prev.xp + result.xpBonus,
@@ -238,14 +244,16 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
     const xpReward = task.xpReward || 100;
     const coinsReward = task.coinsReward || Math.floor(xpReward * 0.5);
     
-    // 3. Show floating XP animation
+    // 3. Show floating XP animation + sound
     setFloatingXPAmount(xpReward);
     setShowFloatingXP(true);
+    playXPSound(); // 🔊 Звук XP
     setTimeout(() => setShowFloatingXP(false), 1500);
     
-    // 4. Show floating coins animation
+    // 4. Show floating coins animation + sound
     setFloatingCoinsAmount(coinsReward);
     setShowFloatingCoins(true);
+    setTimeout(() => playCoinSound(), 200); // 🔊 Звук монет
     setTimeout(() => setShowFloatingCoins(false), 1700);
     
     // 5. Check for level up (500 XP per level)
@@ -257,6 +265,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         setNewLevel(newLevelAfter);
         setShowLevelUp(true);
         setShowConfetti(true);
+        playLevelUpSound(); // 🔊 Level Up!
         setTimeout(() => {
           setShowLevelUp(false);
           setShowConfetti(false);

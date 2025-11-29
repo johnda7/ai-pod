@@ -4,6 +4,7 @@ import { User, ShopItem } from '../types';
 import { ShoppingBag, Coins, Heart, Snowflake, Gift, Crown, Check, Sparkles, X, Zap, Star, Package, Flame, Shield, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hapticMedium, hapticSuccess, hapticLight, hapticError } from '../services/telegramService';
+import { playPurchaseSound, playSurpriseSound } from '../services/soundService';
 
 interface ShopViewProps {
   user: User;
@@ -65,6 +66,10 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }
     setIsPurchasing(true);
     await onBuy(item);
     hapticSuccess(); // 📳 Успешная покупка!
+    playPurchaseSound(); // 🔊 Звук покупки
+    if (item.id === 'mystery_box') {
+      setTimeout(() => playSurpriseSound(), 300); // 🔊 Сюрприз!
+    }
     setIsPurchasing(false);
   };
   

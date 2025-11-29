@@ -275,3 +275,4 @@ export const RewardInfoCard: React.FC<{ type: 'xp' | 'coins' | 'hp' | 'streak' }
 
 export default GameTutorial;
 
+

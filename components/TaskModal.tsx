@@ -10,6 +10,7 @@ import { BubblePopGame, EmotionMatchGame, BreathSyncGame } from './ImprovedGames
 import { RiveKatya } from './RiveKatya';
 import { KatyaMentor } from './KatyaMentor';
 import { hapticLight, hapticMedium, hapticSuccess, hapticError, hapticSelection } from '../services/telegramService';
+import { playCorrectSound, playWrongSound, playCompleteSound, playClickSound } from '../services/soundService';
 
 interface TaskModalProps {
   task: Task;
@@ -90,21 +91,25 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
 
   const handleNext = () => {
       hapticLight(); // 📳 Переход к следующему слайду
+      playClickSound(); // 🔊 Клик
       if (currentSlideIndex < slides.length - 1) {
           setCurrentSlideIndex(prev => prev + 1);
       } else {
           hapticSuccess(); // 📳 Урок завершён!
+          playCompleteSound(); // 🔊 Завершение урока!
           onComplete();
       }
   };
 
   const handleCorrect = () => {
       hapticSuccess(); // 📳 Правильный ответ!
+      playCorrectSound(); // 🔊 Звук успеха
       setFeedbackStatus('CORRECT');
   };
 
   const handleWrong = () => {
       hapticError(); // 📳 Неправильный ответ
+      playWrongSound(); // 🔊 Звук ошибки
       setFeedbackStatus('WRONG');
       setLives(prev => Math.max(0, prev - 1));
       setIsShake(true);
