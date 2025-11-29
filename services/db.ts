@@ -915,8 +915,8 @@ function saveUserToStorage(user: User) {
 const TOOLS_STORAGE_KEYS = [
   'habit_tracker_data',
   'goals_tracker',
-  'notes_tool_data',
-  'balance_wheel_data',
+  'notes_journal',
+  'balance_wheel_history',
   'emotion_diary_entries',
   'gratitude_entries',
   'reflection_entries',

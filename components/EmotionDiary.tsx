@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Sparkles, TrendingUp, Calendar, Heart, Zap, Flame } from 'lucide-react';
+import { X, Check, Sparkles, TrendingUp, Calendar, Heart, Zap, Flame, Cloud, CheckCircle } from 'lucide-react';
+import { syncToolsDataToSupabase, loadToolsDataFromSupabase } from '../services/db';
+import { getTelegramUser } from '../services/telegramService';
 
 interface EmotionEntry {
   date: string;
@@ -56,36 +58,46 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
   const [entries, setEntries] = useState<EmotionEntry[]>([]);
   const [streak, setStreak] = useState(0);
 
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
+
   useEffect(() => {
-    const saved = localStorage.getItem('emotion_diary_entries');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setEntries(parsed);
+    const loadData = async () => {
+      const tgUser = getTelegramUser();
+      if (tgUser?.id) {
+        await loadToolsDataFromSupabase(tgUser.id.toString());
+      }
       
-      const today = new Date().toDateString();
-      const yesterday = new Date(Date.now() - 86400000).toDateString();
-      let currentStreak = 0;
-      
-      for (let i = 0; i < parsed.length; i++) {
-        const entryDate = new Date(parsed[i].date).toDateString();
-        if (i === 0 && (entryDate === today || entryDate === yesterday)) {
-          currentStreak++;
-        } else if (i > 0) {
-          const prevDate = new Date(parsed[i - 1].date);
-          const currDate = new Date(parsed[i].date);
-          const diff = (prevDate.getTime() - currDate.getTime()) / 86400000;
-          if (diff <= 1) {
+      const saved = localStorage.getItem('emotion_diary_entries');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setEntries(parsed);
+        
+        const today = new Date().toDateString();
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        let currentStreak = 0;
+        
+        for (let i = 0; i < parsed.length; i++) {
+          const entryDate = new Date(parsed[i].date).toDateString();
+          if (i === 0 && (entryDate === today || entryDate === yesterday)) {
             currentStreak++;
-          } else {
-            break;
+          } else if (i > 0) {
+            const prevDate = new Date(parsed[i - 1].date);
+            const currDate = new Date(parsed[i].date);
+            const diff = (prevDate.getTime() - currDate.getTime()) / 86400000;
+            if (diff <= 1) {
+              currentStreak++;
+            } else {
+              break;
           }
         }
+        }
+        setStreak(currentStreak);
       }
-      setStreak(currentStreak);
-    }
+    };
+    loadData();
   }, []);
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!selectedEmotion) return;
     
     const newEntry: EmotionEntry = {
@@ -99,6 +111,15 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
     const updatedEntries = [newEntry, ...entries];
     setEntries(updatedEntries);
     localStorage.setItem('emotion_diary_entries', JSON.stringify(updatedEntries));
+    
+    // Sync to Supabase
+    const tgUser = getTelegramUser();
+    if (tgUser?.id) {
+      setSyncStatus('syncing');
+      const success = await syncToolsDataToSupabase(tgUser.id.toString());
+      setSyncStatus(success ? 'synced' : 'idle');
+      if (success) setTimeout(() => setSyncStatus('idle'), 2000);
+    }
     
     const baseXP = 30;
     const streakBonus = Math.min(streak * 5, 50);

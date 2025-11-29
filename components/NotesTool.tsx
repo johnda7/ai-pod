@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Search, Trash2, Edit3, Save, Tag, Clock, Sparkles, BookOpen } from 'lucide-react';
+import { X, Plus, Search, Trash2, Edit3, Save, Tag, Clock, Sparkles, BookOpen, Cloud, CheckCircle } from 'lucide-react';
+import { syncToolsDataToSupabase, loadToolsDataFromSupabase } from '../services/db';
+import { getTelegramUser } from '../services/telegramService';
 
 interface NotesToolProps {
   isOpen: boolean;
@@ -50,17 +52,40 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
   const [noteTags, setNoteTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
 
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
+
   // Load notes
   useEffect(() => {
-    const saved = localStorage.getItem('notes_journal');
-    if (saved) {
-      setNotes(JSON.parse(saved));
-    }
+    const loadData = async () => {
+      const saved = localStorage.getItem('notes_journal');
+      if (saved) setNotes(JSON.parse(saved));
+      
+      const tgUser = getTelegramUser();
+      if (tgUser?.id) {
+        await loadToolsDataFromSupabase(tgUser.id.toString());
+        const fresh = localStorage.getItem('notes_journal');
+        if (fresh) setNotes(JSON.parse(fresh));
+      }
+    };
+    loadData();
   }, []);
 
-  // Save notes
+  // Save notes with Supabase sync
   useEffect(() => {
+    if (notes.length === 0) return;
     localStorage.setItem('notes_journal', JSON.stringify(notes));
+    
+    const syncToCloud = async () => {
+      const tgUser = getTelegramUser();
+      if (tgUser?.id) {
+        setSyncStatus('syncing');
+        const success = await syncToolsDataToSupabase(tgUser.id.toString());
+        setSyncStatus(success ? 'synced' : 'idle');
+        if (success) setTimeout(() => setSyncStatus('idle'), 2000);
+      }
+    };
+    const timeoutId = setTimeout(syncToCloud, 1000);
+    return () => clearTimeout(timeoutId);
   }, [notes]);
 
   const saveNote = () => {
