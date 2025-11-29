@@ -54,6 +54,8 @@ export const MeditationView: React.FC = () => {
   const [showJournal, setShowJournal] = useState(false);
   const [showVisualizer, setShowVisualizer] = useState(false);
   const [currentAffirmation, setCurrentAffirmation] = useState(0);
+  const [selectedMeditation, setSelectedMeditation] = useState<typeof MEDITATIONS[0] | null>(null);
+  const [meditationPlaying, setMeditationPlaying] = useState(false);
 
   const activeSound = SOUNDSCAPES.find(s => s.id === activeSoundId);
   
@@ -430,6 +432,7 @@ export const MeditationView: React.FC = () => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2, delay: idx * 0.02 }}
                 className="relative overflow-hidden rounded-2xl group text-left aspect-square"
+                onClick={() => { setSelectedMeditation(meditation); setMeditationPlaying(true); }}
               >
                 {/* UNIQUE image for each meditation */}
                 <img 
@@ -529,6 +532,92 @@ export const MeditationView: React.FC = () => {
                 />
                </div>
            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* MEDITATION PLAYER MODAL */}
+      <AnimatePresence>
+        {selectedMeditation && (
+          <motion.div
+            className="fixed inset-0 z-[90] flex flex-col"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Background Image */}
+            <div className="absolute inset-0">
+              <img 
+                src={MEDITATION_UNIQUE_IMAGES[selectedMeditation.id]}
+                alt={selectedMeditation.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/30" />
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => { setSelectedMeditation(null); setMeditationPlaying(false); }}
+              className="absolute top-6 right-6 z-10 w-12 h-12 rounded-full flex items-center justify-center text-white/60 hover:text-white transition-colors"
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255,255,255,0.15)',
+              }}
+            >
+              <X size={24} />
+            </button>
+
+            {/* Content */}
+            <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8">
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-center"
+              >
+                <h2 className="text-3xl font-bold text-white mb-2">{selectedMeditation.title}</h2>
+                <p className="text-white/60 mb-8">{selectedMeditation.duration}</p>
+                
+                {/* Play/Pause Button */}
+                <motion.button
+                  onClick={() => setMeditationPlaying(!meditationPlaying)}
+                  className="w-24 h-24 rounded-full flex items-center justify-center mx-auto"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)',
+                    backdropFilter: 'blur(20px)',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {meditationPlaying ? (
+                    <Pause size={40} className="text-white" fill="white" />
+                  ) : (
+                    <Play size={40} className="text-white ml-2" fill="white" />
+                  )}
+                </motion.button>
+
+                <p className="text-white/40 text-sm mt-6">
+                  {meditationPlaying ? 'Слушай и расслабляйся...' : 'Нажми чтобы начать'}
+                </p>
+              </motion.div>
+            </div>
+
+            {/* Hidden YouTube Audio */}
+            {meditationPlaying && selectedMeditation.youtubeId && (
+              <div className="absolute w-1 h-1 opacity-0 pointer-events-none overflow-hidden">
+                <iframe
+                  key={selectedMeditation.id + meditationPlaying}
+                  width="1"
+                  height="1"
+                  src={`https://www.youtube.com/embed/${selectedMeditation.youtubeId}?autoplay=1&controls=0&playsinline=1`}
+                  title="Meditation Audio"
+                  allow="autoplay; encrypted-media"
+                />
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
