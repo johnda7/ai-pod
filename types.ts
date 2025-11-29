@@ -162,6 +162,7 @@ export interface Meditation {
   category: 'SLEEP' | 'FOCUS' | 'ANXIETY' | 'ENERGY';
   duration: string;
   color: string;
+  youtubeId?: string;
 }
 
 export interface Soundscape {
