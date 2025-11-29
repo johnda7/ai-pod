@@ -517,7 +517,7 @@ export const MeditationView: React.FC = () => {
                  <iframe 
                   key={activeSound.id + isPlaying}
                    width="1" height="1" 
-                  src={`https://www.youtube.com/embed/${activeSound.youtubeId}?autoplay=1&controls=0&loop=1&playlist=${activeSound.youtubeId}&playsinline=1`} 
+                  src={`https://www.youtube-nocookie.com/embed/${activeSound.youtubeId}?autoplay=1&controls=0&loop=1&playlist=${activeSound.youtubeId}&playsinline=1&modestbranding=1&rel=0`} 
                    title="Audio Player" 
                    allow="autoplay; encrypted-media"
                 />
@@ -603,7 +603,7 @@ export const MeditationView: React.FC = () => {
                   key={selectedMeditation.id + meditationPlaying}
                   width="1"
                   height="1"
-                  src={`https://www.youtube.com/embed/${selectedMeditation.youtubeId}?autoplay=1&controls=0&playsinline=1`}
+                  src={`https://www.youtube-nocookie.com/embed/${selectedMeditation.youtubeId}?autoplay=1&controls=0&playsinline=1&modestbranding=1&rel=0`}
                   title="Meditation Audio"
                   allow="autoplay; encrypted-media"
                 />
