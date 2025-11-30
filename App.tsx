@@ -4,15 +4,29 @@ import { UserRole, Task, User } from './types';
 import { TeenDashboard } from './components/TeenDashboard';
 import { ParentDashboard } from './components/ParentDashboard';
 import { CuratorDashboard } from './components/CuratorDashboard';
+import { ParentZone } from './components/ParentZone';
 import { initTelegramApp, getTelegramUser } from './services/telegramService';
 import { getOrCreateUser, completeTask, refreshUserFromSupabase } from './services/db';
 import { KatyaChat } from './components/KatyaChat';
 import { Wifi, AlertCircle, RefreshCw } from 'lucide-react';
 import { isSupabaseEnabled } from './services/supabaseClient';
 
+// 🔀 Определяем режим по URL
+const getAppMode = (): 'teen' | 'parent' => {
+  const path = window.location.pathname;
+  const hash = window.location.hash;
+  
+  // Проверяем /parent или #parent
+  if (path.includes('/parent') || hash.includes('parent')) {
+    return 'parent';
+  }
+  return 'teen';
+};
+
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [appMode] = useState<'teen' | 'parent'>(getAppMode());
 
   // --- INITIALIZATION (Optimized - no delay) ---
   useEffect(() => {
@@ -157,25 +171,32 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto scroll-smooth bg-[#020617]">
-        {currentUser.role === UserRole.TEEN && (
-          <TeenDashboard 
-            user={currentUser}
-            onTaskComplete={handleTaskComplete}
-            onUserUpdate={(updatedUser) => {
-              setCurrentUser(updatedUser);
-            }}
-          />
-        )}
-        {currentUser.role === UserRole.PARENT && (
-          <ParentDashboard />
-        )}
-        {currentUser.role === UserRole.CURATOR && (
-          <CuratorDashboard />
+        {/* 👨‍👩‍👧 РОДИТЕЛЬСКИЙ РЕЖИМ - отдельный вход */}
+        {appMode === 'parent' ? (
+          <ParentZone isOpen={true} onClose={() => window.location.href = '/'} />
+        ) : (
+          <>
+            {currentUser.role === UserRole.TEEN && (
+              <TeenDashboard 
+                user={currentUser}
+                onTaskComplete={handleTaskComplete}
+                onUserUpdate={(updatedUser) => {
+                  setCurrentUser(updatedUser);
+                }}
+              />
+            )}
+            {currentUser.role === UserRole.PARENT && (
+              <ParentDashboard />
+            )}
+            {currentUser.role === UserRole.CURATOR && (
+              <CuratorDashboard />
+            )}
+          </>
         )}
       </main>
 
-      {/* AI Assistant (Only for Teen) */}
-      {currentUser.role === UserRole.TEEN && <KatyaChat />}
+      {/* AI Assistant (Only for Teen mode) */}
+      {appMode === 'teen' && currentUser.role === UserRole.TEEN && <KatyaChat />}
     </div>
   );
 };

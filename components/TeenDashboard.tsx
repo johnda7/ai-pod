@@ -728,6 +728,25 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                          <ChevronRight size={18} className="text-white/30" />
                          </button>
                      
+                     {/* Кнопка Зоны Родителей */}
+                     <button
+                         onClick={() => { hapticLight(); setShowParentZone(true); }}
+                         className="w-full p-4 rounded-[1.5rem] flex items-center gap-3 mt-3"
+                         style={{
+                             background: 'linear-gradient(135deg, rgba(236,72,153,0.1) 0%, rgba(168,85,247,0.1) 100%)',
+                             border: '1px solid rgba(236,72,153,0.2)',
+                         }}
+                     >
+                         <div className="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center">
+                             <GraduationCap size={18} className="text-pink-400" />
+                         </div>
+                         <div className="flex-1 text-left">
+                             <div className="text-sm font-bold text-pink-300">Зона Родителей</div>
+                             <div className="text-[10px] text-white/40">По книге Кати Карпенко</div>
+                         </div>
+                         <ChevronRight size={18} className="text-pink-400/50" />
+                     </button>
+                     
                      <button className="w-full mt-6 p-4 rounded-[1.5rem] border border-red-500/20 text-red-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-500/10 transition-all active:scale-95">
                          <LogOut size={18} />
                          Выйти из аккаунта
