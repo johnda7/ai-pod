@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Sparkles, TrendingUp, Calendar, Heart, Zap, Flame, Cloud, CheckCircle } from 'lucide-react';
-import { syncToolsDataToSupabase, loadToolsDataFromSupabase } from '../services/db';
-import { getTelegramUser } from '../services/telegramService';
+import { X, Check, Sparkles, TrendingUp, Calendar, Heart, Zap, Flame } from 'lucide-react';
+import { useSyncTool } from '../hooks/useSyncTool';
 
 interface EmotionEntry {
   date: string;
@@ -50,54 +49,45 @@ const PROMPTS = [
 ];
 
 export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onComplete }) => {
+  // 🔄 useSyncTool вместо ручной синхронизации (-30 строк!)
+  const { data: entries, setData: setEntries } = useSyncTool<EmotionEntry[]>([], {
+    storageKey: 'emotion_diary_entries',
+    debounceMs: 1000
+  });
+  
   const [step, setStep] = useState<'emotion' | 'energy' | 'note' | 'done'>('emotion');
   const [selectedEmotion, setSelectedEmotion] = useState<typeof EMOTIONS[0] | null>(null);
   const [selectedEnergy, setSelectedEnergy] = useState<number>(3);
   const [note, setNote] = useState('');
   const [prompt] = useState(PROMPTS[Math.floor(Math.random() * PROMPTS.length)]);
-  const [entries, setEntries] = useState<EmotionEntry[]>([]);
-  const [streak, setStreak] = useState(0);
-
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
-
-  useEffect(() => {
-    const loadData = async () => {
-      const tgUser = getTelegramUser();
-      if (tgUser?.id) {
-        await loadToolsDataFromSupabase(tgUser.id.toString());
-      }
-      
-      const saved = localStorage.getItem('emotion_diary_entries');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setEntries(parsed);
-        
-        const today = new Date().toDateString();
-        const yesterday = new Date(Date.now() - 86400000).toDateString();
-        let currentStreak = 0;
-        
-        for (let i = 0; i < parsed.length; i++) {
-          const entryDate = new Date(parsed[i].date).toDateString();
-          if (i === 0 && (entryDate === today || entryDate === yesterday)) {
-            currentStreak++;
-          } else if (i > 0) {
-            const prevDate = new Date(parsed[i - 1].date);
-            const currDate = new Date(parsed[i].date);
-            const diff = (prevDate.getTime() - currDate.getTime()) / 86400000;
-            if (diff <= 1) {
-              currentStreak++;
-            } else {
-              break;
-          }
+  
+  // Вычисляем streak на лету
+  const streak = useMemo(() => {
+    if (entries.length === 0) return 0;
+    
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    let currentStreak = 0;
+    
+    for (let i = 0; i < entries.length; i++) {
+      const entryDate = new Date(entries[i].date).toDateString();
+      if (i === 0 && (entryDate === today || entryDate === yesterday)) {
+        currentStreak++;
+      } else if (i > 0) {
+        const prevDate = new Date(entries[i - 1].date);
+        const currDate = new Date(entries[i].date);
+        const diff = (prevDate.getTime() - currDate.getTime()) / 86400000;
+        if (diff <= 1) {
+          currentStreak++;
+        } else {
+          break;
         }
-        }
-        setStreak(currentStreak);
       }
-    };
-    loadData();
-  }, []);
+    }
+    return currentStreak;
+  }, [entries]);
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
     if (!selectedEmotion) return;
     
     const newEntry: EmotionEntry = {
@@ -108,18 +98,8 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
       energy: selectedEnergy,
     };
     
-    const updatedEntries = [newEntry, ...entries];
-    setEntries(updatedEntries);
-    localStorage.setItem('emotion_diary_entries', JSON.stringify(updatedEntries));
-    
-    // Sync to Supabase
-    const tgUser = getTelegramUser();
-    if (tgUser?.id) {
-      setSyncStatus('syncing');
-      const success = await syncToolsDataToSupabase(tgUser.id.toString());
-      setSyncStatus(success ? 'synced' : 'idle');
-      if (success) setTimeout(() => setSyncStatus('idle'), 2000);
-    }
+    // useSyncTool автоматически синхронизирует!
+    setEntries(prev => [newEntry, ...prev]);
     
     const baseXP = 30;
     const streakBonus = Math.min(streak * 5, 50);

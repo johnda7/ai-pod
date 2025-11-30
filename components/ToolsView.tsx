@@ -1,19 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Timer, Target, BookHeart, ChevronRight, BarChart3, Heart, Calendar, FileText, TreePine, Trophy, Flame, BookOpen, Zap, Star, Sparkles, Cloud, CheckCircle } from 'lucide-react';
+import { Timer, Target, BookHeart, ChevronRight, BarChart3, Heart, Calendar, FileText, TreePine, Trophy, Flame, BookOpen, Zap, Star, Sparkles, Cloud, CheckCircle, Loader } from 'lucide-react';
 import { syncToolsDataToSupabase, loadToolsDataFromSupabase } from '../services/db';
 import { User } from '../types';
-import { PomodoroTimer } from './PomodoroTimer';
-import { BalanceWheel } from './BalanceWheel';
-import { EmotionDiary } from './EmotionDiary';
-import { PlannerTool } from './PlannerTool';
-import { GoalsTool } from './GoalsTool';
-import { NotesTool } from './NotesTool';
-import { HabitTracker } from './HabitTracker';
-import { ChallengeSystem } from './ChallengeSystem';
-import { FocusMode } from './FocusMode';
-import { ReflectionJournal } from './ReflectionJournal';
-import { LifeSkillsModule } from './LifeSkillsModule';
+
+// 🚀 Lazy loading для тяжёлых компонентов (-30% начальная загрузка)
+const PomodoroTimer = lazy(() => import('./PomodoroTimer').then(m => ({ default: m.PomodoroTimer })));
+const BalanceWheel = lazy(() => import('./BalanceWheel').then(m => ({ default: m.BalanceWheel })));
+const EmotionDiary = lazy(() => import('./EmotionDiary').then(m => ({ default: m.EmotionDiary })));
+const PlannerTool = lazy(() => import('./PlannerTool').then(m => ({ default: m.PlannerTool })));
+const GoalsTool = lazy(() => import('./GoalsTool').then(m => ({ default: m.GoalsTool })));
+const NotesTool = lazy(() => import('./NotesTool').then(m => ({ default: m.NotesTool })));
+const HabitTracker = lazy(() => import('./HabitTracker').then(m => ({ default: m.HabitTracker })));
+const ChallengeSystem = lazy(() => import('./ChallengeSystem').then(m => ({ default: m.ChallengeSystem })));
+const FocusMode = lazy(() => import('./FocusMode').then(m => ({ default: m.FocusMode })));
+const ReflectionJournal = lazy(() => import('./ReflectionJournal').then(m => ({ default: m.ReflectionJournal })));
+const LifeSkillsModule = lazy(() => import('./LifeSkillsModule').then(m => ({ default: m.LifeSkillsModule })));
+
+// 🔄 Компонент загрузки
+const ToolLoader = () => (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)' }}>
+    <motion.div
+      animate={{ rotate: 360 }}
+      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+    >
+      <Loader size={32} className="text-purple-400" />
+    </motion.div>
+  </div>
+);
 
 interface ToolsViewProps {
   user: User;
@@ -617,80 +631,104 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
         </motion.div>
       </div>
 
-      {/* Tool Modals */}
-      <AnimatePresence>
-        <FocusMode
-          isOpen={activeTool === 'focus'}
-          onClose={() => setActiveTool(null)}
-          onComplete={(xp, coins) => handleToolComplete('focus', xp, coins)}
-        />
-        
-        <ChallengeSystem
-          isOpen={activeTool === 'challenges'}
-          onClose={() => setActiveTool(null)}
-          onComplete={(xp, coins) => handleToolComplete('challenges', xp, coins)}
-          userXp={user.xp}
-          completedLessons={user.completedTaskIds.length}
-        />
-        
-        <HabitTracker
-          isOpen={activeTool === 'habits'}
-          onClose={() => setActiveTool(null)}
-          onComplete={(xp) => handleToolComplete('habits', xp)}
-        />
-        
-        <LifeSkillsModule
-          isOpen={activeTool === 'lifeskills'}
-          onClose={() => setActiveTool(null)}
-          onComplete={(xp, coins) => handleToolComplete('lifeskills', xp, coins)}
-        />
-        
-        <ReflectionJournal
-          isOpen={activeTool === 'reflection'}
-          onClose={() => setActiveTool(null)}
-          onComplete={(xp) => handleToolComplete('reflection', xp)}
-        />
-        
-        <PomodoroTimer 
-          isOpen={activeTool === 'pomodoro'} 
-          onClose={() => setActiveTool(null)}
-          onSessionComplete={(type) => {
-            if (type === 'work') {
-              handleToolComplete('pomodoro', 20);
-            }
-          }}
-        />
-        
-        <PlannerTool
-          isOpen={activeTool === 'planner'}
-          onClose={() => setActiveTool(null)}
-          onComplete={(xp) => handleToolComplete('planner', xp)}
-        />
-        
-        <GoalsTool
-          isOpen={activeTool === 'goals'}
-          onClose={() => setActiveTool(null)}
-          onComplete={(xp) => handleToolComplete('goals', xp)}
-        />
-        
-        <NotesTool
-          isOpen={activeTool === 'notes'}
-          onClose={() => setActiveTool(null)}
-          onComplete={(xp) => handleToolComplete('notes', xp)}
-        />
-        
-        <BalanceWheel 
-          isOpen={activeTool === 'balance'} 
-          onClose={() => setActiveTool(null)}
-          onComplete={() => handleToolComplete('balance', 30)}
-        />
-        
-        <EmotionDiary 
-          isOpen={activeTool === 'emotions'} 
-          onClose={() => setActiveTool(null)}
-          onComplete={(xp) => handleToolComplete('emotions', xp)}
-        />
-      </AnimatePresence>
+      {/* Tool Modals - Lazy Loaded */}
+      <Suspense fallback={<ToolLoader />}>
+        <AnimatePresence>
+          {activeTool === 'focus' && (
+            <FocusMode
+              isOpen={true}
+              onClose={() => setActiveTool(null)}
+              onComplete={(xp, coins) => handleToolComplete('focus', xp, coins)}
+            />
+          )}
+          
+          {activeTool === 'challenges' && (
+            <ChallengeSystem
+              isOpen={true}
+              onClose={() => setActiveTool(null)}
+              onComplete={(xp, coins) => handleToolComplete('challenges', xp, coins)}
+              userXp={user.xp}
+              completedLessons={user.completedTaskIds.length}
+            />
+          )}
+          
+          {activeTool === 'habits' && (
+            <HabitTracker
+              isOpen={true}
+              onClose={() => setActiveTool(null)}
+              onComplete={(xp) => handleToolComplete('habits', xp)}
+            />
+          )}
+          
+          {activeTool === 'lifeskills' && (
+            <LifeSkillsModule
+              isOpen={true}
+              onClose={() => setActiveTool(null)}
+              onComplete={(xp, coins) => handleToolComplete('lifeskills', xp, coins)}
+            />
+          )}
+          
+          {activeTool === 'reflection' && (
+            <ReflectionJournal
+              isOpen={true}
+              onClose={() => setActiveTool(null)}
+              onComplete={(xp) => handleToolComplete('reflection', xp)}
+            />
+          )}
+          
+          {activeTool === 'pomodoro' && (
+            <PomodoroTimer 
+              isOpen={true}
+              onClose={() => setActiveTool(null)}
+              onSessionComplete={(type) => {
+                if (type === 'work') {
+                  handleToolComplete('pomodoro', 20);
+                }
+              }}
+            />
+          )}
+          
+          {activeTool === 'planner' && (
+            <PlannerTool
+              isOpen={true}
+              onClose={() => setActiveTool(null)}
+              onComplete={(xp) => handleToolComplete('planner', xp)}
+            />
+          )}
+          
+          {activeTool === 'goals' && (
+            <GoalsTool
+              isOpen={true}
+              onClose={() => setActiveTool(null)}
+              onComplete={(xp) => handleToolComplete('goals', xp)}
+            />
+          )}
+          
+          {activeTool === 'notes' && (
+            <NotesTool
+              isOpen={true}
+              onClose={() => setActiveTool(null)}
+              onComplete={(xp) => handleToolComplete('notes', xp)}
+            />
+          )}
+          
+          {activeTool === 'balance' && (
+            <BalanceWheel 
+              isOpen={true}
+              onClose={() => setActiveTool(null)}
+              onComplete={() => handleToolComplete('balance', 30)}
+            />
+          )}
+          
+          {activeTool === 'emotions' && (
+            <EmotionDiary 
+              isOpen={true}
+              onClose={() => setActiveTool(null)}
+              onComplete={(xp) => handleToolComplete('emotions', xp)}
+            />
+          )}
+        </AnimatePresence>
+      </Suspense>
     </div>
   );
 };
