@@ -39,14 +39,24 @@ export const KatyaVideoModal: React.FC<KatyaVideoModalProps> = ({
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
+  // Получаем длительность видео
+  const videoDuration = type === 'welcome' ? KATYA_VIDEOS.welcome.duration : KATYA_VIDEOS.motivation.duration;
+
   useEffect(() => {
     if (isOpen) {
       setIsPlaying(true);
       hapticMedium();
+      
+      // Автозакрытие после окончания видео (+2 сек буфер)
+      const autoCloseTimer = setTimeout(() => {
+        onClose();
+      }, (videoDuration + 2) * 1000);
+      
+      return () => clearTimeout(autoCloseTimer);
     } else {
       setIsPlaying(false);
     }
-  }, [isOpen]);
+  }, [isOpen, videoDuration, onClose]);
 
   const handleClose = () => {
     hapticLight();
@@ -96,27 +106,28 @@ export const KatyaVideoModal: React.FC<KatyaVideoModalProps> = ({
             {/* Video Container - компактный размер */}
             <div 
               className="relative rounded-3xl overflow-hidden"
-              style={{
+            style={{
                 aspectRatio: '9/16',
                 maxHeight: '60vh',
-                boxShadow: '0 25px 80px rgba(0,0,0,0.5), 0 0 60px rgba(139,92,246,0.3)',
-              }}
-            >
-              {/* Close button */}
-              <button
+              boxShadow: '0 25px 80px rgba(0,0,0,0.5), 0 0 60px rgba(139,92,246,0.3)',
+            }}
+          >
+            {/* Close button */}
+            <button
                 onClick={handleClose}
                 className="absolute top-3 right-3 z-50 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white hover:bg-black/80 transition-all"
               >
                 <X size={18} />
-              </button>
+            </button>
 
-              {/* YouTube Embed - максимально скрытый брендинг */}
+              {/* YouTube Embed - без повтора, автозакрытие */}
               {isPlaying && (
                 <div className="relative w-full h-full overflow-hidden">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=0&playsinline=1&loop=1&playlist=${videoId}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0&disablekb=1&cc_load_policy=0`}
+            <iframe
+                    id="katya-video-player"
+                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=0&playsinline=1&loop=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0&disablekb=1&cc_load_policy=0&enablejsapi=1`}
                     className="absolute inset-0 w-[120%] h-[120%] -top-[10%] -left-[10%]"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     title="Катя"
                     style={{ border: 'none', pointerEvents: 'none' }}
                   />
@@ -223,12 +234,9 @@ export const useKatyaMotivation = () => {
   const [lessonTitle, setLessonTitle] = useState('');
 
   const triggerMotivation = (title?: string) => {
-    // Показываем мотивацию только иногда (30% шанс) чтобы не надоедать
-    const shouldShow = Math.random() < 0.3;
-    if (shouldShow) {
-      setLessonTitle(title || '');
-      setShowMotivation(true);
-    }
+    // Показываем мотивацию после каждого урока (можно уменьшить до 0.3 позже)
+    setLessonTitle(title || '');
+    setShowMotivation(true);
   };
 
   const closeMotivation = () => {
