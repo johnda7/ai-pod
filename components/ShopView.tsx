@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SHOP_ITEMS } from '../constants';
 import { User, ShopItem } from '../types';
-import { ShoppingBag, Coins, Heart, Snowflake, Gift, Crown, Check, Sparkles, X, Zap, Star, Package, Flame, Shield, Clock } from 'lucide-react';
+import { ShoppingBag, Coins, Heart, Snowflake, Gift, Crown, Check, Sparkles, X, Zap, Star, Package, Flame, Shield, Clock, Trophy, Medal, Users, Calendar, Lock, Unlock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hapticMedium, hapticSuccess, hapticLight, hapticError } from '../services/telegramService';
 import { playPurchaseSound, playSurpriseSound } from '../services/soundService';
@@ -18,12 +18,64 @@ interface MysteryReward {
   message: string;
 }
 
+// 🏆 ЧЕЛЛЕНДЖ: Призы для топ-игроков
+const CHALLENGE_PRIZES = [
+  { 
+    place: 1, 
+    prize: '🎁 ГЛАВНЫЙ ПРИЗ', 
+    description: 'Бесплатная подписка на 1 месяц + Эксклюзивный аватар "Чемпион"',
+    color: 'from-yellow-400 to-amber-500',
+    icon: '👑'
+  },
+  { 
+    place: 2, 
+    prize: '🥈 2 МЕСТО', 
+    description: 'Бесплатная подписка на 2 недели + Редкий аватар',
+    color: 'from-gray-300 to-gray-400',
+    icon: '🥈'
+  },
+  { 
+    place: 3, 
+    prize: '🥉 3 МЕСТО', 
+    description: '500 монет + Уникальная рамка профиля',
+    color: 'from-amber-600 to-amber-700',
+    icon: '🥉'
+  },
+  { 
+    place: '4-5', 
+    prize: '⭐ ТОП-5', 
+    description: '300 монет + Эксклюзивный значок',
+    color: 'from-purple-400 to-purple-600',
+    icon: '⭐'
+  },
+  { 
+    place: '6-10', 
+    prize: '📚 КНИГА КАТИ', 
+    description: 'Книга "Шаг к себе" с автографом Кати Карпенко!',
+    color: 'from-pink-400 to-rose-500',
+    icon: '📖'
+  },
+];
+
+// Мок-данные лидерборда (потом из Supabase)
+const LEADERBOARD_MOCK = [
+  { id: '1', name: 'Маша К.', coins: 2450, avatar: '👧' },
+  { id: '2', name: 'Артём С.', coins: 2180, avatar: '👦' },
+  { id: '3', name: 'Даша П.', coins: 1920, avatar: '👱‍♀️' },
+  { id: '4', name: 'Максим Л.', coins: 1750, avatar: '🧑' },
+  { id: '5', name: 'Алина В.', coins: 1680, avatar: '👩' },
+];
+
 // Extended shop items with more options
 const EXTENDED_SHOP_ITEMS = [
   ...SHOP_ITEMS,
-  { id: 'xp_boost', name: 'XP Буст', description: '⚡ x2 опыта на следующий урок!', price: 80, icon: 'xp_boost', type: 'POWERUP' as const },
+  { id: 'xp_boost', name: 'XP Буст x2', description: '⚡ Двойной опыт на следующий урок!', price: 80, icon: 'xp_boost', type: 'POWERUP' as const },
   { id: 'hint_pack', name: 'Подсказки', description: '💡 3 подсказки для сложных заданий', price: 60, icon: 'hint_pack', type: 'POWERUP' as const },
   { id: 'skip_task', name: 'Пропуск', description: '⏭️ Пропусти одно сложное задание', price: 120, icon: 'skip_task', type: 'POWERUP' as const },
+  { id: 'avatar_ninja', name: 'Аватар "Ниндзя"', description: '🥷 Крутой аватар для твоего профиля', price: 200, icon: 'avatar', type: 'COSMETIC' as const },
+  { id: 'avatar_unicorn', name: 'Аватар "Единорог"', description: '🦄 Редкий магический аватар', price: 300, icon: 'avatar', type: 'COSMETIC' as const },
+  { id: 'frame_diamond', name: 'Рамка "Алмаз"', description: '💎 Сияющая рамка профиля', price: 250, icon: 'frame', type: 'COSMETIC' as const },
+  { id: 'title_legend', name: 'Титул "Легенда"', description: '🏆 Особый титул под именем', price: 400, icon: 'title', type: 'COSMETIC' as const },
 ];
 
 export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }) => {
@@ -103,7 +155,12 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }
     { id: 'all', label: 'Всё', icon: '🛒' },
     { id: 'powerups', label: 'Усиления', icon: '⚡' },
     { id: 'cosmetic', label: 'Стиль', icon: '✨' },
+    { id: 'challenge', label: 'Призы', icon: '🏆' },
   ];
+  
+  // Находим позицию пользователя в лидерборде
+  const userPosition = LEADERBOARD_MOCK.findIndex(u => u.coins < user.coins) + 1 || LEADERBOARD_MOCK.length + 1;
+  const daysLeft = 14; // Дней до конца челленджа
 
   const filteredItems = EXTENDED_SHOP_ITEMS.filter(item => {
     if (activeCategory === 'all') return true;
@@ -266,7 +323,173 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }
         </div>
       </div>
 
-      {/* ITEMS GRID */}
+      {/* 🏆 CHALLENGE SECTION - Показываем только в категории "Призы" */}
+      {activeCategory === 'challenge' && (
+        <div className="px-4 mb-6">
+          {/* Challenge Banner */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-3xl p-5 mb-4 relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(234,179,8,0.15) 0%, rgba(168,85,247,0.15) 100%)',
+              border: '1px solid rgba(234,179,8,0.3)',
+            }}
+          >
+            <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/5 to-transparent" />
+            
+            <div className="flex items-center gap-3 mb-4 relative z-10">
+              <div className="w-14 h-14 rounded-2xl bg-yellow-500/20 flex items-center justify-center">
+                <Trophy className="text-yellow-400" size={28} />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-white">Месячный Челлендж</h2>
+                <p className="text-white/60 text-sm">Заработай больше всех монет!</p>
+              </div>
+            </div>
+            
+            {/* Timer */}
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-white/5 mb-4 relative z-10">
+              <Calendar className="text-white/60" size={18} />
+              <span className="text-white/80 text-sm">До конца челленджа:</span>
+              <span className="ml-auto text-yellow-400 font-bold">{daysLeft} дней</span>
+            </div>
+            
+            {/* User Position */}
+            <div className="flex items-center justify-between p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 relative z-10">
+              <div className="flex items-center gap-2">
+                <Medal className="text-purple-400" size={18} />
+                <span className="text-white/80 text-sm">Твоя позиция:</span>
+              </div>
+              <span className="text-2xl font-black text-purple-400">#{userPosition}</span>
+            </div>
+          </motion.div>
+          
+          {/* Prizes */}
+          <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+            <Gift className="text-pink-400" size={20} />
+            Призы для победителей
+          </h3>
+          
+          <div className="space-y-3 mb-6">
+            {CHALLENGE_PRIZES.map((prize, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="p-4 rounded-2xl relative overflow-hidden"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  backdropFilter: 'blur(20px)',
+                  border: index < 3 ? `1px solid rgba(255,255,255,0.15)` : '1px solid rgba(255,255,255,0.08)',
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div 
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-br ${prize.color}`}
+                  >
+                    {prize.icon}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-bold text-white">{prize.prize}</div>
+                    <div className="text-white/60 text-sm">{prize.description}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          
+          {/* Leaderboard */}
+          <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+            <Users className="text-blue-400" size={20} />
+            Топ-5 игроков
+          </h3>
+          
+          <div className="space-y-2">
+            {LEADERBOARD_MOCK.map((player, index) => (
+              <motion.div
+                key={player.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + index * 0.1 }}
+                className="flex items-center gap-3 p-3 rounded-xl"
+                style={{
+                  background: index === 0 
+                    ? 'linear-gradient(135deg, rgba(234,179,8,0.15) 0%, rgba(234,179,8,0.05) 100%)'
+                    : 'rgba(255,255,255,0.03)',
+                  border: index === 0 
+                    ? '1px solid rgba(234,179,8,0.3)'
+                    : '1px solid rgba(255,255,255,0.05)',
+                }}
+              >
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${
+                  index === 0 ? 'bg-yellow-500/20 text-yellow-400' :
+                  index === 1 ? 'bg-gray-400/20 text-gray-300' :
+                  index === 2 ? 'bg-amber-600/20 text-amber-500' :
+                  'bg-white/5 text-white/40'
+                }`}>
+                  {index + 1}
+                </div>
+                <span className="text-2xl">{player.avatar}</span>
+                <span className="flex-1 text-white font-medium">{player.name}</span>
+                <div className="flex items-center gap-1">
+                  <Coins className="text-yellow-400" size={16} />
+                  <span className="text-yellow-300 font-bold">{player.coins}</span>
+                </div>
+              </motion.div>
+            ))}
+            
+            {/* Твоя позиция если не в топ-5 */}
+            {userPosition > 5 && (
+              <>
+                <div className="text-center text-white/30 py-2">• • •</div>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-3 p-3 rounded-xl"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.05) 100%)',
+                    border: '1px solid rgba(139,92,246,0.3)',
+                  }}
+                >
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold bg-purple-500/20 text-purple-400">
+                    {userPosition}
+                  </div>
+                  <span className="text-2xl">😎</span>
+                  <span className="flex-1 text-white font-medium">Ты</span>
+                  <div className="flex items-center gap-1">
+                    <Coins className="text-yellow-400" size={16} />
+                    <span className="text-yellow-300 font-bold">{user.coins}</span>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </div>
+          
+          {/* Мотивация */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="mt-6 p-4 rounded-2xl text-center"
+            style={{
+              background: 'rgba(139,92,246,0.1)',
+              border: '1px solid rgba(139,92,246,0.2)',
+            }}
+          >
+            <p className="text-white/80 text-sm mb-2">
+              💡 <strong>Совет:</strong> Проходи уроки и выполняй ежедневные задания, чтобы заработать больше монет!
+            </p>
+            <p className="text-purple-300 text-xs">
+              Каждый урок = +20-150 монет 🎯
+            </p>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ITEMS GRID - Скрываем когда выбраны Призы */}
+      {activeCategory !== 'challenge' && (
       <div className="p-4 grid grid-cols-2 gap-3">
         <AnimatePresence mode="popLayout">
           {filteredItems.map((item, index) => {
@@ -388,8 +611,10 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }
           })}
         </AnimatePresence>
       </div>
+      )}
 
-      {/* INFO SECTION */}
+      {/* INFO SECTION - Скрываем в разделе призов */}
+      {activeCategory !== 'challenge' && (
       <div className="px-4 mt-4 mb-8">
         <div 
           className="p-4 rounded-2xl"
@@ -408,6 +633,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }
           </div>
         </div>
       </div>
+      )}
 
       {/* MYSTERY BOX REWARD MODAL */}
       <AnimatePresence>
