@@ -61,7 +61,9 @@ export const DailyRewards: React.FC<DailyRewardsProps> = ({
     }, 1000);
   };
 
-  const currentDay = Math.min(currentStreak % 7 || 7, 7);
+  // Если streak = 0, то текущий день = 1 (первая награда)
+  // Иначе берём остаток от деления на 7 (цикл 7 дней)
+  const currentDay = currentStreak === 0 ? 1 : Math.min((currentStreak % 7) || 7, 7);
   const canClaimDay = claimedToday ? -1 : currentDay;
 
   if (!isOpen) return null;
@@ -119,7 +121,9 @@ export const DailyRewards: React.FC<DailyRewardsProps> = ({
             {/* Streak counter */}
             <div className="flex items-center justify-center gap-2 mt-4">
               <Flame size={20} className="text-orange-400" />
-              <span className="text-white font-bold">{currentStreak} дней подряд</span>
+              <span className="text-white font-bold">
+                {currentStreak > 0 ? `${currentStreak} дней подряд` : 'Начни серию!'}
+              </span>
             </div>
           </div>
 
