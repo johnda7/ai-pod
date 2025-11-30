@@ -952,6 +952,7 @@ export const setToolsData = (data: Record<string, any>): void => {
 };
 
 // Синхронизировать данные инструментов с Supabase
+// ПРИМЕЧАНИЕ: Колонка tools_data должна быть добавлена в Supabase вручную
 export const syncToolsDataToSupabase = async (userId: string): Promise<boolean> => {
   if (!isSupabaseEnabled) return false;
   
@@ -967,6 +968,10 @@ export const syncToolsDataToSupabase = async (userId: string): Promise<boolean> 
       .eq('id', userId);
     
     if (error) {
+      // Тихо игнорируем если колонка не существует
+      if (error.message?.includes('column') || error.code === '42703') {
+        return false;
+      }
       console.error('❌ Tools sync failed:', error.message);
       return false;
     }
@@ -974,12 +979,12 @@ export const syncToolsDataToSupabase = async (userId: string): Promise<boolean> 
     console.log('✅ Tools data synced to Supabase');
     return true;
   } catch (e) {
-    console.error('❌ Tools sync error:', e);
     return false;
   }
 };
 
 // Загрузить данные инструментов из Supabase
+// ПРИМЕЧАНИЕ: Колонка tools_data должна быть добавлена в Supabase вручную
 export const loadToolsDataFromSupabase = async (userId: string): Promise<boolean> => {
   if (!isSupabaseEnabled) return false;
   
@@ -993,8 +998,12 @@ export const loadToolsDataFromSupabase = async (userId: string): Promise<boolean
       .eq('id', userId)
       .single();
     
+    // Тихо игнорируем если колонка не существует
+    if (error?.message?.includes('column') || error?.code === '42703') {
+      return false;
+    }
+    
     if (error || !data?.tools_data) {
-      console.log('ℹ️ No tools data in Supabase yet');
       return false;
     }
     
