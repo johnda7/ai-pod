@@ -20,7 +20,7 @@ import { DailyRewards } from './DailyRewards';
 import { ActivityChart } from './ActivityChart';
 import { DailyQuoteWidget } from './KatyaQuotes';
 import { HabitsWidget } from './HabitsWidget';
-import { KatyaVideoWidget } from './KatyaVideo';
+import { KatyaWelcome, KatyaMotivation, useKatyaMotivation } from './KatyaVideo';
 
 interface TeenDashboardProps {
   user: User;
@@ -61,6 +61,9 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   // TikTok-style lesson mode (modern view)
   const [useTikTokMode, setUseTikTokMode] = useState(true); // Default to new modern view
   const [showModernLesson, setShowModernLesson] = useState(false);
+
+  // Katya motivation video after lesson completion
+  const { showMotivation, lessonTitle, triggerMotivation, closeMotivation } = useKatyaMotivation();
 
   // Telegram user data state
   const [telegramUser, setTelegramUser] = useState<{
@@ -285,7 +288,10 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
     // 7. Complete the task
     onTaskComplete(task);
     
-    // 8. Close lesson view
+    // 8. Trigger Katya motivation video (30% chance)
+    triggerMotivation(task.title);
+    
+    // 9. Close lesson view
     setShowModernLesson(false);
     setSelectedTask(null);
   };
@@ -909,11 +915,6 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                 <DailyQuoteWidget />
             </div>
 
-            {/* KATYA VIDEO WIDGET */}
-            <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-110">
-                <KatyaVideoWidget onXpEarned={(xp) => handleXpEarned(xp, 0)} />
-            </div>
-
             {/* HABITS WIDGET */}
             <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-125">
                 <HabitsWidget 
@@ -1332,6 +1333,20 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
           <ShopView user={user} onBuy={handleBuyItem} />
         </div>
       )}
+      
+      {/* Katya Welcome Video - shows once for new users */}
+      <KatyaWelcome onComplete={() => {
+        // XP bonus for watching welcome video
+        handleXpEarned(50, 0);
+        showToastMessage('Катя рада познакомиться! +50 XP');
+      }} />
+      
+      {/* Katya Motivation Video - shows after completing lessons */}
+      <KatyaMotivation 
+        isOpen={showMotivation}
+        onClose={closeMotivation}
+        lessonTitle={lessonTitle}
+      />
     </div>
   );
 };
