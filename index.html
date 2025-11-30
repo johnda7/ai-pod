@@ -101,5 +101,16 @@
       <div class="aurora-blob blob-4"></div>
     </div>
     <div id="root" class="h-screen w-screen flex flex-col relative z-10"></div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((reg) => console.log('✅ Service Worker registered'))
+            .catch((err) => console.log('❌ SW registration failed:', err));
+        });
+      }
+    </script>
   </body>
 </html>

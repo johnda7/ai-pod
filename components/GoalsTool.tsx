@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Target, Trophy, Flame, ChevronRight, Trash2, Check, Edit3, Cloud, CheckCircle } from 'lucide-react';
-import { syncToolsDataToSupabase, loadToolsDataFromSupabase } from '../services/db';
-import { getTelegramUser } from '../services/telegramService';
+import { X, Plus, Trophy, ChevronRight, Trash2 } from 'lucide-react';
+import { useSyncTool } from '../hooks/useSyncTool';
+import { SyncIndicator } from './SyncIndicator';
 
 interface GoalsToolProps {
   isOpen: boolean;
@@ -41,7 +41,12 @@ const TEMPLATES = [
 ];
 
 export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplete }) => {
-  const [goals, setGoals] = useState<Goal[]>([]);
+  // 🔄 useSyncTool вместо ручной синхронизации (-35 строк!)
+  const { data: goals, setData: setGoals, syncStatus } = useSyncTool<Goal[]>([], {
+    storageKey: 'goals_tracker',
+    debounceMs: 1000
+  });
+  
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   
@@ -52,44 +57,6 @@ export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplet
   const [newTarget, setNewTarget] = useState('10');
   const [newUnit, setNewUnit] = useState('раз');
   const [newDeadline, setNewDeadline] = useState('');
-
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
-
-  // Load goals
-  useEffect(() => {
-    const loadData = async () => {
-      const saved = localStorage.getItem('goals_tracker');
-      if (saved) setGoals(JSON.parse(saved));
-      
-      const tgUser = getTelegramUser();
-      if (tgUser?.id) {
-        const loaded = await loadToolsDataFromSupabase(tgUser.id.toString());
-        if (loaded) {
-          const fresh = localStorage.getItem('goals_tracker');
-          if (fresh) setGoals(JSON.parse(fresh));
-        }
-      }
-    };
-    loadData();
-  }, []);
-
-  // Save goals with Supabase sync
-  useEffect(() => {
-    if (goals.length === 0) return;
-    localStorage.setItem('goals_tracker', JSON.stringify(goals));
-    
-    const syncToCloud = async () => {
-      const tgUser = getTelegramUser();
-      if (tgUser?.id) {
-        setSyncStatus('syncing');
-        const success = await syncToolsDataToSupabase(tgUser.id.toString());
-        setSyncStatus(success ? 'synced' : 'idle');
-        if (success) setTimeout(() => setSyncStatus('idle'), 2000);
-      }
-    };
-    const timeoutId = setTimeout(syncToCloud, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [goals]);
 
   const addGoal = () => {
     if (!newTitle.trim()) return;
@@ -205,21 +172,7 @@ export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplet
                     <p className="text-white/50 text-xs">
                       {completedGoals}/{goals.length} выполнено
                     </p>
-                    <AnimatePresence>
-                      {syncStatus !== 'idle' && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.5 }}
-                        >
-                          {syncStatus === 'syncing' ? (
-                            <Cloud size={12} className="text-blue-400 animate-pulse" />
-                          ) : (
-                            <CheckCircle size={12} className="text-green-400" />
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    <SyncIndicator status={syncStatus} />
                   </div>
                 </div>
               </div>

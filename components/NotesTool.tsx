@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Search, Trash2, Edit3, Save, Tag, Clock, Sparkles, BookOpen, Cloud, CheckCircle } from 'lucide-react';
-import { syncToolsDataToSupabase, loadToolsDataFromSupabase } from '../services/db';
-import { getTelegramUser } from '../services/telegramService';
+import { X, Plus, Search, Trash2, Edit3, Save, Tag, Clock, Sparkles, BookOpen } from 'lucide-react';
+import { useSyncTool } from '../hooks/useSyncTool';
 
 interface NotesToolProps {
   isOpen: boolean;
@@ -40,7 +39,12 @@ const PROMPTS = [
 ];
 
 export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplete }) => {
-  const [notes, setNotes] = useState<Note[]>([]);
+  // 🔄 useSyncTool вместо ручной синхронизации (-35 строк!)
+  const { data: notes, setData: setNotes } = useSyncTool<Note[]>([], {
+    storageKey: 'notes_journal',
+    debounceMs: 1000
+  });
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [showEditor, setShowEditor] = useState(false);
@@ -51,42 +55,6 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
   const [noteColor, setNoteColor] = useState('purple');
   const [noteTags, setNoteTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
-
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
-
-  // Load notes
-  useEffect(() => {
-    const loadData = async () => {
-      const saved = localStorage.getItem('notes_journal');
-      if (saved) setNotes(JSON.parse(saved));
-      
-      const tgUser = getTelegramUser();
-      if (tgUser?.id) {
-        await loadToolsDataFromSupabase(tgUser.id.toString());
-        const fresh = localStorage.getItem('notes_journal');
-        if (fresh) setNotes(JSON.parse(fresh));
-      }
-    };
-    loadData();
-  }, []);
-
-  // Save notes with Supabase sync
-  useEffect(() => {
-    if (notes.length === 0) return;
-    localStorage.setItem('notes_journal', JSON.stringify(notes));
-    
-    const syncToCloud = async () => {
-      const tgUser = getTelegramUser();
-      if (tgUser?.id) {
-        setSyncStatus('syncing');
-        const success = await syncToolsDataToSupabase(tgUser.id.toString());
-        setSyncStatus(success ? 'synced' : 'idle');
-        if (success) setTimeout(() => setSyncStatus('idle'), 2000);
-      }
-    };
-    const timeoutId = setTimeout(syncToCloud, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [notes]);
 
   const saveNote = () => {
     if (!noteContent.trim()) return;

@@ -164,27 +164,58 @@ export const HabitsWidget: React.FC<HabitsWidgetProps> = ({ onOpenHabits, onXpRe
 
       {/* Quick habits */}
       <div className="px-4 pb-4 flex gap-2 overflow-x-auto scrollbar-hide">
-        {habits.slice(0, 4).map((habit) => {
+        {habits.slice(0, 4).map((habit, index) => {
           const isCompletedToday = habit.completedDays.includes(today);
           return (
             <motion.div
               key={habit.id}
               className="flex-shrink-0 w-16 text-center"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
               whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
             >
-              <div 
-                className="w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-1 transition-all"
+              <motion.div 
+                className="w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-1 relative overflow-hidden"
+                animate={isCompletedToday ? { 
+                  boxShadow: [
+                    `0 4px 15px ${habit.color}30`,
+                    `0 4px 25px ${habit.color}50`,
+                    `0 4px 15px ${habit.color}30`
+                  ]
+                } : {}}
+                transition={{ duration: 2, repeat: Infinity }}
                 style={{
                   background: isCompletedToday ? habit.color : 'rgba(255,255,255,0.05)',
-                  boxShadow: isCompletedToday ? `0 4px 15px ${habit.color}50` : 'none',
                 }}
               >
-                {isCompletedToday ? (
-                  <Check size={20} className="text-white" />
-                ) : (
-                  <span className="text-xl">{habit.emoji}</span>
+                {/* Shimmer effect on completed */}
+                {isCompletedToday && (
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    animate={{ x: ['-100%', '100%'] }}
+                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                  />
                 )}
-              </div>
+                {isCompletedToday ? (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                  >
+                    <Check size={20} className="text-white" />
+                  </motion.div>
+                ) : (
+                  <motion.span 
+                    className="text-xl"
+                    animate={{ rotate: [0, -5, 5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
+                  >
+                    {habit.emoji}
+                  </motion.span>
+                )}
+              </motion.div>
               <span className="text-white/50 text-[10px] truncate block">{habit.name}</span>
             </motion.div>
           );
