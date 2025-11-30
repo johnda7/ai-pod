@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Check, Flame, Trophy, Star, Zap, Target, Calendar, TrendingUp, Trash2, Cloud, CheckCircle } from 'lucide-react';
-import { syncToolsDataToSupabase, loadToolsDataFromSupabase } from '../services/db';
-import { getTelegramUser } from '../services/telegramService';
+import { X, Plus, Check, Flame, Calendar, Trash2 } from 'lucide-react';
+import { useSyncTool } from '../hooks/useSyncTool';
+import { SyncIndicator } from './SyncIndicator';
 
 interface HabitTrackerProps {
   isOpen: boolean;
@@ -36,57 +36,15 @@ const HABIT_PRESETS = [
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
 export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onComplete }) => {
-  const [habits, setHabits] = useState<Habit[]>([]);
+  // 🔄 Используем useSyncTool вместо ручной синхронизации (-40 строк!)
+  const { data: habits, setData: setHabits, syncStatus } = useSyncTool<Habit[]>([], {
+    storageKey: 'habit_tracker_data',
+    debounceMs: 1000
+  });
+  
   const [showAddForm, setShowAddForm] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
   const [selectedPreset, setSelectedPreset] = useState<typeof HABIT_PRESETS[0] | null>(null);
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
-
-  // Загрузка данных при открытии
-  useEffect(() => {
-    const loadData = async () => {
-      // Сначала из localStorage
-      const saved = localStorage.getItem('habit_tracker_data');
-      if (saved) {
-        setHabits(JSON.parse(saved));
-      }
-      
-      // Потом пробуем загрузить из Supabase
-      const tgUser = getTelegramUser();
-      if (tgUser?.id) {
-        const loaded = await loadToolsDataFromSupabase(tgUser.id.toString());
-        if (loaded) {
-          const fresh = localStorage.getItem('habit_tracker_data');
-          if (fresh) setHabits(JSON.parse(fresh));
-        }
-      }
-    };
-    loadData();
-  }, []);
-
-  // Сохранение и синхронизация при изменении
-  useEffect(() => {
-    if (habits.length === 0) return;
-    
-    localStorage.setItem('habit_tracker_data', JSON.stringify(habits));
-    
-    // Синхронизация с Supabase
-    const syncToCloud = async () => {
-      const tgUser = getTelegramUser();
-      if (tgUser?.id) {
-        setSyncStatus('syncing');
-        const success = await syncToolsDataToSupabase(tgUser.id.toString());
-        setSyncStatus(success ? 'synced' : 'idle');
-        if (success) {
-          setTimeout(() => setSyncStatus('idle'), 2000);
-        }
-      }
-    };
-    
-    // Debounce синхронизации
-    const timeoutId = setTimeout(syncToCloud, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [habits]);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -274,23 +232,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
                   <h1 className="text-xl font-bold text-white">Привычки</h1>
                   <div className="flex items-center gap-2">
                     <p className="text-white/50 text-xs">{completedToday}/{habits.length} сегодня</p>
-                    {/* Cloud Sync Indicator */}
-                    <AnimatePresence>
-                      {syncStatus !== 'idle' && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.5 }}
-                          className="flex items-center gap-1"
-                        >
-                          {syncStatus === 'syncing' ? (
-                            <Cloud size={12} className="text-blue-400 animate-pulse" />
-                          ) : (
-                            <CheckCircle size={12} className="text-green-400" />
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    <SyncIndicator status={syncStatus} />
                   </div>
                 </div>
               </div>
