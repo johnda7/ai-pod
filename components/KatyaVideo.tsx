@@ -110,19 +110,22 @@ export const KatyaVideoModal: React.FC<KatyaVideoModalProps> = ({
                 <X size={18} />
               </button>
 
-              {/* YouTube Embed - скрытый брендинг */}
+              {/* YouTube Embed - максимально скрытый брендинг */}
               {isPlaying && (
-                <iframe
-                  src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=0&playsinline=1&loop=1&playlist=${videoId}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0&disablekb=1`}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  title="Катя"
-                  style={{ border: 'none' }}
-                />
+                <div className="relative w-full h-full overflow-hidden">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=0&playsinline=1&loop=1&playlist=${videoId}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0&disablekb=1&cc_load_policy=0`}
+                    className="absolute inset-0 w-[120%] h-[120%] -top-[10%] -left-[10%]"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    title="Катя"
+                    style={{ border: 'none', pointerEvents: 'none' }}
+                  />
+                </div>
               )}
 
-              {/* Overlay gradient at bottom to hide YouTube controls */}
-              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
+              {/* Overlays to hide YouTube branding */}
+              <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none z-10" />
+              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black via-black/90 to-transparent pointer-events-none z-10" />
             </div>
 
             {/* Skip button */}
