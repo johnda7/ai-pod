@@ -47,10 +47,10 @@ export const KatyaVideoModal: React.FC<KatyaVideoModalProps> = ({
       setIsPlaying(true);
       hapticMedium();
       
-      // Автозакрытие сразу после окончания видео (без буфера)
+      // Автозакрытие ЗА СЕКУНДУ ДО окончания видео, чтобы не показывать YouTube рекомендации
       const autoCloseTimer = setTimeout(() => {
         onClose();
-      }, videoDuration * 1000);
+      }, (videoDuration - 1) * 1000);
       
       return () => clearTimeout(autoCloseTimer);
     } else {
