@@ -37,18 +37,18 @@ const App: React.FC = () => {
       initTelegramApp();
       
       // 2. Get User immediately
-      const tgUser = getTelegramUser();
-      
-      try {
-        const user = await getOrCreateUser(tgUser);
+          const tgUser = getTelegramUser();
+          
+          try {
+            const user = await getOrCreateUser(tgUser);
         if (mounted) {
-          setCurrentUser(user);
+            setCurrentUser(user);
           setIsLoadingData(false);
         }
-      } catch (e) {
-        console.error("Failed to load user", e);
+          } catch (e) {
+            console.error("Failed to load user", e);
         if (mounted) setIsLoadingData(false);
-      }
+          }
     };
     
     init();
@@ -176,20 +176,20 @@ const App: React.FC = () => {
           <ParentZone isOpen={true} onClose={() => window.location.href = '/'} />
         ) : (
           <>
-            {currentUser.role === UserRole.TEEN && (
-              <TeenDashboard 
-                user={currentUser}
-                onTaskComplete={handleTaskComplete}
-                onUserUpdate={(updatedUser) => {
-                  setCurrentUser(updatedUser);
-                }}
-              />
-            )}
-            {currentUser.role === UserRole.PARENT && (
-              <ParentDashboard />
-            )}
-            {currentUser.role === UserRole.CURATOR && (
-              <CuratorDashboard />
+        {currentUser.role === UserRole.TEEN && (
+          <TeenDashboard 
+            user={currentUser}
+            onTaskComplete={handleTaskComplete}
+            onUserUpdate={(updatedUser) => {
+              setCurrentUser(updatedUser);
+            }}
+          />
+        )}
+        {currentUser.role === UserRole.PARENT && (
+          <ParentDashboard />
+        )}
+        {currentUser.role === UserRole.CURATOR && (
+          <CuratorDashboard />
             )}
           </>
         )}
