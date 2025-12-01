@@ -7,6 +7,7 @@ import { FocusDefender, EmbeddedMemoryGame, ReactionGame } from './MiniGames';
 import { AnimatedBrain, AnimatedDopamine, AnimatedFocus, AnimatedBattery, AnimatedSleep, AnimatedBoss, AnimatedReward } from './AnimatedSlides';
 import { KatyaCharacter } from './KatyaCharacter';
 import { BubblePopGame, EmotionMatchGame, BreathSyncGame } from './ImprovedGames';
+import { ThermiteGrid } from './ProGames';
 import { RiveKatya } from './RiveKatya';
 import { KatyaMentor } from './KatyaMentor';
 import { hapticLight, hapticMedium, hapticSuccess, hapticError, hapticSelection } from '../services/telegramService';
@@ -739,6 +740,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
                         {currentSlide.gameType === 'BUBBLE_POP' && <BubblePopGame onComplete={handleGameComplete} duration={currentSlide.durationSeconds || 30} targetScore={currentSlide.targetScore || 10} />}
                         {currentSlide.gameType === 'EMOTION_MATCH' && <EmotionMatchGame onComplete={handleGameComplete} />}
                         {currentSlide.gameType === 'BREATH_SYNC' && <BreathSyncGame onComplete={handleGameComplete} cycles={3} />}
+                        {currentSlide.gameType === 'THERMITE_GRID' && <ThermiteGrid onComplete={handleGameComplete} rows={5} cols={5} targetScore={currentSlide.targetScore || 12} duration={currentSlide.durationSeconds || 45} />}
                     </div>
                 );
 
