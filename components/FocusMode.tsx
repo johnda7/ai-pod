@@ -16,11 +16,46 @@ const FOCUS_DURATIONS = [
 ];
 
 const AMBIENT_SOUNDS = [
-  { id: 'none', name: 'Тишина', emoji: '🌙', image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&h=200&fit=crop&q=80' },
-  { id: 'rain', name: 'Дождь', emoji: '🌧️', image: 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=200&h=200&fit=crop&q=80' },
-  { id: 'forest', name: 'Лес', emoji: '🌲', image: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=200&h=200&fit=crop&q=80' },
-  { id: 'cafe', name: 'Кафе', emoji: '☕', image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=200&h=200&fit=crop&q=80' },
-  { id: 'fire', name: 'Камин', emoji: '🔥', image: 'https://images.unsplash.com/photo-1517329782449-810562a4ec2f?w=200&h=200&fit=crop&q=80' },
+  { 
+    id: 'none', 
+    name: 'Тишина', 
+    emoji: '🌙', 
+    image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&h=200&fit=crop&q=80',
+    bgImage: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&h=1800&fit=crop&q=80',
+    gradient: 'linear-gradient(180deg, rgba(15,23,42,0.7) 0%, rgba(15,23,42,0.9) 100%)',
+  },
+  { 
+    id: 'rain', 
+    name: 'Дождь', 
+    emoji: '🌧️', 
+    image: 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=200&h=200&fit=crop&q=80',
+    bgImage: 'https://images.unsplash.com/photo-1428592953211-077101b2021b?w=1200&h=1800&fit=crop&q=80',
+    gradient: 'linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.9) 100%)',
+  },
+  { 
+    id: 'forest', 
+    name: 'Лес', 
+    emoji: '🌲', 
+    image: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=200&h=200&fit=crop&q=80',
+    bgImage: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&h=1800&fit=crop&q=80',
+    gradient: 'linear-gradient(180deg, rgba(6,78,59,0.6) 0%, rgba(2,44,34,0.9) 100%)',
+  },
+  { 
+    id: 'cafe', 
+    name: 'Кафе', 
+    emoji: '☕', 
+    image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=200&h=200&fit=crop&q=80',
+    bgImage: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1200&h=1800&fit=crop&q=80',
+    gradient: 'linear-gradient(180deg, rgba(120,53,15,0.6) 0%, rgba(30,20,10,0.9) 100%)',
+  },
+  { 
+    id: 'fire', 
+    name: 'Камин', 
+    emoji: '🔥', 
+    image: 'https://images.unsplash.com/photo-1517329782449-810562a4ec2f?w=200&h=200&fit=crop&q=80',
+    bgImage: 'https://images.unsplash.com/photo-1475552113915-6fcb52652ba2?w=1200&h=1800&fit=crop&q=80',
+    gradient: 'linear-gradient(180deg, rgba(154,52,18,0.5) 0%, rgba(30,15,10,0.9) 100%)',
+  },
 ];
 
 // Tree stages based on progress
@@ -146,35 +181,38 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] overflow-hidden"
       >
-        {/* Beautiful Forest Background */}
+        {/* Dynamic Background based on selected sound */}
         <div className="absolute inset-0">
-          {/* Base gradient */}
-          <div 
+          {/* Background Image - changes with selected sound */}
+          <motion.div
+            key={selectedSound.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0"
+          >
+            <img 
+              src={selectedSound.bgImage}
+              alt={selectedSound.name}
+              className="w-full h-full object-cover"
+              style={{ 
+                filter: isComplete 
+                  ? 'brightness(0.5) saturate(1.3)' 
+                  : isRunning 
+                    ? `brightness(${0.25 + treeGrowth / 400}) saturate(1.2)` 
+                    : 'brightness(0.35) saturate(1.1)',
+              }}
+            />
+          </motion.div>
+          
+          {/* Gradient overlay */}
+          <motion.div 
             className="absolute inset-0 transition-all duration-1000"
             style={{
-              background: isComplete 
-                ? 'linear-gradient(180deg, #064e3b 0%, #022c22 50%, #0a0a1a 100%)'
-                : isRunning
-                  ? `linear-gradient(180deg, #0a1a0f 0%, #0f2518 ${Math.min(treeGrowth, 50)}%, #0a0a1a 100%)`
-                  : 'linear-gradient(180deg, #0a0a1a 0%, #0f0f2a 50%, #0a0a1a 100%)',
+              background: selectedSound.gradient,
             }}
           />
-          
-          {/* Forest image overlay when growing */}
-          {(isRunning || isComplete) && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: treeGrowth / 200 + 0.1 }}
-              className="absolute inset-0"
-            >
-              <img 
-                src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&h=1200&fit=crop"
-                alt="Forest"
-                className="w-full h-full object-cover"
-                style={{ filter: 'brightness(0.3) saturate(1.2)' }}
-              />
-            </motion.div>
-          )}
           
           {/* Aurora effects */}
           <motion.div
