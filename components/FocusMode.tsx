@@ -66,12 +66,216 @@ const AMBIENT_SOUNDS = [
 
 // Tree stages based on progress
 const TREE_STAGES = [
-  { min: 0, emoji: '🌱', label: 'Росток' },
-  { min: 25, emoji: '🌿', label: 'Побег' },
-  { min: 50, emoji: '🪴', label: 'Растение' },
-  { min: 75, emoji: '🌳', label: 'Деревце' },
-  { min: 100, emoji: '🌲', label: 'Дерево!' },
+  { min: 0, emoji: '🌱', label: 'Росток', color: '#86efac' },
+  { min: 25, emoji: '🌿', label: 'Побег', color: '#4ade80' },
+  { min: 50, emoji: '🪴', label: 'Растение', color: '#22c55e' },
+  { min: 75, emoji: '🌳', label: 'Деревце', color: '#16a34a' },
+  { min: 100, emoji: '🌲', label: 'Дерево!', color: '#15803d' },
 ];
+
+// Animated Tree Component
+const AnimatedTree: React.FC<{ growth: number; isRunning: boolean }> = ({ growth, isRunning }) => {
+  const trunkHeight = Math.min(growth * 0.8, 60);
+  const crownSize = Math.max(0, (growth - 20) * 1.2);
+  const leafCount = Math.floor(growth / 10);
+  
+  return (
+    <svg viewBox="0 0 200 200" className="w-full h-full">
+      <defs>
+        {/* Gradients */}
+        <linearGradient id="trunkGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#78350f" />
+          <stop offset="50%" stopColor="#92400e" />
+          <stop offset="100%" stopColor="#78350f" />
+        </linearGradient>
+        <radialGradient id="crownGradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#4ade80" />
+          <stop offset="70%" stopColor="#22c55e" />
+          <stop offset="100%" stopColor="#16a34a" />
+        </radialGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      
+      {/* Ground */}
+      <ellipse 
+        cx="100" 
+        cy="180" 
+        rx={30 + growth * 0.3} 
+        ry="8" 
+        fill="rgba(34,197,94,0.2)"
+      />
+      
+      {/* Trunk */}
+      <motion.rect
+        x="92"
+        y={180 - trunkHeight}
+        width="16"
+        rx="3"
+        fill="url(#trunkGradient)"
+        initial={{ height: 0 }}
+        animate={{ height: trunkHeight }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      />
+      
+      {/* Branches - appear at 30%+ */}
+      {growth >= 30 && (
+        <>
+          <motion.path
+            d={`M100,${160 - trunkHeight * 0.3} Q85,${150 - trunkHeight * 0.3} 75,${145 - trunkHeight * 0.3}`}
+            stroke="#78350f"
+            strokeWidth="4"
+            fill="none"
+            strokeLinecap="round"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 0.5 }}
+          />
+          <motion.path
+            d={`M100,${160 - trunkHeight * 0.3} Q115,${150 - trunkHeight * 0.3} 125,${145 - trunkHeight * 0.3}`}
+            stroke="#78350f"
+            strokeWidth="4"
+            fill="none"
+            strokeLinecap="round"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 0.5 }}
+          />
+        </>
+      )}
+      
+      {/* Crown - grows from 20%+ */}
+      {growth >= 20 && (
+        <motion.g filter={isRunning ? "url(#glow)" : undefined}>
+          {/* Main crown */}
+          <motion.ellipse
+            cx="100"
+            cy={140 - trunkHeight * 0.4}
+            fill="url(#crownGradient)"
+            initial={{ rx: 0, ry: 0 }}
+            animate={{ 
+              rx: Math.min(crownSize * 0.7, 45),
+              ry: Math.min(crownSize * 0.6, 40),
+            }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          />
+          
+          {/* Crown layers for depth */}
+          {growth >= 40 && (
+            <motion.ellipse
+              cx="85"
+              cy={135 - trunkHeight * 0.4}
+              fill="#22c55e"
+              initial={{ rx: 0, ry: 0 }}
+              animate={{ 
+                rx: Math.min(crownSize * 0.4, 25),
+                ry: Math.min(crownSize * 0.35, 22),
+              }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            />
+          )}
+          
+          {growth >= 50 && (
+            <motion.ellipse
+              cx="115"
+              cy={135 - trunkHeight * 0.4}
+              fill="#22c55e"
+              initial={{ rx: 0, ry: 0 }}
+              animate={{ 
+                rx: Math.min(crownSize * 0.4, 25),
+                ry: Math.min(crownSize * 0.35, 22),
+              }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            />
+          )}
+          
+          {growth >= 60 && (
+            <motion.ellipse
+              cx="100"
+              cy={120 - trunkHeight * 0.4}
+              fill="#4ade80"
+              initial={{ rx: 0, ry: 0 }}
+              animate={{ 
+                rx: Math.min(crownSize * 0.35, 20),
+                ry: Math.min(crownSize * 0.3, 18),
+              }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            />
+          )}
+        </motion.g>
+      )}
+      
+      {/* Floating leaves animation */}
+      {isRunning && growth >= 30 && [...Array(leafCount)].map((_, i) => (
+        <motion.text
+          key={i}
+          fontSize="12"
+          initial={{ 
+            x: 100, 
+            y: 130 - trunkHeight * 0.4,
+            opacity: 0,
+          }}
+          animate={{ 
+            x: 100 + Math.sin(i * 1.5) * 40,
+            y: [130 - trunkHeight * 0.4, 130 - trunkHeight * 0.4 - 30, 130 - trunkHeight * 0.4],
+            opacity: [0, 0.8, 0],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            delay: i * 0.5,
+            ease: "easeInOut",
+          }}
+        >
+          🍃
+        </motion.text>
+      ))}
+      
+      {/* Sparkles when complete */}
+      {growth >= 100 && [...Array(6)].map((_, i) => (
+        <motion.text
+          key={`sparkle-${i}`}
+          fontSize="14"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ 
+            opacity: [0, 1, 0],
+            scale: [0.5, 1.2, 0.5],
+            x: 100 + Math.cos(i * Math.PI / 3) * 50,
+            y: 100 + Math.sin(i * Math.PI / 3) * 50,
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            delay: i * 0.3,
+          }}
+        >
+          ✨
+        </motion.text>
+      ))}
+      
+      {/* Seed/Sprout at start */}
+      {growth < 10 && (
+        <motion.text
+          x="92"
+          y="178"
+          fontSize="20"
+          animate={{ 
+            y: [178, 175, 178],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          🌱
+        </motion.text>
+      )}
+    </svg>
+  );
+};
 
 export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplete }) => {
   const [selectedDuration, setSelectedDuration] = useState(FOCUS_DURATIONS[1]);
@@ -421,18 +625,20 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
                     </defs>
                   </svg>
                   
-                  {/* Center content */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  {/* Center content - Animated Tree */}
+                  <div className="absolute inset-4 flex flex-col items-center justify-center">
+                    <div className="w-28 h-28">
+                      <AnimatedTree growth={treeGrowth} isRunning={isRunning} />
+                    </div>
                     <motion.span 
-                      className="text-6xl mb-2"
-                      key={treeStage.emoji}
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring" }}
+                      key={treeStage.label}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-white/60 text-xs font-medium mt-1"
+                      style={{ color: treeStage.color }}
                     >
-                      {treeStage.emoji}
+                      {treeStage.label}
                     </motion.span>
-                    <span className="text-white/50 text-xs">{treeStage.label}</span>
                   </div>
                 </div>
                 
@@ -615,22 +821,28 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
               animate={{ scale: 1, opacity: 1 }}
               className="text-center"
             >
-              {/* Celebration */}
+              {/* Celebration - Full grown tree */}
               <motion.div
                 animate={{ 
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 5, -5, 0],
+                  scale: [1, 1.05, 1],
                 }}
-                transition={{ duration: 0.5, repeat: 3 }}
-                className="relative inline-block mb-6"
+                transition={{ duration: 2, repeat: Infinity }}
+                className="relative mb-6 w-40 h-40"
               >
-                <span className="text-8xl">🌲</span>
+                <AnimatedTree growth={100} isRunning={false} />
                 <motion.div
-                  className="absolute -top-4 -right-4"
+                  className="absolute -top-2 -right-2"
                   animate={{ scale: [0, 1.2, 1], rotate: [0, 20, 0] }}
                   transition={{ delay: 0.5 }}
                 >
                   <Sparkles size={32} className="text-yellow-400" />
+                </motion.div>
+                <motion.div
+                  className="absolute -top-2 -left-2"
+                  animate={{ scale: [0, 1.2, 1], rotate: [0, -20, 0] }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <Trophy size={28} className="text-yellow-400" />
                 </motion.div>
               </motion.div>
               
