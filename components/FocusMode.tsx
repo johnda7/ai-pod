@@ -15,6 +15,7 @@ const FOCUS_DURATIONS = [
   { minutes: 60, label: '1 час', xp: 100, coins: 40 },
 ];
 
+// Ambient звуки - спокойные, не раздражающие (loopable)
 const AMBIENT_SOUNDS = [
   { 
     id: 'none', 
@@ -23,6 +24,7 @@ const AMBIENT_SOUNDS = [
     image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&h=200&fit=crop&q=80',
     bgImage: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&h=1800&fit=crop&q=80',
     gradient: 'linear-gradient(180deg, rgba(15,23,42,0.7) 0%, rgba(15,23,42,0.9) 100%)',
+    audioUrl: '', // Тишина - без звука
   },
   { 
     id: 'rain', 
@@ -31,6 +33,7 @@ const AMBIENT_SOUNDS = [
     image: 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=200&h=200&fit=crop&q=80',
     bgImage: 'https://images.unsplash.com/photo-1428592953211-077101b2021b?w=1200&h=1800&fit=crop&q=80',
     gradient: 'linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.9) 100%)',
+    audioUrl: 'https://cdn.pixabay.com/audio/2022/05/13/audio_257112094f.mp3', // Мягкий дождь
   },
   { 
     id: 'forest', 
@@ -39,6 +42,7 @@ const AMBIENT_SOUNDS = [
     image: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=200&h=200&fit=crop&q=80',
     bgImage: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&h=1800&fit=crop&q=80',
     gradient: 'linear-gradient(180deg, rgba(6,78,59,0.6) 0%, rgba(2,44,34,0.9) 100%)',
+    audioUrl: 'https://cdn.pixabay.com/audio/2022/03/10/audio_d72a5a1c34.mp3', // Птицы в лесу
   },
   { 
     id: 'cafe', 
@@ -47,6 +51,7 @@ const AMBIENT_SOUNDS = [
     image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=200&h=200&fit=crop&q=80',
     bgImage: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1200&h=1800&fit=crop&q=80',
     gradient: 'linear-gradient(180deg, rgba(120,53,15,0.6) 0%, rgba(30,20,10,0.9) 100%)',
+    audioUrl: 'https://cdn.pixabay.com/audio/2022/10/30/audio_f8e58b2f50.mp3', // Кафе атмосфера
   },
   { 
     id: 'fire', 
@@ -55,6 +60,7 @@ const AMBIENT_SOUNDS = [
     image: 'https://images.unsplash.com/photo-1517329782449-810562a4ec2f?w=200&h=200&fit=crop&q=80',
     bgImage: 'https://images.unsplash.com/photo-1475552113915-6fcb52652ba2?w=1200&h=1800&fit=crop&q=80',
     gradient: 'linear-gradient(180deg, rgba(154,52,18,0.5) 0%, rgba(30,15,10,0.9) 100%)',
+    audioUrl: 'https://cdn.pixabay.com/audio/2022/02/23/audio_ea70ad08e0.mp3', // Треск камина
   },
 ];
 
@@ -75,8 +81,46 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
   const [selectedSound, setSelectedSound] = useState(AMBIENT_SOUNDS[0]);
   const [treeGrowth, setTreeGrowth] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [volume, setVolume] = useState(0.3); // Тихий фоновый звук
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Управление ambient звуками
+  useEffect(() => {
+    // Остановить предыдущий звук
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    // Запустить новый звук если есть URL и таймер запущен
+    if (selectedSound.audioUrl && isRunning) {
+      const audio = new Audio(selectedSound.audioUrl);
+      audio.loop = true;
+      audio.volume = volume;
+      audio.play().catch(() => {
+        // Игнорируем ошибки autoplay (требуется взаимодействие пользователя)
+      });
+      audioRef.current = audio;
+    }
+
+    // Cleanup при размонтировании
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [selectedSound, isRunning, volume]);
+
+  // Остановить звук при закрытии
+  useEffect(() => {
+    if (!isOpen && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+  }, [isOpen]);
 
   // Load streak
   useEffect(() => {
