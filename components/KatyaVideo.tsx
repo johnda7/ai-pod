@@ -47,10 +47,10 @@ export const KatyaVideoModal: React.FC<KatyaVideoModalProps> = ({
       setIsPlaying(true);
       hapticMedium();
       
-      // Автозакрытие после окончания видео (+2 сек буфер)
+      // Автозакрытие сразу после окончания видео (без буфера)
       const autoCloseTimer = setTimeout(() => {
         onClose();
-      }, (videoDuration + 2) * 1000);
+      }, videoDuration * 1000);
       
       return () => clearTimeout(autoCloseTimer);
     } else {
@@ -126,7 +126,7 @@ export const KatyaVideoModal: React.FC<KatyaVideoModalProps> = ({
             <iframe
                     id="katya-video-player"
                     src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=0&playsinline=1&loop=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0&disablekb=1&cc_load_policy=0&enablejsapi=1`}
-                    className="absolute inset-0 w-[120%] h-[120%] -top-[10%] -left-[10%]"
+                    className="absolute inset-0 w-[115%] h-[115%] top-0 -left-[7.5%]"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     title="Катя"
                     style={{ border: 'none', pointerEvents: 'none' }}
@@ -134,9 +134,9 @@ export const KatyaVideoModal: React.FC<KatyaVideoModalProps> = ({
                 </div>
               )}
 
-              {/* Overlays to hide YouTube branding */}
-              <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none z-10" />
-              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black via-black/90 to-transparent pointer-events-none z-10" />
+              {/* Overlays to hide YouTube branding - уменьшены чтобы не закрывать голову */}
+              <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-black/70 to-transparent pointer-events-none z-10" />
+              <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-10" />
             </div>
 
             {/* Skip button */}
