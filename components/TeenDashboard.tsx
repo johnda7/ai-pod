@@ -1337,8 +1337,10 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       {/* Katya Welcome Video - shows once for new users */}
       <KatyaWelcome onComplete={() => {
         // XP bonus for watching welcome video
-        handleXpEarned(50, 0);
-        showToastMessage('Катя рада познакомиться! +50 XP');
+        setUser(prev => ({ ...prev, xp: prev.xp + 50 }));
+        setFloatingXPAmount(50);
+        setShowFloatingXP(true);
+        setToastMessage('Катя рада познакомиться! +50 XP');
       }} />
       
       {/* Katya Motivation Video - shows after completing lessons */}
