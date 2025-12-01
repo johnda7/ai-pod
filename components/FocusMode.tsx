@@ -16,11 +16,11 @@ const FOCUS_DURATIONS = [
 ];
 
 const AMBIENT_SOUNDS = [
-  { id: 'none', name: 'Тишина', emoji: '🔇', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=100&fit=crop' },
-  { id: 'rain', name: 'Дождь', emoji: '🌧️', image: 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=100&h=100&fit=crop' },
-  { id: 'forest', name: 'Лес', emoji: '🌲', image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=100&h=100&fit=crop' },
-  { id: 'cafe', name: 'Кафе', emoji: '☕', image: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=100&h=100&fit=crop' },
-  { id: 'fire', name: 'Камин', emoji: '🔥', image: 'https://images.unsplash.com/photo-1475552113915-6fcb52652ba2?w=100&h=100&fit=crop' },
+  { id: 'none', name: 'Тишина', emoji: '🌙', image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&h=200&fit=crop&q=80' },
+  { id: 'rain', name: 'Дождь', emoji: '🌧️', image: 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=200&h=200&fit=crop&q=80' },
+  { id: 'forest', name: 'Лес', emoji: '🌲', image: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=200&h=200&fit=crop&q=80' },
+  { id: 'cafe', name: 'Кафе', emoji: '☕', image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=200&h=200&fit=crop&q=80' },
+  { id: 'fire', name: 'Камин', emoji: '🔥', image: 'https://images.unsplash.com/photo-1517329782449-810562a4ec2f?w=200&h=200&fit=crop&q=80' },
 ];
 
 // Tree stages based on progress
@@ -414,31 +414,56 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="flex gap-2 mb-8"
+                  className="flex gap-3 mb-8"
                 >
                   {AMBIENT_SOUNDS.map((sound) => (
-                    <button
+                    <motion.button
                       key={sound.id}
                       onClick={() => setSelectedSound(sound)}
-                      className="w-14 h-14 rounded-xl overflow-hidden relative transition-all"
+                      className="w-16 h-16 rounded-2xl overflow-hidden relative transition-all"
                       style={{
                         border: selectedSound.id === sound.id 
-                          ? '2px solid rgba(34,197,94,0.8)' 
-                          : '2px solid transparent',
+                          ? '3px solid rgba(34,197,94,0.9)' 
+                          : '2px solid rgba(255,255,255,0.1)',
                         boxShadow: selectedSound.id === sound.id 
-                          ? '0 4px 15px rgba(34,197,94,0.3)' 
-                          : 'none',
+                          ? '0 8px 25px rgba(34,197,94,0.4), inset 0 0 20px rgba(34,197,94,0.2)' 
+                          : '0 4px 12px rgba(0,0,0,0.3)',
                       }}
+                      whileHover={{ scale: 1.08, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
                     >
                       <img 
                         src={sound.image}
                         alt={sound.name}
                         className="w-full h-full object-cover"
+                        style={{
+                          filter: selectedSound.id === sound.id 
+                            ? 'brightness(1.1) saturate(1.2)' 
+                            : 'brightness(0.8)',
+                        }}
                       />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <span className="text-xl">{sound.emoji}</span>
+                      <div 
+                        className="absolute inset-0 flex items-center justify-center transition-all"
+                        style={{
+                          background: selectedSound.id === sound.id 
+                            ? 'linear-gradient(180deg, rgba(34,197,94,0.2) 0%, rgba(0,0,0,0.4) 100%)'
+                            : 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.6) 100%)',
+                        }}
+                      >
+                        <span className="text-2xl drop-shadow-lg">{sound.emoji}</span>
                       </div>
-                    </button>
+                      {selectedSound.id === sound.id && (
+                        <motion.div 
+                          className="absolute inset-0 rounded-2xl"
+                          style={{
+                            border: '2px solid rgba(34,197,94,0.5)',
+                            boxShadow: 'inset 0 0 15px rgba(34,197,94,0.3)',
+                          }}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                        />
+                      )}
+                    </motion.button>
                   ))}
                 </motion.div>
               )}
