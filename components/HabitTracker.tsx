@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Check, Flame, Calendar, Trash2 } from 'lucide-react';
+import { X, Plus, Check, Flame, Calendar, Trash2, Trophy } from 'lucide-react';
 import { useSyncTool } from '../hooks/useSyncTool';
 import { SyncIndicator } from './SyncIndicator';
 
@@ -34,6 +34,39 @@ const HABIT_PRESETS = [
 ];
 
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+
+// 💪 Мотивационные сообщения
+const getMotivationMessage = (streak: number, bestStreak: number, completedToday: number, totalHabits: number) => {
+  if (totalHabits === 0) return { text: 'Создай первую привычку! 🌱', color: '#22c55e' };
+  
+  const daysToRecord = bestStreak - streak + 1;
+  
+  if (completedToday === totalHabits && totalHabits > 0) {
+    return { text: '🔥 Все привычки выполнены! Ты огонь!', color: '#f59e0b' };
+  }
+  
+  if (streak > 0 && streak === bestStreak) {
+    return { text: '🏆 Ты на своём рекорде! Не останавливайся!', color: '#eab308' };
+  }
+  
+  if (streak > 0 && daysToRecord <= 3 && daysToRecord > 0) {
+    return { text: `⭐ Ещё ${daysToRecord} ${daysToRecord === 1 ? 'день' : 'дня'} до рекорда!`, color: '#a855f7' };
+  }
+  
+  if (streak >= 7) {
+    return { text: '💎 Неделя подряд! Ты легенда!', color: '#6366f1' };
+  }
+  
+  if (streak >= 3) {
+    return { text: '🚀 Отличный прогресс! Держи темп!', color: '#22c55e' };
+  }
+  
+  if (completedToday > 0) {
+    return { text: '✨ Хорошее начало! Продолжай!', color: '#3b82f6' };
+  }
+  
+  return { text: '👋 Выполни привычку сегодня!', color: '#64748b' };
+};
 
 export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onComplete }) => {
   // 🔄 Используем useSyncTool вместо ручной синхронизации (-40 строк!)
@@ -121,6 +154,19 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
   const weekDays = getWeekDays();
   const completedToday = habits.filter(h => h.completedDays.includes(today)).length;
   const totalStreak = habits.reduce((sum, h) => sum + h.streak, 0);
+  
+  // 🏆 Лучший streak (сохраняем в localStorage)
+  const bestStreakKey = 'habit_tracker_best_streak';
+  const savedBestStreak = parseInt(localStorage.getItem(bestStreakKey) || '0', 10);
+  const currentBestStreak = Math.max(savedBestStreak, totalStreak);
+  
+  // Обновляем рекорд если нужно
+  if (totalStreak > savedBestStreak) {
+    localStorage.setItem(bestStreakKey, totalStreak.toString());
+  }
+  
+  // 💪 Мотивационное сообщение
+  const motivation = getMotivationMessage(totalStreak, currentBestStreak, completedToday, habits.length);
   
   // Прогресс за неделю
   const getWeekProgress = () => {
@@ -282,6 +328,19 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
               </div>
             </div>
 
+            {/* 💪 Motivation Message */}
+            <div 
+              className="mb-3 p-3 rounded-xl text-center"
+              style={{
+                background: `${motivation.color}15`,
+                border: `1px solid ${motivation.color}30`,
+              }}
+            >
+              <span className="text-sm font-medium" style={{ color: motivation.color }}>
+                {motivation.text}
+              </span>
+            </div>
+
             {/* Stats */}
             <div className="flex gap-2">
               <div 
@@ -315,13 +374,16 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
               <div 
                 className="flex-1 p-3 rounded-xl text-center"
                 style={{ 
-                  background: 'rgba(99,102,241,0.1)', 
+                  background: 'rgba(234,179,8,0.1)', 
                   backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(99,102,241,0.2)' 
+                  border: '1px solid rgba(234,179,8,0.2)' 
                 }}
               >
-                <div className="text-xl font-bold text-indigo-400">{habits.length}</div>
-                <div className="text-white/40 text-[10px]">Привычек</div>
+                <div className="text-xl font-bold text-yellow-400 flex items-center justify-center gap-1">
+                  {currentBestStreak}
+                  <Trophy size={14} />
+                </div>
+                <div className="text-white/40 text-[10px]">Рекорд</div>
               </div>
             </div>
           </motion.div>
