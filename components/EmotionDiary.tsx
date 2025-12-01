@@ -64,26 +64,26 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
   // Вычисляем streak на лету
   const streak = useMemo(() => {
     if (entries.length === 0) return 0;
-    
-    const today = new Date().toDateString();
-    const yesterday = new Date(Date.now() - 86400000).toDateString();
-    let currentStreak = 0;
-    
+      
+      const today = new Date().toDateString();
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+      let currentStreak = 0;
+      
     for (let i = 0; i < entries.length; i++) {
       const entryDate = new Date(entries[i].date).toDateString();
-      if (i === 0 && (entryDate === today || entryDate === yesterday)) {
-        currentStreak++;
-      } else if (i > 0) {
+        if (i === 0 && (entryDate === today || entryDate === yesterday)) {
+          currentStreak++;
+        } else if (i > 0) {
         const prevDate = new Date(entries[i - 1].date);
         const currDate = new Date(entries[i].date);
-        const diff = (prevDate.getTime() - currDate.getTime()) / 86400000;
-        if (diff <= 1) {
-          currentStreak++;
-        } else {
-          break;
+          const diff = (prevDate.getTime() - currDate.getTime()) / 86400000;
+          if (diff <= 1) {
+            currentStreak++;
+          } else {
+            break;
+          }
         }
       }
-    }
     return currentStreak;
   }, [entries]);
 

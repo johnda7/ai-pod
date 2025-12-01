@@ -349,12 +349,12 @@ export const MeditationView: React.FC = () => {
                 
                 {isActive && (
                   <div className="absolute inset-0 bg-blue-500/30 flex items-center justify-center">
-                    <div className="flex gap-0.5 items-end h-3">
+                      <div className="flex gap-0.5 items-end h-3">
                       <div className="w-0.5 h-2 bg-white rounded-full animate-[bounce_0.8s_infinite]" />
                       <div className="w-0.5 h-3 bg-white rounded-full animate-[bounce_1s_infinite]" />
                       <div className="w-0.5 h-1.5 bg-white rounded-full animate-[bounce_0.6s_infinite]" />
                     </div>
-                  </div>
+                </div>
                 )}
 
                 <div className="absolute bottom-0 left-0 right-0 p-1.5">
@@ -605,10 +605,10 @@ export const MeditationView: React.FC = () => {
                   height="1"
                   src={`https://www.youtube-nocookie.com/embed/${selectedMeditation.youtubeId}?autoplay=1&controls=0&playsinline=1&modestbranding=1&rel=0`}
                   title="Meditation Audio"
-                  allow="autoplay; encrypted-media"
+                   allow="autoplay; encrypted-media"
                 />
-              </div>
-            )}
+               </div>
+           )}
           </motion.div>
         )}
       </AnimatePresence>

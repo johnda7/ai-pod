@@ -231,7 +231,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
                 <div>
                   <h1 className="text-xl font-bold text-white">Привычки</h1>
                   <div className="flex items-center gap-2">
-                    <p className="text-white/50 text-xs">{completedToday}/{habits.length} сегодня</p>
+                  <p className="text-white/50 text-xs">{completedToday}/{habits.length} сегодня</p>
                     <SyncIndicator status={syncStatus} />
                   </div>
                 </div>
