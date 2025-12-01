@@ -108,7 +108,7 @@ export interface InputSlide extends BaseSlide {
 
 export interface GameSlide extends BaseSlide {
   type: 'GAME';
-  gameType: 'FOCUS_DEFENDER' | 'NEURO_MATCH' | 'REACTION_TIME' | 'BUBBLE_POP' | 'EMOTION_MATCH' | 'BREATH_SYNC';
+  gameType: 'FOCUS_DEFENDER' | 'NEURO_MATCH' | 'REACTION_TIME' | 'BUBBLE_POP' | 'EMOTION_MATCH' | 'BREATH_SYNC' | 'THERMITE_GRID';
   instructions: string;
   durationSeconds?: number; // For timed games
   targetScore?: number;
