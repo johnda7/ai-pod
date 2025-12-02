@@ -1,298 +1,1354 @@
 
-import React, { useState } from 'react';
-import { TASKS } from '../constants';
-import { Task, LearningStyle, User } from '../types';
-import { Check, Lock, Star, Video, Headphones, Zap, Gamepad2, Dribbble, Palette, BrainCircuit, Eye, Hand, User as UserIcon, LayoutGrid, Music, Github } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { TASKS, SHOP_ITEMS, ACHIEVEMENTS } from '../constants';
+import { Task, User, ShopItem } from '../types';
+import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info, Award, Flame, Wrench, Trophy, Calendar, Play } from 'lucide-react';
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
-import { TeenProfile } from './TeenProfile';
+import { ModernLessonView } from './ModernLessonView';
+import { MemoryGame } from './MemoryGame';
+import { ShopView } from './ShopView';
+import { AchievementsView } from './AchievementsView';
+import { ToolsView } from './ToolsView';
+import { purchaseItem, checkAndUpdateStreak, checkMilestoneReward } from '../services/db';
+import { isSupabaseEnabled } from '../services/supabaseClient';
+import { GameTutorial } from './GameTutorial';
+import { hapticMedium, hapticSuccess, hapticLight } from '../services/telegramService';
+import { playXPSound, playCoinSound, playLevelUpSound, playStreakSound, playSurpriseSound } from '../services/soundService';
+import { Confetti, RewardPopup, Toast, FloatingXP, FloatingCoins, LevelUpAnimation, StreakAnimation } from './Confetti';
+import { DailyRewards } from './DailyRewards';
+import { ActivityChart } from './ActivityChart';
+import { DailyQuoteWidget } from './KatyaQuotes';
+import { HabitsWidget } from './HabitsWidget';
+import { KatyaWelcome, KatyaMotivation, useKatyaMotivation } from './KatyaVideo';
 
 interface TeenDashboardProps {
   user: User;
   onTaskComplete: (task: Task) => void;
-  onUpdateUserStyle?: (style: LearningStyle) => void;
-  onUpdateInterest?: (interest: string) => void;
-  onExportData?: () => void;
-  onImportData?: (file: File) => void;
-  onOpenGitHubSync?: () => void;
+  onUserUpdate?: (user: User) => void;
 }
 
-type Tab = 'LEARN' | 'RELAX' | 'PROFILE';
+type Tab = 'LEARN' | 'TOOLS' | 'RELAX' | 'PROFILE';
 
-const INTERESTS = [
-  { id: 'Гейминг', icon: Gamepad2, color: 'bg-purple-500' },
-  { id: 'Футбол', icon: Dribbble, color: 'bg-green-500' },
-  { id: 'Арт', icon: Palette, color: 'bg-pink-500' },
-  { id: 'IT', icon: BrainCircuit, color: 'bg-blue-500' },
-];
-
-export const TeenDashboard: React.FC<TeenDashboardProps> = ({ 
-  user, 
-  onTaskComplete, 
-  onUpdateUserStyle, 
-  onUpdateInterest,
-  onExportData,
-  onImportData,
-  onOpenGitHubSync
-}) => {
-  const [activeTab, setActiveTab] = useState<Tab>('LEARN');
+export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser, onTaskComplete, onUserUpdate }) => {
+  const [user, setUser] = useState<User>(initialUser); // Local user state to reflect changes immediately
+  const [activeTab, setActiveTab] = useState<Tab>('LEARN'); 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isGameOpen, setIsGameOpen] = useState(false);
+  const [prevXp, setPrevXp] = useState(user.xp);
+  const [isXpAnimating, setIsXpAnimating] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [showShop, setShowShop] = useState(false);
   
-  // Use local state for immediate UI feedback, but sync with prop
-  const userInterest = user.interest || 'Гейминг';
+  // New UI States
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showReward, setShowReward] = useState(false);
+  const [rewardData, setRewardData] = useState({ xp: 0, coins: 0 });
+  const [showDailyRewards, setShowDailyRewards] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  
+  // Enhanced Animation States
+  const [showFloatingXP, setShowFloatingXP] = useState(false);
+  const [floatingXPAmount, setFloatingXPAmount] = useState(0);
+  const [showFloatingCoins, setShowFloatingCoins] = useState(false);
+  const [floatingCoinsAmount, setFloatingCoinsAmount] = useState(0);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [newLevel, setNewLevel] = useState(1);
+  const [showStreak, setShowStreak] = useState(false);
+  
+  // TikTok-style lesson mode (modern view)
+  const [useTikTokMode, setUseTikTokMode] = useState(true); // Default to new modern view
+  const [showModernLesson, setShowModernLesson] = useState(false);
 
-  const handleInterestChange = (newInterest: string) => {
-    if (onUpdateInterest) {
-      onUpdateInterest(newInterest);
+  // Katya motivation video after lesson completion
+  const { showMotivation, lessonTitle, triggerMotivation, closeMotivation } = useKatyaMotivation();
+
+  // Telegram user data state
+  const [telegramUser, setTelegramUser] = useState<{
+    id?: number;
+    first_name?: string;
+    last_name?: string;
+    username?: string;
+    photo_url?: string;
+  } | null>(null);
+
+  // Initialize Telegram WebApp and get user data
+  useEffect(() => {
+    const initTelegram = () => {
+      try {
+        const tg = (window as any).Telegram?.WebApp;
+        if (tg) {
+          // Expand to full height
+          tg.expand?.();
+          tg.ready?.();
+          
+          // Get user data from initDataUnsafe
+          const userData = tg.initDataUnsafe?.user;
+          if (userData) {
+            console.log('✅ Telegram user found:', userData);
+            setTelegramUser({
+              id: userData.id,
+              first_name: userData.first_name,
+              last_name: userData.last_name,
+              username: userData.username,
+              photo_url: userData.photo_url,
+            });
+          } else {
+            console.log('⚠️ No user in initDataUnsafe');
+            
+            // Try to get from URL params (for testing)
+            const urlParams = new URLSearchParams(window.location.search);
+            const userParam = urlParams.get('user');
+            if (userParam) {
+              try {
+                const parsedUser = JSON.parse(userParam);
+                console.log('✅ User from URL params:', parsedUser);
+                setTelegramUser(parsedUser);
+              } catch (e) {
+                console.log('❌ Failed to parse user from URL');
+              }
+            }
+          }
+        } else {
+          console.log('⚠️ Telegram WebApp not available - running in browser mode');
+        }
+      } catch (e) {
+        console.error('❌ Error initializing Telegram:', e);
+      }
+    };
+
+    // Try immediately
+    initTelegram();
+    
+    // Also try after delays (Telegram SDK may load async)
+    const timer1 = setTimeout(initTelegram, 300);
+    const timer2 = setTimeout(initTelegram, 1000);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, []);
+
+  // Show tutorial for new users
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem('ai_pod_tutorial_seen');
+    if (!hasSeenTutorial && user.completedTaskIds.length === 0) {
+      setShowTutorial(true);
     }
+  }, []);
+
+  const handleCloseTutorial = () => {
+    setShowTutorial(false);
+    localStorage.setItem('ai_pod_tutorial_seen', 'true');
+  };
+  
+  // Sync local state if prop changes (e.g. from parent refresh)
+  useEffect(() => {
+      setUser(initialUser);
+  }, [initialUser]);
+
+  // 🔥 Check and update streak on daily login
+  useEffect(() => {
+    const checkStreak = async () => {
+      if (!user?.id) return;
+      const result = await checkAndUpdateStreak(user.id);
+      if (result) {
+        // Show streak animation
+        setShowStreak(true);
+        playStreakSound(); // 🔊 Звук streak!
+        playCoinSound(); // 🔊 Звук монет
+        // Update user locally
+        setUser(prev => ({ ...prev, streak: result.newStreak, coins: prev.coins + result.bonus }));
+        // Show toast
+        setToastMessage(result.message);
+        setTimeout(() => {
+          setToastMessage('');
+          setShowStreak(false);
+        }, 3000);
+        // Call parent update if available
+        if (onUserUpdate) {
+          onUserUpdate({ ...user, streak: result.newStreak, coins: user.coins + result.bonus });
+        }
+      }
+    };
+    checkStreak();
+  }, [user?.id]);
+
+  // 🏆 Check milestone rewards after lesson completion
+  useEffect(() => {
+    const checkMilestone = async () => {
+      if (!user?.id || user.completedTaskIds.length === 0) return;
+      const result = await checkMilestoneReward(user.id);
+      if (result) {
+        // Show celebration!
+        setShowConfetti(true);
+        playLevelUpSound(); // 🔊 Торжественный звук!
+        playXPSound(); // 🔊 XP
+        playCoinSound(); // 🔊 Монеты
+        setUser(prev => ({
+          ...prev,
+          xp: prev.xp + result.xpBonus,
+          coins: prev.coins + result.coinsBonus,
+          level: Math.floor((prev.xp + result.xpBonus) / 500) + 1
+        }));
+        setToastMessage(`🏆 ${result.milestone} уроков! +${result.xpBonus} XP, +${result.coinsBonus} монет!`);
+        setTimeout(() => {
+          setShowConfetti(false);
+          setToastMessage('');
+        }, 4000);
+        if (onUserUpdate) {
+          onUserUpdate({
+            ...user,
+            xp: user.xp + result.xpBonus,
+            coins: user.coins + result.coinsBonus,
+            level: Math.floor((user.xp + result.xpBonus) / 500) + 1
+          });
+        }
+      }
+    };
+    checkMilestone();
+  }, [user?.completedTaskIds?.length]);
+
+  // Daily Quests State (Mock for now)
+  const [dailyQuests, setDailyQuests] = useState([
+      { id: 1, text: 'Закончи 1 урок', completed: user.completedTaskIds.length > 0, reward: 50 },
+      { id: 2, text: 'Сделай паузу', completed: false, reward: 30 },
+      { id: 3, text: 'Зайди в магазин', completed: false, reward: 20 }
+  ]);
+
+  useEffect(() => {
+    if (user.xp !== prevXp) {
+        setIsXpAnimating(true);
+        const timer = setTimeout(() => setIsXpAnimating(false), 1000);
+        setPrevXp(user.xp);
+        return () => clearTimeout(timer);
+    }
+  }, [user.xp, prevXp]);
+
+  const handleTaskClick = (task: Task, isLocked: boolean) => {
+      if (isLocked) return; 
+      hapticMedium(); // 📳 Вибрация при выборе урока
+      setSelectedTask(task);
+      if (useTikTokMode) {
+        setShowModernLesson(true);
+      }
   };
 
-  const getStyleBadge = () => {
-    if (!user.learningStyle) return null;
-    const config = {
-        'VISUAL': { label: 'Visual', icon: Eye, color: 'bg-blue-500' },
-        'AUDIO': { label: 'Audio', icon: Headphones, color: 'bg-purple-500' },
-        'KINESTHETIC': { label: 'Doer', icon: Hand, color: 'bg-orange-500' },
-    }[user.learningStyle];
-    const Icon = config.icon;
+  const handleGameComplete = (xp: number) => {
+      setIsGameOpen(false);
+  };
+
+  // Enhanced lesson completion with animations
+  const handleLessonComplete = (task: Task) => {
+    // 1. Haptic feedback
+    hapticSuccess();
+    
+    // 2. Calculate rewards
+    const xpReward = task.xpReward || 100;
+    const coinsReward = task.coinsReward || Math.floor(xpReward * 0.5);
+    
+    // 3. Show floating XP animation + sound
+    setFloatingXPAmount(xpReward);
+    setShowFloatingXP(true);
+    playXPSound(); // 🔊 Звук XP
+    setTimeout(() => setShowFloatingXP(false), 1500);
+    
+    // 4. Show floating coins animation + sound
+    setFloatingCoinsAmount(coinsReward);
+    setShowFloatingCoins(true);
+    setTimeout(() => playCoinSound(), 200); // 🔊 Звук монет
+    setTimeout(() => setShowFloatingCoins(false), 1700);
+    
+    // 5. Check for level up (500 XP per level)
+    const currentLevel = Math.floor(user.xp / 500) + 1;
+    const newLevelAfter = Math.floor((user.xp + xpReward) / 500) + 1;
+    
+    if (newLevelAfter > currentLevel) {
+      setTimeout(() => {
+        setNewLevel(newLevelAfter);
+        setShowLevelUp(true);
+        setShowConfetti(true);
+        playLevelUpSound(); // 🔊 Level Up!
+        setTimeout(() => {
+          setShowLevelUp(false);
+          setShowConfetti(false);
+        }, 3500);
+      }, 800);
+    }
+    
+    // 6. Show reward popup
+    setRewardData({ xp: xpReward, coins: coinsReward });
+    setTimeout(() => {
+      setShowReward(true);
+      setTimeout(() => setShowReward(false), 2500);
+    }, 400);
+    
+    // 7. Complete the task
+    onTaskComplete(task);
+    
+    // 8. Trigger Katya motivation video (30% chance)
+    triggerMotivation(task.title);
+    
+    // 9. Close lesson view
+    setShowModernLesson(false);
+    setSelectedTask(null);
+  };
+
+  // Refresh user data from localStorage
+  const refreshUserData = () => {
+      const users = JSON.parse(localStorage.getItem('ai_teenager_users_v6') || '[]');
+      const updatedUser = users.find((u: User) => u.id === user.id);
+      if (updatedUser) {
+          setUser(updatedUser);
+          if (onUserUpdate) {
+              onUserUpdate(updatedUser);
+          }
+      }
+  };
+
+  // 🚀 ОПТИМИЗАЦИЯ: Мемоизация списка уроков (пересчитывается только при изменении completedTaskIds)
+  const tasksWithStatus = useMemo(() => {
+    return TASKS.map((task, index) => ({
+      task,
+      index,
+      isCompleted: user.completedTaskIds.includes(task.id),
+      isLocked: false, // Все уроки открыты для тестирования
+      isActive: !user.completedTaskIds.includes(task.id),
+      isNewWeek: index === 0 || task.week > TASKS[index - 1].week,
+    }));
+  }, [user.completedTaskIds]);
+
+  // Check for daily rewards on mount
+  useEffect(() => {
+    const lastClaim = localStorage.getItem('daily_reward_last_claim');
+    const today = new Date().toDateString();
+    if (lastClaim !== today && user.completedTaskIds.length > 0) {
+      // Show daily rewards after a delay
+      const timer = setTimeout(() => setShowDailyRewards(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Handle daily reward claim
+  const handleDailyRewardClaim = (day: number, xp: number, coins: number) => {
+    setRewardData({ xp, coins });
+    setShowReward(true);
+    
+    // Update user
+    const updatedUser = {
+      ...user,
+      xp: user.xp + xp,
+      coins: user.coins + coins,
+      streak: user.streak + 1,
+    };
+    setUser(updatedUser);
+    
+    // Save to localStorage
+    const users = JSON.parse(localStorage.getItem('ai_teenager_users_v6') || '[]');
+    const userIndex = users.findIndex((u: User) => u.id === user.id);
+    if (userIndex !== -1) {
+      users[userIndex] = updatedUser;
+      localStorage.setItem('ai_teenager_users_v6', JSON.stringify(users));
+    }
+    
+    if (onUserUpdate) onUserUpdate(updatedUser);
+  };
+
+  // Show toast notification
+  const showToastMessage = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+  };
+
+  // REAL PURCHASE LOGIC
+  const handleBuyItem = async (item: ShopItem) => {
+      const success = await purchaseItem(user.id, item);
+      
+      if (success) {
+          // Small delay to ensure localStorage is updated
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          // Reload user from storage to get accurate state
+          refreshUserData();
+      } else {
+          // Fallback if validation failed inside purchaseItem
+          alert("Недостаточно монет или предмет уже куплен!");
+      }
+  };
+
+  const nextLevelXp = user.level * 500;
+  const prevLevelXp = (user.level - 1) * 500;
+  const levelProgress = Math.min(100, Math.max(0, ((user.xp - prevLevelXp) / (nextLevelXp - prevLevelXp)) * 100));
+
+  const inventoryItems = user.inventory.map(id => SHOP_ITEMS.find(item => item.id === id)).filter(Boolean);
+
+  // Обработка награды от игр
+  const handleGameReward = (xp: number, coins: number, bonus?: string) => {
+    const updatedUser = {
+      ...user,
+      xp: user.xp + xp,
+      coins: user.coins + coins,
+      level: Math.floor((user.xp + xp) / 100) + 1,
+    };
+    
+    // Добавляем бонусный предмет в инвентарь
+    if (bonus && !updatedUser.inventory.includes(bonus)) {
+      updatedUser.inventory = [...updatedUser.inventory, bonus];
+    }
+    
+    setUser(updatedUser);
+    localStorage.setItem('ai_pod_user', JSON.stringify(updatedUser));
+    onUserUpdate?.(updatedUser);
+    
+    // Анимация XP
+    setIsXpAnimating(true);
+    setTimeout(() => setIsXpAnimating(false), 500);
+  };
+
+  const renderContent = () => {
+    if (activeTab === 'TOOLS') return <ToolsView user={user} onXpEarned={handleGameReward} />;
+    if (activeTab === 'RELAX') return <MeditationView />;
+
+    if (activeTab === 'PROFILE') {
+        // Use Telegram user data from state
+        const displayName = telegramUser?.first_name || telegramUser?.username || user.name;
+        const telegramPhoto = telegramUser?.photo_url;
+        const telegramUsername = telegramUser?.username;
+        const telegramId = telegramUser?.id;
+        
+        return (
+            <div className="px-5 pt-4 pb-32 min-h-screen relative" style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, #0f0f2a 50%, #0a0a1a 100%)' }}>
+                
+                {/* 1. HERO IDENTITY CARD - SIMPLIFIED */}
+                <div className="relative w-full rounded-[2rem] overflow-hidden p-6 flex flex-col items-center text-center border border-white/10 mb-6"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                    backdropFilter: 'blur(20px)',
+                  }}
+                >
+                    {/* Static background gradient */}
+                    <div className="absolute inset-0 -z-10">
+                        <div className="absolute top-0 right-0 w-[200px] h-[200px] rounded-full opacity-30"
+                          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%)' }}
+                        />
+                    </div>
+
+                    {/* Avatar - Telegram photo or default */}
+                    <div className="relative z-10 mb-4">
+                        <div className="relative w-24 h-24 rounded-full p-1 bg-gradient-to-br from-indigo-500/50 to-purple-500/50 shadow-lg">
+                            <img 
+                              src={telegramPhoto || user.avatarUrl} 
+                              className="w-full h-full rounded-full object-cover bg-[#0A0F1C]" 
+                              alt="Profile" 
+                            />
+                            {/* Online Status */}
+                            <div className="absolute bottom-0 right-0 w-5 h-5 bg-[#0A0F1C] rounded-full flex items-center justify-center">
+                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Name & ID */}
+                    <div className="relative z-10 mb-4">
+                        <h2 className="text-2xl font-black text-white tracking-tight mb-1">{displayName}</h2>
+                        {telegramId ? (
+                          <p className="text-white/40 text-xs font-mono">@{telegramUsername || `id${telegramId}`}</p>
+                        ) : (
+                          <p className="text-white/40 text-xs">Игрок AI Pod</p>
+                        )}
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 mt-2">
+                             <ShieldCheck size={12} className="text-indigo-400" />
+                             <span className="text-xs font-bold text-indigo-200 uppercase tracking-widest">Уровень {user.level}</span>
+                        </div>
+                    </div>
+
+                    {/* Stats Grid - Compact */}
+                    <div className="relative z-10 grid grid-cols-4 gap-2 w-full mb-4">
+                        <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
+                            <div className="text-lg font-black text-white">{user.level}</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase">LVL</div>
+                        </div>
+                        <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
+                            <div className="text-lg font-black text-white">{user.xp}</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase">XP</div>
+                        </div>
+                        <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
+                            <div className="text-lg font-black text-yellow-400">{user.coins || 0}</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase">COINS</div>
+                        </div>
+                        <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
+                            <div className="text-lg font-black text-orange-400">{user.streak}</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase">DAYS</div>
+                        </div>
+                    </div>
+
+                    {/* Level Progress - Enhanced */}
+                    <div className="relative z-10 w-full">
+                        <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1">
+                            <span>Уровень {user.level}</span>
+                            <span>{user.xp - prevLevelXp}/{nextLevelXp - prevLevelXp} XP</span>
+                        </div>
+                        <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
+                            <div 
+                                style={{width: `${levelProgress}%`}} 
+                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                            ></div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 🎁 LEVEL REWARDS ROADMAP */}
+                <div className="mb-6 p-4 rounded-2xl border border-white/10" 
+                  style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%)' }}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                      <Gift size={16} className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-bold text-sm">Награды за уровни</h3>
+                      <p className="text-white/40 text-xs">Следующая на уровне {user.level + 1}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Level Milestones */}
+                  <div className="flex justify-between items-center relative">
+                    {/* Progress Line */}
+                    <div className="absolute top-4 left-4 right-4 h-0.5 bg-white/10 rounded-full">
+                      <div 
+                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (user.level / 10) * 100)}%` }}
+                      />
+                    </div>
+                    
+                    {/* Milestone Points */}
+                    {[
+                      { lvl: 1, reward: '🎁 100', icon: '💰', label: 'Монет' },
+                      { lvl: 3, reward: '❄️ 1', icon: '❄️', label: 'Заморозка' },
+                      { lvl: 5, reward: '🎁 500', icon: '💰', label: 'Монет' },
+                      { lvl: 7, reward: '⚡ x2', icon: '⚡', label: 'XP Буст' },
+                      { lvl: 10, reward: '👑', icon: '👑', label: 'Рамка' },
+                    ].map((m, i) => {
+                      const isUnlocked = user.level >= m.lvl;
+                      const isCurrent = user.level === m.lvl - 1;
+                      return (
+                        <div key={i} className="relative z-10 flex flex-col items-center">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                            isUnlocked 
+                              ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/30' 
+                              : isCurrent
+                                ? 'bg-white/20 text-white border-2 border-indigo-500 animate-pulse'
+                                : 'bg-white/10 text-white/40'
+                          }`}>
+                            {isUnlocked ? '✓' : m.lvl}
+                          </div>
+                          <span className={`text-[9px] mt-1 font-bold ${isUnlocked ? 'text-indigo-400' : 'text-white/30'}`}>
+                            {m.icon}
+                          </span>
+                          <span className="text-[8px] text-white/40">{m.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Next Reward Info */}
+                  {user.level < 10 && (
+                    <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/10">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">
+                            {user.level < 3 ? '❄️' : user.level < 5 ? '💰' : user.level < 7 ? '⚡' : '👑'}
+                          </span>
+                          <div>
+                            <p className="text-white text-xs font-bold">
+                              {user.level < 3 ? 'Заморозка серии' : user.level < 5 ? '500 монет' : user.level < 7 ? 'XP Буст x2' : 'Золотая рамка'}
+                            </p>
+                            <p className="text-white/40 text-[10px]">
+                              Ещё {(user.level < 3 ? 3 : user.level < 5 ? 5 : user.level < 7 ? 7 : 10) * 500 - user.xp} XP до награды
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-xs font-bold text-indigo-400 bg-indigo-500/20 px-2 py-1 rounded-lg">
+                          LVL {user.level < 3 ? 3 : user.level < 5 ? 5 : user.level < 7 ? 7 : 10}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* SHOP BUTTON - Quick Access */}
+                <button 
+                    onClick={() => setShowShop(true)}
+                    className="w-full mb-6 p-4 rounded-2xl flex items-center gap-4 transition-all active:scale-[0.98]"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(234,179,8,0.2) 0%, rgba(234,88,12,0.1) 100%)',
+                      border: '1px solid rgba(234,179,8,0.3)',
+                    }}
+                >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg">
+                        <ShoppingBag size={24} className="text-white" />
+                    </div>
+                    <div className="flex-1 text-left">
+                        <div className="text-white font-bold">Магазин</div>
+                        <div className="text-yellow-400/70 text-sm">Потрать свои {user.coins || 0} монет</div>
+                    </div>
+                    <ChevronRight size={20} className="text-yellow-400/50" />
+                </button>
+
+                {/* 2. ACHIEVEMENTS PREVIEW */}
+                <div className="mb-6">
+                    <div className="flex items-center justify-between px-2 mb-4">
+                        <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                            <Trophy size={18} className="text-yellow-400"/> Достижения
+                        </h3>
+                        <span className="text-xs font-bold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded-lg">
+                            {ACHIEVEMENTS.filter(a => {
+                                if (a.requirement.type === 'TASKS_COMPLETED') return user.completedTaskIds.length >= a.requirement.value;
+                                if (a.requirement.type === 'STREAK_DAYS') return user.streak >= a.requirement.value;
+                                if (a.requirement.type === 'XP_EARNED') return user.xp >= a.requirement.value;
+                                return false;
+                            }).length} / {ACHIEVEMENTS.length}
+                        </span>
+                    </div>
+                    
+                    <div className="flex gap-3 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide">
+                        {ACHIEVEMENTS.slice(0, 5).map((achievement, idx) => {
+                            const isUnlocked = 
+                                (achievement.requirement.type === 'TASKS_COMPLETED' && user.completedTaskIds.length >= achievement.requirement.value) ||
+                                (achievement.requirement.type === 'STREAK_DAYS' && user.streak >= achievement.requirement.value) ||
+                                (achievement.requirement.type === 'XP_EARNED' && user.xp >= achievement.requirement.value);
+                            
+                            return (
+                                <div 
+                                    key={achievement.id}
+                                    className={`w-20 h-20 shrink-0 rounded-[1.2rem] flex flex-col items-center justify-center relative overflow-hidden ${
+                                        isUnlocked 
+                                            ? 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/30' 
+                                            : 'bg-slate-800/50 border border-white/5'
+                                    }`}
+                                >
+                                    <span className={`text-2xl ${isUnlocked ? '' : 'grayscale opacity-30'}`}>
+                                        {achievement.icon}
+                                    </span>
+                                    {isUnlocked && (
+                                        <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                                            <Check size={10} className="text-white" />
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                        
+                        {/* View All Button */}
+                        <button 
+                            onClick={() => setShowAchievements(true)}
+                            className="w-20 h-20 shrink-0 rounded-[1.2rem] bg-white/5 border border-white/10 border-dashed flex flex-col items-center justify-center gap-1 text-slate-500 hover:text-white hover:bg-white/10 transition-all active:scale-95"
+                        >
+                            <Award size={20} />
+                            <span className="text-[9px] font-bold uppercase">Все</span>
+                        </button>
+                    </div>
+                                 </div>
+
+                {/* 3. INVENTORY - Compact with proper icons */}
+                <div className="mb-6">
+                    <div className="flex items-center justify-between px-1 mb-3">
+                        <h3 className="text-white font-bold text-base flex items-center gap-2">
+                            <Sparkles size={16} className="text-amber-400"/> Инвентарь
+                        </h3>
+                        <span className="text-xs font-bold text-slate-500">{inventoryItems.length} шт</span>
+                             </div>
+                    
+                    <div className="flex gap-2 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
+                        {inventoryItems.length === 0 ? (
+                          <div className="w-full py-4 text-center text-white/30 text-sm">
+                            Пусто. Загляни в магазин!
+                          </div>
+                        ) : (
+                          inventoryItems.map((item, idx) => {
+                            // Правильные иконки для каждого предмета
+                            const getItemIcon = (itemId: string | undefined) => {
+                              switch(itemId) {
+                                case 'hp_potion': return '❤️';
+                                case 'streak_freeze': return '❄️';
+                                case 'mystery_box': return '🎁';
+                                case 'frame_gold': return '👑';
+                                default: return '📦';
+                              }
+                            };
+                            const getItemName = (itemId: string | undefined) => {
+                              switch(itemId) {
+                                case 'hp_potion': return 'HP';
+                                case 'streak_freeze': return 'Заморозка';
+                                case 'mystery_box': return 'Сюрприз';
+                                case 'frame_gold': return 'Рамка';
+                                default: return 'Предмет';
+                              }
+                            };
+                            return (
+                              <div key={idx} className="flex flex-col items-center">
+                                <div className="w-14 h-14 shrink-0 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                  <span className="text-2xl">{getItemIcon(item?.id)}</span>
+                                </div>
+                                <span className="text-[9px] text-white/40 mt-1">{getItemName(item?.id)}</span>
+                             </div>
+                            );
+                          })
+                        )}
+                    </div>
+                </div>
+
+                {/* 4. SETTINGS MENU - Simplified */}
+                <div className="space-y-2">
+                     {/* How to Play Button */}
+                         <button 
+                        onClick={() => setShowTutorial(true)}
+                        className="w-full p-3 rounded-xl flex items-center gap-3 transition-all active:scale-[0.98]"
+                        style={{
+                          background: 'rgba(99,102,241,0.15)',
+                          border: '1px solid rgba(99,102,241,0.2)',
+                        }}
+                     >
+                         <div className="w-10 h-10 rounded-lg bg-indigo-500/30 flex items-center justify-center">
+                             <Info size={18} className="text-indigo-400" />
+                             </div>
+                             <div className="flex-1 text-left">
+                             <div className="text-sm font-bold text-white">Как играть?</div>
+                         </div>
+                         <ChevronRight size={18} className="text-indigo-400/50" />
+                     </button>
+
+                     <button 
+                        className="w-full p-3 rounded-xl flex items-center gap-3 transition-all active:scale-[0.98]"
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                        }}
+                     >
+                         <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
+                             <HelpCircle size={18} className="text-white/50" />
+                             </div>
+                         <div className="flex-1 text-left">
+                             <div className="text-sm font-bold text-white/80">Поддержка</div>
+                                 </div>
+                         <ChevronRight size={18} className="text-white/30" />
+                         </button>
+                     
+                     <button className="w-full mt-6 p-4 rounded-[1.5rem] border border-red-500/20 text-red-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-500/10 transition-all active:scale-95">
+                         <LogOut size={18} />
+                         Выйти из аккаунта
+                     </button>
+                </div>
+
+            </div>
+        );
+    }
+
+    // --- GAME MAP LOGIC ---
+    const ITEM_SPACING = 140; 
+    const START_PADDING = 150;
+    const END_PADDING = 250;
+    const mapHeight = (TASKS.length * ITEM_SPACING) + START_PADDING + END_PADDING; 
+
     return (
-        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${config.color} text-white shadow-md animate-in slide-in-from-top-2`}>
-            <Icon size={12} />
-            <span className="text-[10px] font-black uppercase tracking-wider">{config.label}</span>
+        <div className="relative pt-2 pb-40 px-4 min-h-screen overflow-x-hidden">
+             
+             {/* TOP BAR - iOS 26 LIQUID GLASS - COMPACT - LOWERED */}
+             <div className="flex justify-between items-center mb-4 relative z-40 pt-6 sticky top-0 pb-3 -mx-4 px-4 transition-all duration-300">
+                 {/* Glass background */}
+                 <div 
+                   className="absolute inset-0 -top-16"
+                   style={{
+                     background: 'linear-gradient(to bottom, rgba(10,15,28,1) 0%, rgba(10,15,28,0.95) 60%, transparent 100%)',
+                   }}
+                 />
+                 
+                 {/* Left side - HP & Streak */}
+                 <div className="flex items-center gap-1.5 relative z-10">
+                    {/* HP - Compact Glass Pill */}
+                    <div 
+                      className="px-2.5 py-1.5 rounded-xl flex items-center gap-1.5"
+                      style={{
+                        background: 'rgba(244,63,94,0.12)',
+                        backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(244,63,94,0.15)',
+                      }}
+                    >
+                      <Heart size={12} fill="currentColor" className="text-rose-400" />
+                      <span className="text-xs font-bold text-rose-300">{user.hp || 5}</span>
+                    </div>
+                    
+                    {/* Streak - Compact */}
+                    {user.streak > 0 && (
+                      <div 
+                        className="px-2.5 py-1.5 rounded-xl flex items-center gap-1"
+                        style={{
+                          background: 'rgba(249,115,22,0.12)',
+                          backdropFilter: 'blur(20px)',
+                          border: '1px solid rgba(249,115,22,0.15)',
+                        }}
+                      >
+                        <Flame size={12} className="text-orange-400" />
+                        <span className="text-xs font-bold text-orange-300">{user.streak}</span>
+                      </div>
+                    )}
+                 </div>
+                 
+                 {/* Right side - XP & Coins */}
+                 <div className="flex gap-1.5 items-center relative z-10">
+                     {/* XP - Compact */}
+                     <div 
+                       className="px-2.5 py-1.5 rounded-xl flex items-center gap-1.5"
+                       style={{
+                         background: 'rgba(168,85,247,0.12)',
+                         backdropFilter: 'blur(20px)',
+                         border: '1px solid rgba(168,85,247,0.15)',
+                       }}
+                     >
+                       <Zap size={12} className="text-purple-400" />
+                       <span className={`text-xs font-bold text-purple-300 ${isXpAnimating ? 'animate-pulse' : ''}`}>
+                         {user.xp}
+                       </span>
+                     </div>
+                     
+                     {/* COINS - Clickable */}
+                     <button 
+                       onClick={() => setActiveTab('SHOP')}
+                       className="px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95"
+                       style={{
+                         background: 'rgba(234,179,8,0.15)',
+                         backdropFilter: 'blur(20px)',
+                         border: '1px solid rgba(234,179,8,0.2)',
+                       }}
+                     >
+                       <Coins size={12} className="text-yellow-400" />
+                       <span className="text-xs font-bold text-yellow-300">{user.coins || 0}</span>
+                     </button>
+                 </div>
+             </div>
+
+             {/* WELCOME CARD - Always show with progress */}
+             <div className="mb-4 mx-auto max-w-sm animate-in fade-in slide-in-from-top-4 duration-500">
+                 <div 
+                   className="relative overflow-hidden rounded-2xl p-4"
+                   style={{
+                     background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.06) 100%)',
+                     backdropFilter: 'blur(30px)',
+                     border: '1px solid rgba(99,102,241,0.15)',
+                   }}
+                 >
+                     <div className="flex items-center gap-3 mb-3">
+                         <div className="text-3xl">👋</div>
+                         <div className="flex-1">
+                             <h3 className="text-white font-bold text-sm">Привет, {telegramUser?.first_name || telegramUser?.username || user.name}!</h3>
+                             <p className="text-white/50 text-xs">
+                               {user.completedTaskIds.length === 0 
+                                 ? 'Начни своё путешествие! 🚀' 
+                                 : user.streak > 0 
+                                   ? `🔥 ${user.streak} ${user.streak === 1 ? 'день' : user.streak < 5 ? 'дня' : 'дней'} подряд!`
+                                   : 'С тобой всё нормально ✨'
+                               }
+                             </p>
+                         </div>
+                         <button 
+                             onClick={() => setShowTutorial(true)}
+                             className="px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-300 transition-all active:scale-95"
+                             style={{
+                               background: 'rgba(99,102,241,0.2)',
+                               border: '1px solid rgba(99,102,241,0.3)',
+                             }}
+                         >
+                             Как играть?
+                         </button>
+                     </div>
+                     
+                    {/* Level Progress Bar */}
+                    <div className="relative">
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-white/60 text-[10px] font-medium">Уровень {user.level}</span>
+                            <span className="text-white/40 text-[10px]">{user.xp % 500}/500 XP</span>
+                        </div>
+                        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{
+                                width: `${(user.xp % 500) / 5}%`,
+                                background: 'linear-gradient(90deg, #6366f1 0%, #a855f7 100%)',
+                              }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* WEEKLY PROGRESS - Mini Stats */}
+            <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75">
+                <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { icon: '🎯', label: 'Уроки', value: user.completedTaskIds.length, color: 'from-indigo-500/20 to-purple-500/20' },
+                      { icon: '⚡', label: 'XP', value: user.xp, color: 'from-yellow-500/20 to-orange-500/20' },
+                      { icon: '🔥', label: 'Серия', value: user.streak, color: 'from-red-500/20 to-pink-500/20' },
+                      { icon: '💎', label: 'Монеты', value: user.coins, color: 'from-cyan-500/20 to-blue-500/20' },
+                    ].map((stat, i) => (
+                      <div 
+                        key={i}
+                        className="relative overflow-hidden rounded-xl p-2.5 text-center"
+                        style={{
+                          background: 'rgba(255,255,255,0.03)',
+                          border: '1px solid rgba(255,255,255,0.06)',
+                        }}
+                      >
+                        <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-50`} />
+                        <div className="relative z-10">
+                          <div className="text-lg mb-0.5">{stat.icon}</div>
+                          <div className="text-white font-bold text-sm">{stat.value}</div>
+                          <div className="text-white/40 text-[8px] uppercase tracking-wider">{stat.label}</div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* DAILY QUOTE FROM KATYA */}
+            <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+                <DailyQuoteWidget />
+            </div>
+
+            {/* HABITS WIDGET */}
+            <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-125">
+                <HabitsWidget 
+                  onOpenHabits={() => setActiveTab('TOOLS')}
+                  onXpReward={(xp) => {
+                    setUser(prev => ({ ...prev, xp: prev.xp + xp }));
+                    setFloatingXPAmount(xp);
+                    setShowFloatingXP(true);
+                  }}
+                />
+            </div>
+
+            {/* DAILY QUESTS - Compact Glass Card */}
+            <div className="mb-4 relative z-10 mx-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
+                 <div 
+                   className="relative overflow-hidden rounded-2xl p-4"
+                   style={{
+                     background: 'rgba(255,255,255,0.05)',
+                     backdropFilter: 'blur(30px)',
+                     border: '1px solid rgba(255,255,255,0.08)',
+                   }}
+                 >
+                     <div className="flex items-center justify-between mb-3 relative z-10">
+                         <div className="flex items-center gap-2">
+                             <Target className="text-indigo-400" size={14} />
+                             <span className="text-white/80 font-semibold text-xs">Цели дня</span>
+             </div>
+                         <span className="text-white/40 text-[10px] font-medium">
+                             {dailyQuests.filter(q => q.completed).length}/{dailyQuests.length}
+                         </span>
+                     </div>
+                     
+                     {/* Compact quest list */}
+                     <div className="space-y-2 relative z-10">
+                         {dailyQuests.map((q) => (
+                             <div 
+                                 key={q.id} 
+                                 className="flex items-center justify-between"
+                             >
+                                 <div className="flex items-center gap-2">
+                                     <div className={`w-4 h-4 rounded-md flex items-center justify-center ${
+                                         q.completed ? 'bg-green-500' : 'bg-white/10 border border-white/20'
+                                     }`}>
+                                         {q.completed && <Check size={10} className="text-white" strokeWidth={3} />}
+                                     </div>
+                                     <span className={`text-xs ${q.completed ? 'text-green-400' : 'text-white/60'}`}>
+                                         {q.text}
+                                     </span>
+                                 </div>
+                                 <span className="text-yellow-400 text-[10px] font-bold">+{q.reward}</span>
+                             </div>
+                         ))}
+                     </div>
+                     
+                     {/* Mini progress bar */}
+                     <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden">
+                         <div 
+                             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                             style={{ width: `${(dailyQuests.filter(q => q.completed).length / dailyQuests.length) * 100}%` }}
+                         />
+                     </div>
+                 </div>
+             </div>
+
+             {/* LESSON PATH - Modern Glass Cards */}
+             <div className="relative mx-auto max-w-sm pb-8" style={{ minHeight: mapHeight }}>
+               
+               {/* SVG Path - Subtle */}
+                <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-0" overflow="visible">
+                    <path 
+                       d={`M 192 40 
+                           ${TASKS.map((_, i) => {
+                              const y = START_PADDING + (i * ITEM_SPACING) - 50;
+                               const x = i % 2 === 0 ? 280 : 100; 
+                               return `L ${x} ${y}`;
+                           }).join(" ")}
+                        `}
+                        fill="none" 
+                        stroke="url(#pathGradient)" 
+                       strokeWidth="2"
+                       strokeDasharray="6 6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                       className="opacity-20"
+                    />
+                    <defs>
+                        <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#6366f1" />
+                           <stop offset="100%" stopColor="#a855f7" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+
+                {TASKS.map((task, index) => {
+                    const isCompleted = user.completedTaskIds.includes(task.id);
+                    // ВРЕМЕННО: Все уроки открыты для просмотра (убрать после тестирования)
+                    const isLocked = false; // index > 0 && !user.completedTaskIds.includes(TASKS[index-1].id);
+                    const isActive = !isCompleted && !isLocked;
+
+                   const topPos = START_PADDING + (index * ITEM_SPACING) - 50;
+                   const leftPos = index % 2 === 0 ? '65%' : '35%'; 
+                    
+                    const isNewWeek = index === 0 || task.week > TASKS[index - 1].week;
+                    
+                    // Иконки для каждого урока
+                    const lessonIcons: Record<string, string> = {
+                      't1': '🧠', 't2': '⚡', 't3': '🎯', 't4': '🔋', 't5': '😴',
+                      't6': '👑', 't7': '🦥', 't8': '🧹', 't9': '❓', 't10': '🐸',
+                      't11': '💪', 't12': '🏗️', 't13': '📈', 't14': '🎮', 't15': '🌊',
+                      't16': '🍅', 't17': '🔬', 't18': '🧘', 't19': '👥', 't20': '📜', 't21': '🏆'
+                    };
+                    const lessonIcon = lessonIcons[task.id] || '📚';
+                    
+                    return (
+                        <React.Fragment key={task.id}>
+                           {/* WEEK DIVIDER - Enhanced */}
+                            {isNewWeek && (
+                                <div 
+                                    className="absolute w-full text-center z-0"
+                                   style={{ top: topPos - 60, left: '50%', transform: 'translateX(-50%)' }}
+                                >
+                                   <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full"
+                                     style={{
+                                       background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.08) 100%)',
+                                       border: '1px solid rgba(99,102,241,0.2)',
+                                     }}
+                                   >
+                                     <Flame size={10} className="text-orange-400" />
+                                     <span className="text-[10px] font-bold uppercase tracking-wider text-white/60">
+                                            Неделя {task.week}
+                                     </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div 
+                               className="absolute z-10"
+                                style={{ top: topPos, left: leftPos, transform: 'translate(-50%, -50%)' }}
+                            >
+                                <button
+                                    onClick={() => handleTaskClick(task, isLocked)}
+                                    disabled={isLocked}
+                                    className={`
+                                       relative flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 w-[165px]
+                                       ${isLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
+                                       ${isActive ? 'hover:scale-105 hover:shadow-xl animate-pulse-soft' : ''}
+                                       ${isActive && !isCompleted ? 'ring-2 ring-indigo-400/50 ring-offset-2 ring-offset-transparent' : ''}
+                                   `}
+                                   style={{
+                                     background: isCompleted 
+                                       ? 'linear-gradient(135deg, rgba(34,197,94,0.2) 0%, rgba(34,197,94,0.08) 100%)'
+                                       : isActive 
+                                         ? task.isBoss 
+                                           ? 'linear-gradient(135deg, rgba(239,68,68,0.25) 0%, rgba(239,68,68,0.1) 100%)'
+                                           : 'linear-gradient(135deg, rgba(99,102,241,0.25) 0%, rgba(139,92,246,0.1) 100%)'
+                                         : 'rgba(255,255,255,0.03)',
+                                     backdropFilter: 'blur(20px)',
+                                     border: isCompleted 
+                                       ? '1px solid rgba(34,197,94,0.4)'
+                                       : isActive 
+                                         ? task.isBoss 
+                                           ? '1px solid rgba(239,68,68,0.4)'
+                                           : '1px solid rgba(99,102,241,0.35)'
+                                         : '1px solid rgba(255,255,255,0.08)',
+                                     boxShadow: isActive && !task.isBoss 
+                                       ? '0 8px 32px rgba(99,102,241,0.2)' 
+                                       : isActive && task.isBoss 
+                                         ? '0 8px 32px rgba(239,68,68,0.2)'
+                                         : 'none',
+                                   }}
+                               >
+                                   {/* Shine effect for active */}
+                                    {isActive && (
+                                     <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+                                       <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent" />
+                                     </div>
+                                    )}
+
+                                   {/* Icon Circle with emoji */}
+                                    <div className={`
+                                       w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all relative
+                                        ${isCompleted 
+                                           ? 'bg-gradient-to-br from-green-400 to-emerald-500' 
+                                            : isLocked 
+                                               ? 'bg-white/5' 
+                                                : task.isBoss 
+                                                   ? 'bg-gradient-to-br from-red-500 to-orange-500' 
+                                                   : 'bg-gradient-to-br from-indigo-500 to-purple-500'
+                                        }
+                                    `}
+                                    style={{
+                                      boxShadow: isActive 
+                                        ? task.isBoss 
+                                          ? '0 4px 20px rgba(239,68,68,0.4)' 
+                                          : '0 4px 20px rgba(99,102,241,0.4)'
+                                        : 'none'
+                                    }}
+                                    >
+                                        {isCompleted 
+                                           ? <Check size={22} strokeWidth={3} className="text-white" /> 
+                                            : isLocked 
+                                               ? <Lock size={16} className="text-white/30" /> 
+                                                : task.isBoss
+                                                   ? <Skull size={22} className="text-white" />
+                                                   : <span className="text-xl">{lessonIcon}</span>
+                                        }
+                                    </div>
+                                    
+                                   {/* Text */}
+                                   <div className="flex-1 text-left min-w-0 relative z-10">
+                                       <span className={`text-[11px] font-bold leading-tight block truncate ${
+                                           isCompleted ? 'text-green-400' : isActive ? 'text-white' : 'text-white/30'
+                                       }`}>
+                                           {task.title}
+                                       </span>
+                                       <div className="flex items-center gap-1.5 mt-0.5">
+                                         <Zap size={10} className={isCompleted ? 'text-green-400/60' : isActive ? 'text-yellow-400' : 'text-white/20'} />
+                                         <span className={`text-[9px] font-medium ${
+                                             isCompleted ? 'text-green-400/60' : isActive ? 'text-yellow-400' : 'text-white/20'
+                                         }`}>
+                                             +{task.xpReward} XP
+                                         </span>
+                                       </div>
+                                        </div>
+
+                                   {/* Active indicator with glow */}
+                                   {isActive && !task.isBoss && (
+                                       <div className="absolute -right-1 -top-1">
+                                         <div className="w-3 h-3 rounded-full bg-indigo-400 animate-pulse" />
+                                         <div className="absolute inset-0 w-3 h-3 rounded-full bg-indigo-400 animate-ping opacity-75" />
+                                       </div>
+                                   )}
+                                   {task.isBoss && isActive && (
+                                       <div className="absolute -right-1 -top-1">
+                                         <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                                         <div className="absolute inset-0 w-3 h-3 rounded-full bg-red-500 animate-ping opacity-75" />
+                                        </div>
+                                    )}
+                                </button>
+                            </div>
+                        </React.Fragment>
+                    );
+                })}
+             </div>
         </div>
     );
   };
 
   return (
-    <div className="h-full bg-slate-50 relative font-sans selection:bg-indigo-100 selection:text-indigo-700">
+    <div className="h-full relative overflow-hidden text-white" style={{ background: 'linear-gradient(135deg, #0a0f1c 0%, #0d1424 50%, #0f172a 100%)' }}>
       
-      {/* --- LEARN TAB --- */}
-      {activeTab === 'LEARN' && (
-        <div className="min-h-full pb-32 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
-          <div className="bg-white/80 backdrop-blur-md p-4 border-b border-slate-100 sticky top-0 z-30 shadow-sm">
-             <div className="flex justify-between items-center mb-3">
-                 <div className="flex items-center gap-3">
-                     <div className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                         <div className="bg-yellow-400 rounded-full p-1 shadow-sm">
-                            <Star fill="white" className="text-white" size={12} />
-                         </div>
-                         <span className="font-black text-slate-800 text-sm">{user.xp} XP</span>
-                     </div>
-                     {getStyleBadge()}
-                 </div>
-                 
-                 <div className="flex items-center gap-2">
-                     {onOpenGitHubSync && (
-                         <button 
-                            onClick={onOpenGitHubSync}
-                            className="w-9 h-9 bg-slate-900 rounded-full flex items-center justify-center text-white shadow-md active:scale-95 transition-transform hover:bg-slate-800 relative group"
-                            title="GitHub Cloud Save"
-                         >
-                            <Github size={16} />
-                            <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full animate-pulse"></span>
-                         </button>
-                     )}
-
-                     <button onClick={() => setActiveTab('PROFILE')} className="w-9 h-9 bg-indigo-100 rounded-full border-2 border-white shadow-md overflow-hidden active:scale-95 transition-transform">
-                         <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
-                     </button>
-                 </div>
-             </div>
-             
-             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                 {INTERESTS.map((item) => (
-                     <button
-                        key={item.id}
-                        onClick={() => handleInterestChange(item.id)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold whitespace-nowrap transition-all ${
-                            userInterest === item.id 
-                            ? `${item.color} text-white shadow-lg shadow-purple-500/20 scale-105` 
-                            : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
-                        }`}
-                     >
-                         <item.icon size={14} />
-                         {item.id}
-                     </button>
-                 ))}
-             </div>
-          </div>
-
-          <div className="relative max-w-md mx-auto pt-8 pb-12 px-8">
-            <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 opacity-40" style={{ minHeight: '900px' }}>
-                <defs>
-                  <linearGradient id="roadGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#6366f1" />
-                    <stop offset="50%" stopColor="#a855f7" />
-                    <stop offset="100%" stopColor="#06b6d4" />
-                  </linearGradient>
-                </defs>
-                <path 
-                  d="M 190 40 Q 190 100 100 120 T 100 240 T 280 360 T 100 480 T 200 600"
-                  fill="none" 
-                  stroke="url(#roadGradient)" 
-                  strokeWidth="40"
-                  strokeLinecap="round"
-                />
-                 <path 
-                  d="M 190 40 Q 190 100 100 120 T 100 240 T 280 360 T 100 480 T 200 600"
-                  fill="none" 
-                  stroke="white" 
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  strokeDasharray="15 25"
-                  className="path-line opacity-50"
-                />
-            </svg>
-
-            {TASKS.map((task, index) => {
-              const isCompleted = user.completedTaskIds.includes(task.id);
-              const isLocked = false; 
-              
-              const isNext = !isCompleted; 
-
-              const TypeIcon = () => {
-                 if (task.type === 'VIDEO') return <Video size={24} fill="currentColor" />;
-                 if (task.type === 'AUDIO') return <Headphones size={24} fill="currentColor" />;
-                 if (task.type === 'UPLOAD') return <LayoutGrid size={24} fill="currentColor" />;
-                 if (task.type === 'ACTION') return <Zap size={24} fill="currentColor" />;
-                 return <Star size={28} fill="currentColor" />;
-              };
-
-              return (
-                <div 
-                  key={task.id}
-                  className="absolute w-32 flex flex-col items-center z-10 transition-all duration-500"
-                  style={{ 
-                    left: `${task.position.x}%`, 
-                    top: `${task.position.y}px`,
-                    transform: 'translateX(-50%)' 
-                  }}
-                >
-                  <button
-                    onClick={() => !isLocked && setSelectedTask(task)}
-                    disabled={isLocked}
-                    className={`
-                        w-20 h-20 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 relative group border-[5px]
-                        ${isCompleted 
-                            ? 'bg-amber-400 border-amber-200 text-white shadow-amber-500/40' 
-                            : isLocked 
-                                ? 'bg-slate-200 border-slate-100 text-slate-400' 
-                                : 'bg-white border-indigo-100 text-indigo-600 shadow-indigo-500/30 animate-bounce-soft'
-                        }
-                    `}
-                  >
-                     {!isCompleted && !isLocked && (
-                         <div className="absolute inset-2 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full opacity-100"></div>
-                     )}
-                     {!isCompleted && !isLocked && (
-                         <div className="absolute inset-0 rounded-full border-2 border-indigo-500 opacity-20 animate-ping"></div>
-                     )}
-
-                     <div className="relative z-10 text-white">
-                        {isCompleted ? <Check size={32} strokeWidth={4} /> : isLocked ? <Lock size={24} /> : <TypeIcon />}
-                     </div>
-                     
-                     {isNext && !isCompleted && (
-                         <div className="absolute -top-10 bg-indigo-600 px-3 py-1 rounded-xl font-bold text-white text-[10px] shadow-xl animate-pulse whitespace-nowrap z-20 border border-indigo-400">
-                            +{task.xpReward} XP
-                            <div className="absolute bottom-[-4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-indigo-600 rotate-45"></div>
-                         </div>
-                     )}
-                  </button>
-                  
-                  <div className={`mt-3 text-center px-4 py-2 rounded-2xl shadow-sm transition-all border backdrop-blur-sm ${
-                      !isCompleted ? 'bg-white/90 border-indigo-100 scale-110 z-20 shadow-lg' : 'bg-white/60 border-white text-slate-500'
-                  }`}>
-                      <div className={`text-xs font-extrabold uppercase tracking-wide ${isLocked ? 'text-slate-400' : 'text-slate-800'}`}>
-                          {task.title}
-                      </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {selectedTask && (
-            <TaskModal 
-                task={selectedTask} 
-                isOpen={!!selectedTask} 
-                userInterest={userInterest}
-                onClose={() => setSelectedTask(null)} 
-                onComplete={() => {
-                    onTaskComplete(selectedTask);
-                    setSelectedTask(null);
-                }} 
-                onUpdateUserStyle={onUpdateUserStyle}
-            />
-          )}
+      {/* Tutorial Modal */}
+      <GameTutorial isOpen={showTutorial} onClose={handleCloseTutorial} />
+      
+      {/* Achievements Modal */}
+      {showAchievements && (
+        <div className="fixed inset-0 z-[80] bg-[#020617] overflow-y-auto">
+          <button 
+            onClick={() => setShowAchievements(false)}
+            className="fixed top-4 left-4 z-[90] w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+          >
+            ✕
+          </button>
+          <AchievementsView user={user} />
         </div>
       )}
+      
+      <div className="h-full overflow-y-auto scroll-smooth scrollbar-hide">
+         {renderContent()}
+      </div>
 
-      {/* --- RELAX TAB --- */}
-      {activeTab === 'RELAX' && (
-        <div className="min-h-full animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
-            <MeditationView />
+      {/* DOCK BAR - iOS 26 LIQUID GLASS STYLE */}
+      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[380px] animate-in slide-in-from-bottom-20 duration-700 delay-200">
+        <div 
+          className="relative flex items-center justify-between p-1.5 rounded-[2rem]"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 100%)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+            border: '1px solid rgba(255,255,255,0.18)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.1)',
+          }}
+        >
+                {[
+                  { id: 'LEARN', icon: LayoutGrid, label: 'Путь' },
+                  { id: 'TOOLS', icon: Wrench, label: 'Полезное' },
+                  { id: 'RELAX', icon: Star, label: 'Чилл' },
+                  { id: 'PROFILE', icon: UserIcon, label: 'Профиль' },
+                ].map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    const Icon = tab.icon;
+                    return (
+                        <button 
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as Tab)}
+                            className={`
+                  h-12 flex-1 rounded-[1.5rem] flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden
+                  ${isActive ? 'text-white' : 'text-white/50 hover:text-white/70 active:scale-95'}
+                `}
+                style={isActive ? {
+                  background: 'linear-gradient(135deg, rgba(99,102,241,0.9) 0%, rgba(139,92,246,0.9) 100%)',
+                  boxShadow: '0 4px 20px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
+                } : {}}
+              >
+                <Icon size={20} strokeWidth={isActive ? 2.5 : 1.5} className="relative z-10" />
+                {isActive && (
+                  <span className="text-[8px] font-bold uppercase tracking-wider mt-0.5 relative z-10 animate-in fade-in slide-in-from-bottom-1 duration-200">
+                    {tab.label}
+                  </span>
+                )}
+                        </button>
+                    );
+                })}
         </div>
+      </div>
+
+      {/* MODALS */}
+      {/* Modern TikTok-style lesson view */}
+      {selectedTask && useTikTokMode && showModernLesson && (
+        <ModernLessonView
+            task={selectedTask}
+            isOpen={showModernLesson}
+            onClose={() => {
+              setShowModernLesson(false);
+              setSelectedTask(null);
+            }}
+            onComplete={() => handleLessonComplete(selectedTask)}
+        />
+      )}
+      
+      {/* Classic lesson view */}
+      {selectedTask && (!useTikTokMode || !showModernLesson) && (
+        <TaskModal 
+            task={selectedTask} 
+            isOpen={!!selectedTask && !showModernLesson} 
+            userInterest={user.interest}
+            isPreviouslyCompleted={user.completedTaskIds.includes(selectedTask.id)}
+            onClose={() => setSelectedTask(null)} 
+            onComplete={() => {
+                handleLessonComplete(selectedTask);
+            }} 
+        />
       )}
 
-      {/* --- PROFILE TAB --- */}
-      {activeTab === 'PROFILE' && (
-        <div className="min-h-full animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
-            <TeenProfile 
-                user={user} 
-                onExportData={onExportData}
-                onImportData={onImportData}
-                onOpenGitHubSync={onOpenGitHubSync}
-            />
-        </div>
+      {isGameOpen && (
+          <MemoryGame 
+            isOpen={isGameOpen}
+            onClose={() => setIsGameOpen(false)}
+            onComplete={handleGameComplete}
+          />
       )}
 
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+      {/* NEW UI COMPONENTS */}
+      
+      {/* Confetti Animation */}
+      <Confetti isActive={showConfetti} />
+      
+      {/* Reward Popup */}
+      <RewardPopup 
+        xp={rewardData.xp}
+        coins={rewardData.coins}
+        isVisible={showReward}
+        onComplete={() => setShowReward(false)}
+      />
+      
+      {/* Toast Notifications */}
+      <Toast 
+        message={toastMessage}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
+      
+      {/* Floating XP Animation */}
+      <FloatingXP 
+        amount={floatingXPAmount}
+        isVisible={showFloatingXP}
+      />
+      
+      {/* Floating Coins Animation */}
+      <FloatingCoins 
+        amount={floatingCoinsAmount}
+        isVisible={showFloatingCoins}
+      />
+      
+      {/* Level Up Animation */}
+      <LevelUpAnimation 
+        newLevel={newLevel}
+        isVisible={showLevelUp}
+        onComplete={() => setShowLevelUp(false)}
+      />
+      
+      {/* Streak Animation */}
+      <StreakAnimation 
+        days={user.streak}
+        isVisible={showStreak}
+        onComplete={() => setShowStreak(false)}
+      />
+      
+      {/* Daily Rewards Modal */}
+      <DailyRewards
+        isOpen={showDailyRewards}
+        onClose={() => setShowDailyRewards(false)}
+        onClaim={handleDailyRewardClaim}
+        currentStreak={user.streak}
+      />
+      
+      {/* Shop Modal */}
+      {showShop && (
+        <div className="fixed inset-0 z-[80] bg-[#020617] overflow-y-auto">
+          <button 
+            onClick={() => setShowShop(false)}
+            className="fixed top-4 left-4 z-[90] w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+          >
+            ✕
+          </button>
+          <ShopView user={user} onBuy={handleBuyItem} />
+        </div>
+      )}
+      
+      {/* Katya Welcome Video - shows once for new users */}
+      <KatyaWelcome onComplete={() => {
+        // XP bonus for watching welcome video
+        setUser(prev => ({ ...prev, xp: prev.xp + 50 }));
+        setFloatingXPAmount(50);
+        setShowFloatingXP(true);
+        setToastMessage('Катя рада познакомиться! +50 XP');
+      }} />
+      
+      {/* Katya Motivation Video - shows after completing lessons */}
+      <KatyaMotivation 
+        isOpen={showMotivation}
+        onClose={closeMotivation}
+        lessonTitle={lessonTitle}
+      />
     </div>
   );
 };
-
-const BottomNav: React.FC<{ activeTab: Tab, setActiveTab: (t: Tab) => void }> = ({ activeTab, setActiveTab }) => (
-    <div className="fixed bottom-6 inset-x-0 z-50 flex justify-center pointer-events-none">
-        <div className="pointer-events-auto flex items-center gap-1 p-1.5 bg-white/40 backdrop-blur-xl border border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] rounded-full ring-1 ring-white/30">
-            <NavButton 
-                active={activeTab === 'LEARN'} 
-                onClick={() => setActiveTab('LEARN')} 
-                icon={LayoutGrid}
-                label="Квесты" 
-            />
-            <NavButton 
-                active={activeTab === 'RELAX'} 
-                onClick={() => setActiveTab('RELAX')} 
-                icon={Music}
-                label="Чилл" 
-            />
-            <NavButton 
-                active={activeTab === 'PROFILE'} 
-                onClick={() => setActiveTab('PROFILE')} 
-                icon={UserIcon}
-                label="Профиль" 
-            />
-        </div>
-    </div>
-);
-
-const NavButton: React.FC<{ active: boolean, onClick: () => void, icon: React.ElementType, label: string }> = ({ active, onClick, icon: Icon, label }) => (
-    <button 
-        onClick={onClick} 
-        className={`relative px-6 py-3 rounded-full transition-all duration-300 flex flex-col items-center justify-center gap-1 group overflow-hidden ${active ? 'bg-white shadow-sm text-indigo-600' : 'hover:bg-white/30 text-slate-600'}`}
-    >
-        <div className={`transition-transform duration-300 ${active ? 'scale-110' : 'scale-100 group-hover:scale-110'}`}>
-            <Icon 
-                size={22} 
-                className={`${active ? 'fill-indigo-600' : ''}`}
-                strokeWidth={active ? 2.5 : 2}
-            />
-        </div>
-        {active && (
-            <span className="text-[9px] font-black uppercase tracking-wider animate-in slide-in-from-bottom-1 duration-200 leading-none">
-                {label}
-            </span>
-        )}
-    </button>
-);

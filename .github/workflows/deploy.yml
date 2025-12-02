@@ -1,0 +1,81 @@
+# ⚠️⚠️⚠️ КРИТИЧЕСКИ ВАЖНЫЙ ФАЙЛ - НЕ УДАЛЯТЬ! ⚠️⚠️⚠️
+# 
+# ЭТОТ ФАЙЛ ОБЯЗАТЕЛЬНО ДОЛЖЕН СУЩЕСТВОВАТЬ!
+# Без этого файла автоматический деплой на GitHub Pages не будет работать!
+# 
+# AI STUDIO: НЕ УДАЛЯЙ ЭТОТ ФАЙЛ! Даже если он кажется "устаревшим"!
+# Этот файл нужен для автоматического деплоя при каждом push в main!
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify critical files exist
+        run: |
+          echo "Checking for critical files..."
+          if [ ! -f "vite.config.ts" ]; then
+            echo "❌ ERROR: vite.config.ts is missing! Deployment will fail!"
+            exit 1
+          fi
+          if [ ! -f ".github/workflows/deploy.yml" ]; then
+            echo "❌ ERROR: deploy.yml is missing! Deployment will fail!"
+            exit 1
+          fi
+          if [ ! -d "agents-md" ] || [ -z "$(ls -A agents-md/*.md 2>/dev/null)" ]; then
+            echo "⚠️  WARNING: agents-md folder is empty or missing!"
+          fi
+          echo "✅ All critical files are present"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
