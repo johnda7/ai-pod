@@ -1,0 +1,29 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = 'https://rnxqyltjbcwqwblnhuhm.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJueHF5bHRqYmN3cXdibG5odWhtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mzk2NzY5NCwiZXhwIjoyMDc5NTQzNjk0fQ.THfAkq_i0eFEnBqtd22n6ZdNZyKnldve_d2rl88e6_w';
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function checkUser() {
+  const userId = 'fc7fb9f2-6bb8-4d42-9fb9-599f7196e941';
+  
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', userId)
+    .single();
+    
+  if (error) {
+    console.error('Error:', error);
+  } else {
+    console.log('📊 User data in Supabase:');
+    console.log('  Coins:', data.coins);
+    console.log('  XP:', data.xp);
+    console.log('  Level:', data.level);
+    console.log('  Inventory:', data.inventory);
+    console.log('  HP:', data.hp, '/', data.max_hp);
+  }
+}
+
+checkUser();
