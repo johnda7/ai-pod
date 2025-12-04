@@ -244,6 +244,24 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
 
   const handleToolComplete = (toolId: string, xp: number, coins: number = 0) => {
     onXpEarned?.(xp, coins);
+    
+    // Трекинг использования инструментов для челленджей
+    const today = new Date().toDateString();
+    const lastToolsDate = localStorage.getItem('tools_used_date');
+    
+    // Сбросить счётчик если новый день
+    if (lastToolsDate !== today) {
+      localStorage.setItem('tools_used_date', today);
+      localStorage.setItem('tools_used_today', '1');
+    } else {
+      const current = parseInt(localStorage.getItem('tools_used_today') || '0', 10);
+      localStorage.setItem('tools_used_today', String(current + 1));
+    }
+    
+    // Сохраняем информацию о последнем использованном инструменте для дебага
+    localStorage.setItem('last_tool_used', toolId);
+    
+    console.log('[ChallengeTracker] Tool completed:', toolId, 'Total today:', localStorage.getItem('tools_used_today'));
   };
 
   const getStatLabel = (toolId: string) => {
@@ -649,6 +667,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
               onComplete={(xp, coins) => handleToolComplete('challenges', xp, coins)}
               userXp={user.xp}
               completedLessons={user.completedTaskIds.length}
+              userStreak={user.streak || 0}
             />
           )}
           

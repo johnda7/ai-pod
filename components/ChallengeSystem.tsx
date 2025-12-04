@@ -8,6 +8,7 @@ interface ChallengeSystemProps {
   onComplete: (xp: number, coins: number) => void;
   userXp: number;
   completedLessons: number;
+  userStreak?: number;
 }
 
 interface Challenge {
@@ -132,7 +133,8 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
   onClose, 
   onComplete,
   userXp,
-  completedLessons 
+  completedLessons,
+  userStreak = 0 
 }) => {
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'special'>('daily');
   const [completedChallenges, setCompletedChallenges] = useState<string[]>([]);
@@ -166,9 +168,8 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
         const meditationMins = parseInt(localStorage.getItem('meditation_minutes_today') || '0', 10);
         return Math.min(meditationMins, challenge.requirement.value);
       case 'streak':
-        // Get streak from user or localStorage
-        const streakVal = parseInt(localStorage.getItem('user_streak') || '0', 10);
-        return Math.min(streakVal, challenge.requirement.value);
+        // Get streak from prop passed from parent
+        return Math.min(userStreak, challenge.requirement.value);
       default:
         return 0;
     }
