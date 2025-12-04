@@ -103,6 +103,17 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
       setTotalFocusTime(prev => prev + settings.workDuration);
       onSessionComplete?.('work', settings.workDuration);
       
+      // Track for daily challenges
+      const today = new Date().toDateString();
+      const lastPomodoroDate = localStorage.getItem('pomodoro_last_date');
+      if (lastPomodoroDate !== today) {
+        localStorage.setItem('pomodoro_sessions_today', '1');
+        localStorage.setItem('pomodoro_last_date', today);
+      } else {
+        const current = parseInt(localStorage.getItem('pomodoro_sessions_today') || '0', 10);
+        localStorage.setItem('pomodoro_sessions_today', (current + 1).toString());
+      }
+      
       if (newCompletedSessions % settings.sessionsUntilLongBreak === 0) {
         setPhase('longBreak');
         setTimeLeft(settings.longBreakDuration * 60);

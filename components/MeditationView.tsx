@@ -57,6 +57,39 @@ export const MeditationView: React.FC = () => {
   const [currentAffirmation, setCurrentAffirmation] = useState(0);
   const [selectedMeditation, setSelectedMeditation] = useState<typeof MEDITATIONS[0] | null>(null);
   const [meditationPlaying, setMeditationPlaying] = useState(false);
+  const [meditationSeconds, setMeditationSeconds] = useState(0);
+  
+  // Track meditation minutes for challenges
+  useEffect(() => {
+    if (!meditationPlaying) return;
+    
+    const interval = setInterval(() => {
+      setMeditationSeconds(prev => {
+        const newSeconds = prev + 1;
+        // Every 60 seconds, update localStorage meditation minutes
+        if (newSeconds % 60 === 0) {
+          const today = new Date().toDateString();
+          const lastDate = localStorage.getItem('meditation_last_date');
+          const currentMinutes = lastDate === today 
+            ? parseInt(localStorage.getItem('meditation_minutes_today') || '0', 10)
+            : 0;
+          
+          localStorage.setItem('meditation_minutes_today', String(currentMinutes + 1));
+          localStorage.setItem('meditation_last_date', today);
+        }
+        return newSeconds;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [meditationPlaying]);
+  
+  // Reset seconds when meditation changes
+  useEffect(() => {
+    if (!selectedMeditation) {
+      setMeditationSeconds(0);
+    }
+  }, [selectedMeditation]);
 
   const activeSound = SOUNDSCAPES.find(s => s.id === activeSoundId);
   
@@ -100,9 +133,11 @@ export const MeditationView: React.FC = () => {
       const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
       const [timer, setTimer] = useState(4);
     const [cycles, setCycles] = useState(0);
+    const [elapsedSeconds, setElapsedSeconds] = useState(0);
       
       useEffect(() => {
           const interval = setInterval(() => {
+              setElapsedSeconds(prev => prev + 1);
               setTimer(prev => {
                   if (prev === 1) {
                       if (phase === 'inhale') { setPhase('hold'); return 7; }
@@ -114,6 +149,22 @@ export const MeditationView: React.FC = () => {
           }, 1000);
           return () => clearInterval(interval);
       }, [phase]);
+      
+      const handleClose = () => {
+        // Save meditation minutes to localStorage
+        const minutesSpent = Math.floor(elapsedSeconds / 60);
+        if (minutesSpent > 0) {
+          const today = new Date().toDateString();
+          const lastDate = localStorage.getItem('meditation_last_date');
+          const currentMinutes = lastDate === today 
+            ? parseInt(localStorage.getItem('meditation_minutes_today') || '0', 10)
+            : 0;
+          
+          localStorage.setItem('meditation_minutes_today', String(currentMinutes + minutesSpent));
+          localStorage.setItem('meditation_last_date', today);
+        }
+        setShowBreathing(false);
+      };
 
       return (
       <motion.div 
@@ -135,7 +186,7 @@ export const MeditationView: React.FC = () => {
         />
 
               <button 
-                  onClick={() => setShowBreathing(false)}
+                  onClick={handleClose}
           className="absolute top-6 right-6 z-10 w-12 h-12 rounded-full flex items-center justify-center text-white/60 hover:text-white transition-colors"
           style={{
             background: 'rgba(255,255,255,0.1)',

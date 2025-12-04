@@ -149,12 +149,26 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
     localStorage.setItem('completed_challenges', JSON.stringify(completedChallenges));
   }, [completedChallenges]);
 
+  // Get challenge progress from localStorage counters
   const getChallengeProgress = (challenge: Challenge): number => {
     switch (challenge.requirement.type) {
       case 'lessons':
         return Math.min(completedLessons, challenge.requirement.value);
       case 'xp':
         return Math.min(userXp, challenge.requirement.value);
+      case 'tools':
+        // Count pomodoro sessions from localStorage
+        const pomodoroCount = parseInt(localStorage.getItem('pomodoro_sessions_today') || '0', 10);
+        const toolsUsed = parseInt(localStorage.getItem('tools_used_today') || '0', 10);
+        return Math.min(Math.max(pomodoroCount, toolsUsed), challenge.requirement.value);
+      case 'meditation':
+        // Minutes of meditation today
+        const meditationMins = parseInt(localStorage.getItem('meditation_minutes_today') || '0', 10);
+        return Math.min(meditationMins, challenge.requirement.value);
+      case 'streak':
+        // Get streak from user or localStorage
+        const streakVal = parseInt(localStorage.getItem('user_streak') || '0', 10);
+        return Math.min(streakVal, challenge.requirement.value);
       default:
         return 0;
     }
