@@ -367,12 +367,19 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
 
   return (
     <AnimatePresence>
-      <motion.div className="fixed inset-0 z-[100] overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-        <motion.div className={`absolute inset-0 bg-gradient-to-br ${config.bgGradient}`}
+      <motion.div 
+        className="fixed inset-0 z-[100] overflow-hidden" 
+        style={{ backgroundColor: '#0a0a1a' }}
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        exit={{ opacity: 0 }}
+      >
+        <motion.div className="absolute inset-0"
+          style={{ background: `linear-gradient(135deg, ${config.color}30 0%, #0a0a1a 40%, #0f0f2a 70%, #0a0a1a 100%)` }}
           animate={{ background: state === 'running' ? [
-            `linear-gradient(135deg, ${config.color}20 0%, #020617 50%, #0a0f1a 100%)`,
-            `linear-gradient(180deg, ${config.color}25 0%, #020617 50%, #0a0f1a 100%)`,
-            `linear-gradient(225deg, ${config.color}20 0%, #020617 50%, #0a0f1a 100%)`,
+            `linear-gradient(135deg, ${config.color}30 0%, #0a0a1a 40%, #0f0f2a 70%, #0a0a1a 100%)`,
+            `linear-gradient(180deg, ${config.color}35 0%, #0a0a1a 40%, #0f0f2a 70%, #0a0a1a 100%)`,
+            `linear-gradient(225deg, ${config.color}30 0%, #0a0a1a 40%, #0f0f2a 70%, #0a0a1a 100%)`,
           ] : undefined }}
           transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
         />
@@ -423,6 +430,23 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
               </div>
               <p className="text-white/50 text-sm">{config.message}</p>
             </motion.div>
+
+            {/* Инструкция для новичков - показывается только в idle */}
+            {state === 'idle' && completedSessions === 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 p-3 rounded-2xl max-w-xs text-center"
+                style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)' }}
+              >
+                <p className="text-white/80 text-xs leading-relaxed">
+                  <span className="font-bold text-violet-300">Как работает:</span><br/>
+                  🍅 Работай {selectedPreset.work} мин → ☕ Отдых {selectedPreset.shortBreak} мин<br/>
+                  После 4 сессий — большой перерыв {selectedPreset.longBreak} мин<br/>
+                  <span className="text-violet-400 font-medium">Нажми ▶️ чтобы начать!</span>
+                </p>
+              </motion.div>
+            )}
 
             <div className="relative mb-8">
               <motion.div className="absolute inset-[-20px] rounded-full"
