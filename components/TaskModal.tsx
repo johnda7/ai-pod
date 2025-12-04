@@ -390,23 +390,58 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
               );
 
           case 'VIDEO':
+              // Видео без YouTube iframe - для России (YouTube заблокирован)
+              const videoId = currentSlide.videoUrl?.split('/embed/')?.[1] || '';
+              const thumbnailUrl = videoId 
+                ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+                : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=450&fit=crop';
+              
               return (
                   <div className="flex flex-col h-full p-6 animate-in fade-in duration-500 justify-center">
-                      <h3 className="text-2xl font-black text-white mb-6 text-center drop-shadow-md">
-                          Видео-Брифинг
+                      <h3 className="text-2xl font-black text-white mb-4 text-center drop-shadow-md">
+                          {currentSlide.title || 'Видео-Брифинг'}
                       </h3>
-                      <div className="relative aspect-video rounded-[2rem] overflow-hidden border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-black group ring-1 ring-white/10">
-                          <iframe 
-                             width="100%" height="100%" 
-                             src={currentSlide.videoUrl} 
-                             title="Video" 
-                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                             allowFullScreen
-                             className="opacity-90 group-hover:opacity-100 transition-opacity"
-                          ></iframe>
+                      
+                      {/* Thumbnail вместо iframe */}
+                      <div className="relative aspect-video rounded-[2rem] overflow-hidden border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-black group">
+                          <img 
+                            src={thumbnailUrl}
+                            alt={currentSlide.title || 'Video thumbnail'}
+                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                            onError={(e) => {
+                              // Fallback для битого thumbnail
+                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=450&fit=crop';
+                            }}
+                          />
+                          
+                          {/* Play overlay */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <a 
+                              href={`https://www.youtube.com/watch?v=${videoId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center hover:bg-red-500 transition-all hover:scale-110"
+                            >
+                              <svg className="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                              </svg>
+                            </a>
+                          </div>
+                          
+                          {/* YouTube badge */}
+                          <div className="absolute top-4 right-4 bg-red-600 px-3 py-1 rounded-lg text-white text-xs font-bold">
+                            YouTube
+                          </div>
                       </div>
-                      <div className="mt-8 glass-panel p-6 rounded-3xl border border-white/5 bg-white/5 backdrop-blur-md">
-                          <p className="text-slate-200 text-center text-sm font-medium leading-relaxed">{currentSlide.description}</p>
+                      
+                      {/* Description */}
+                      <div className="mt-6 glass-panel p-5 rounded-3xl border border-white/5 bg-white/5 backdrop-blur-md">
+                          <p className="text-slate-200 text-center text-sm font-medium leading-relaxed mb-3">
+                            {currentSlide.description}
+                          </p>
+                          <p className="text-slate-400 text-center text-xs">
+                            ⏱️ {currentSlide.duration} • Нажми кнопку выше для просмотра на YouTube
+                          </p>
                       </div>
                   </div>
               );
