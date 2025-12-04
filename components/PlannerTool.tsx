@@ -132,7 +132,7 @@ export const PlannerTool: React.FC<PlannerToolProps> = ({ isOpen, onClose, onCom
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] bg-[#020617] overflow-hidden"
+        className="fixed inset-0 z-[100] bg-[#020617] overflow-hidden flex flex-col"
       >
         {/* Background */}
         <div className="absolute inset-0">
@@ -206,7 +206,7 @@ export const PlannerTool: React.FC<PlannerToolProps> = ({ isOpen, onClose, onCom
         </div>
 
         {/* Content */}
-        <div className="px-4 pb-40 overflow-y-auto h-[calc(100vh-200px)]">
+        <div className="px-4 pb-40 overflow-y-auto flex-1 min-h-0">
           {view === 'list' ? (
             <>
               {/* Today's Tasks */}

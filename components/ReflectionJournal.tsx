@@ -196,7 +196,7 @@ export const ReflectionJournal: React.FC<ReflectionJournalProps> = ({ isOpen, on
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 p-4 rounded-2xl"
+                  className="mb-6 p-4 rounded-2xl relative z-10"
                   style={{
                     background: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(99,102,241,0.08) 100%)',
                     border: '1px solid rgba(139,92,246,0.2)',
@@ -210,7 +210,7 @@ export const ReflectionJournal: React.FC<ReflectionJournalProps> = ({ isOpen, on
                     </div>
                     <button
                       onClick={() => setShowNewEntry(true)}
-                      className="px-4 py-2 rounded-xl font-medium text-white text-sm"
+                      className="px-4 py-2 rounded-xl font-medium text-white text-sm active:scale-95 transition-transform"
                       style={{
                         background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
                       }}

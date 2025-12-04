@@ -316,8 +316,8 @@ export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplet
                       </div>
 
                       <button
-                        onClick={() => deleteGoal(goal.id)}
-                        className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-red-500/20 transition-colors"
+                        onClick={(e) => { e.stopPropagation(); deleteGoal(goal.id); }}
+                        className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-red-500/20 transition-colors active:scale-90"
                       >
                         <Trash2 size={14} className="text-white/40" />
                       </button>
@@ -343,22 +343,22 @@ export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplet
                     {!isComplete && (
                       <div className="flex gap-2">
                         <button
-                          onClick={() => updateProgress(goal.id, -1)}
+                          onClick={(e) => { e.stopPropagation(); updateProgress(goal.id, -1); }}
                           disabled={goal.progress === 0}
-                          className="flex-1 py-2 rounded-xl bg-white/5 text-white/50 text-sm font-medium disabled:opacity-30"
+                          className="flex-1 py-3 rounded-xl bg-white/5 text-white/50 text-sm font-medium disabled:opacity-30 active:scale-95 transition-transform"
                         >
                           -1
                         </button>
                         <button
-                          onClick={() => updateProgress(goal.id, 1)}
-                          className="flex-1 py-2 rounded-xl text-white text-sm font-medium"
+                          onClick={(e) => { e.stopPropagation(); updateProgress(goal.id, 1); }}
+                          className="flex-1 py-3 rounded-xl text-white text-sm font-bold active:scale-95 transition-transform"
                           style={{ background: goal.color }}
                         >
                           +1 {goal.unit.slice(0, -1) || goal.unit}
                         </button>
                         <button
-                          onClick={() => updateProgress(goal.id, 5)}
-                          className="flex-1 py-2 rounded-xl bg-white/10 text-white text-sm font-medium"
+                          onClick={(e) => { e.stopPropagation(); updateProgress(goal.id, 5); }}
+                          className="flex-1 py-3 rounded-xl bg-white/10 text-white text-sm font-medium active:scale-95 transition-transform"
                         >
                           +5
                         </button>

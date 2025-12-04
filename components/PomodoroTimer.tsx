@@ -212,7 +212,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
         className="relative z-10 w-full max-w-sm mx-4"
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <span className="text-3xl">{config.emoji}</span>
             <div>
@@ -239,6 +239,21 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             </button>
           </div>
         </div>
+        
+        {/* Mini Instruction - only show when idle */}
+        {state === 'idle' && completedSessions === 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-3 rounded-xl text-center"
+            style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)' }}
+          >
+            <p className="text-white/80 text-xs leading-relaxed">
+              <span className="font-bold text-indigo-300">Помодоро</span> — работай {settings.workDuration} мин, отдыхай {settings.shortBreakDuration} мин.
+              <br/>После 4 сессий — большой перерыв {settings.longBreakDuration} мин 🎉
+            </p>
+          </motion.div>
+        )}
 
         {/* Timer Circle */}
         <div className="relative flex items-center justify-center mb-8">
