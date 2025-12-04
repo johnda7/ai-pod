@@ -1,6 +1,6 @@
 
 import { Task, User, UserRole, StudentStats } from '../types';
-import { MOCK_USER, MOCK_STUDENTS, TASKS } from '../constants';
+import { MOCK_USER, MOCK_STUDENTS, TASKS, GAME_SETTINGS } from '../constants';
 import { supabase, isSupabaseEnabled } from './supabaseClient';
 import { sheetsAPI, isGoogleSheetsEnabled } from './googleSheetsService';
 
@@ -321,7 +321,29 @@ export const calculateRewards = (baseXP: number, baseCoins: number, level: numbe
     bonusMessages.push(`🔥 ${tasksToday} уроков сегодня: +${Math.round(dailyBonus * 100)}% XP`);
   }
 
-  // 3. Случайный бонус
+  // 3. Mystery multiplier (1x-3x) — этичная вариация переменной награды
+  if (GAME_SETTINGS?.MYSTERY_REWARDS_ENABLED) {
+    const chance = GAME_SETTINGS.MYSTERY_MULTIPLIER_CHANCE ?? 0.25;
+    if (Math.random() < chance) {
+      const maxM = GAME_SETTINGS.MYSTERY_MULTIPLIER_MAX || 3;
+      const mult = Math.floor(Math.random() * maxM) + 1; // 1..maxM
+      if (mult > 1) {
+        const extraXP = Math.floor(baseXP * (mult - 1));
+        bonusXP += extraXP;
+        bonusMessages.push(`🎲 Mystery x${mult}! +${extraXP} XP`);
+      } else {
+        bonusMessages.push('🎲 Mystery x1! Ничего не изменилось.');
+      }
+      // Small chance to also multiply coins (proportional)
+      const extraCoins = Math.floor(baseCoins * ((Math.random() < 0.5 ? Math.floor(Math.random()* (GAME_SETTINGS.MYSTERY_MULTIPLIER_MAX||3)) : 0)));
+      if (extraCoins > 0) {
+        bonusCoins += extraCoins;
+        bonusMessages.push(`💰 Mystery coins +${extraCoins}`);
+      }
+    }
+  }
+
+  // 4. Случайный бонус (старые surprise items)
   const surprise = getSurpriseBonus();
   if (surprise) {
     bonusXP += surprise.xp;

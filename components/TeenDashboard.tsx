@@ -241,30 +241,42 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   };
 
   // Enhanced lesson completion with animations
-  const handleLessonComplete = (task: Task) => {
+  const handleLessonComplete = async (task: Task) => {
     // 1. Haptic feedback
     hapticSuccess();
-    
-    // 2. Calculate rewards
-    const xpReward = task.xpReward || 100;
-    const coinsReward = task.coinsReward || Math.floor(xpReward * 0.5);
-    
-    // 3. Show floating XP animation + sound
-    setFloatingXPAmount(xpReward);
+
+    // Capture old stats to compute real rewarded amounts after DB logic (surprises / multipliers)
+    const oldXp = user.xp;
+    const oldCoins = user.coins || 0;
+
+    // 2. Complete the task (this will update localStorage / supabase and apply bonuses)
+    await onTaskComplete(task);
+
+    // 3. Refresh local user data and compute diffs
+    refreshUserData();
+    const users = JSON.parse(localStorage.getItem('ai_teenager_users_v6') || '[]');
+    const updatedUser = users.find((u: any) => u.id === user.id) || user;
+    const xpDiff = Math.max(0, (updatedUser.xp || 0) - oldXp);
+    const coinsDiff = Math.max(0, (updatedUser.coins || 0) - oldCoins);
+
+    // 4. Show floating XP animation + sound using real diff
+    const displayXp = xpDiff || task.xpReward || 100;
+    const displayCoins = coinsDiff || task.coinsReward || Math.floor(displayXp * 0.5);
+
+    setFloatingXPAmount(displayXp);
     setShowFloatingXP(true);
     playXPSound(); // 🔊 Звук XP
     setTimeout(() => setShowFloatingXP(false), 1500);
-    
-    // 4. Show floating coins animation + sound
-    setFloatingCoinsAmount(coinsReward);
+
+    // 5. Show floating coins animation + sound
+    setFloatingCoinsAmount(displayCoins);
     setShowFloatingCoins(true);
     setTimeout(() => playCoinSound(), 200); // 🔊 Звук монет
     setTimeout(() => setShowFloatingCoins(false), 1700);
-    
-    // 5. Check for level up (500 XP per level)
-    const currentLevel = Math.floor(user.xp / 500) + 1;
-    const newLevelAfter = Math.floor((user.xp + xpReward) / 500) + 1;
-    
+
+    // 6. Check for level up using updated XP
+    const currentLevel = Math.floor(oldXp / 500) + 1;
+    const newLevelAfter = Math.floor((updatedUser.xp || 0) / 500) + 1;
     if (newLevelAfter > currentLevel) {
       setTimeout(() => {
         setNewLevel(newLevelAfter);
@@ -277,20 +289,28 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         }, 3500);
       }, 800);
     }
-    
-    // 6. Show reward popup
-    setRewardData({ xp: xpReward, coins: coinsReward });
+
+    // 7. Show reward popup with actual data
+    setRewardData({ xp: displayXp, coins: displayCoins });
     setTimeout(() => {
       setShowReward(true);
       setTimeout(() => setShowReward(false), 2500);
     }, 400);
-    
-    // 7. Complete the task
-    onTaskComplete(task);
-    
-    // 8. Trigger Katya motivation video (30% chance)
+
+    // 8. Show bonus messages (Mystery / Surprise) as toast
+    const lastBonuses = JSON.parse(localStorage.getItem('last_bonus_messages') || 'null');
+    if (lastBonuses && Array.isArray(lastBonuses) && lastBonuses.length > 0) {
+      setTimeout(() => {
+        setToastMessage(lastBonuses.join(' • '));
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 4500);
+        localStorage.removeItem('last_bonus_messages'); // Clear after showing
+      }, 2600);
+    }
+
+    // 9. Trigger Katya motivation video (30% chance)
     triggerMotivation(task.title);
-    
+
     // 9. Close lesson view
     setShowModernLesson(false);
     setSelectedTask(null);
