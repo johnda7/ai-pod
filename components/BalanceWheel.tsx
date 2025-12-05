@@ -180,8 +180,8 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] overflow-hidden"
     >
-      {/* Beautiful Background */}
-      <div className="absolute inset-0">
+      {/* Beautiful Background - pointer-events-none чтобы не блокировать клики! */}
+      <div className="absolute inset-0 pointer-events-none">
         <div 
           className="absolute inset-0"
           style={{
