@@ -11,6 +11,7 @@ interface ChallengeSystemProps {
   userXp: number;
   completedLessons: number;
   userStreak?: number;
+  onNavigateToSection?: (section: 'PATH' | 'TOOLS' | 'RELAX' | 'PROFILE') => void;
 }
 
 interface Challenge {
@@ -137,7 +138,8 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
   onComplete,
   userXp,
   completedLessons,
-  userStreak = 0 
+  userStreak = 0,
+  onNavigateToSection
 }) => {
   // 🔄 useSyncTool вместо ручной синхронизации - автоматическая синхронизация с Supabase!
   const { data: completedChallenges, setData: setCompletedChallenges, syncStatus } = useSyncTool<string[]>([], {
@@ -291,6 +293,22 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
       tip: 'Каждый челлендж — шаг к лучшей версии себя!',
       action: 'Начать →',
     };
+  };
+
+  // 🔗 Маппинг челленджей к разделам для навигации
+  const getChallengeNavigation = (challengeId: string): 'PATH' | 'TOOLS' | 'RELAX' | null => {
+    const navigationMap: Record<string, 'PATH' | 'TOOLS' | 'RELAX'> = {
+      'd1': 'PATH',      // Утренний старт → Уроки
+      'd2': 'TOOLS',     // Фокус дня → Помодоро (остаётся в Tools)
+      'd3': 'RELAX',     // Момент тишины → Медитации
+      'w1': 'PATH',      // Недельный марафон → Уроки
+      'w2': 'PATH',      // XP Охотник → Уроки
+      'w3': 'PATH',      // Серийный победитель → Уроки
+      's1': 'PATH',      // Первопроходец → Уроки
+      's2': 'TOOLS',     // Исследователь → Инструменты
+      's3': 'PATH',      // XP Легенда → Уроки
+    };
+    return navigationMap[challengeId] || null;
   };
 
   const tabs = [
@@ -752,8 +770,13 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
                         ) : (
                           <motion.button
                             onClick={() => {
+                              const targetSection = getChallengeNavigation(selectedChallenge.id);
                               setSelectedChallenge(null);
-                              onClose();
+                              if (targetSection && onNavigateToSection) {
+                                onNavigateToSection(targetSection);
+                              } else {
+                                onClose();
+                              }
                             }}
                             className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
                             style={{

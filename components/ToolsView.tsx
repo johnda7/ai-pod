@@ -32,6 +32,7 @@ const ToolLoader = () => (
 interface ToolsViewProps {
   user: User;
   onXpEarned?: (xp: number, coins: number) => void;
+  onNavigateToSection?: (section: 'PATH' | 'TOOLS' | 'RELAX' | 'PROFILE') => void;
 }
 
 // 🚀 ОПТИМИЗАЦИЯ: Уменьшены размеры изображений + качество для быстрой загрузки
@@ -218,7 +219,7 @@ const getToolStats = () => {
   return stats;
 };
 
-export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
+export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNavigateToSection }) => {
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
@@ -672,6 +673,10 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
               userXp={user.xp}
               completedLessons={user.completedTaskIds.length}
               userStreak={user.streak || 0}
+              onNavigateToSection={(section) => {
+                setActiveTool(null);
+                onNavigateToSection?.(section);
+              }}
             />
           )}
           
