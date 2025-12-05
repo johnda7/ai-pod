@@ -27,13 +27,14 @@ interface SkillLesson {
   type: 'video' | 'exercise' | 'quiz' | 'practice';
 }
 
+// 🚀 ОПТИМИЗАЦИЯ: уменьшены размеры изображений + качество
 const LIFE_SKILLS: Skill[] = [
   {
     id: 'public_speaking',
     name: 'Публичные выступления',
     description: 'Говори уверенно перед любой аудиторией',
     emoji: '🎤',
-    image: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=400&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=200&h=150&fit=crop&q=50',
     category: 'leadership',
     color: '#6366f1',
     lessons: [
@@ -47,7 +48,7 @@ const LIFE_SKILLS: Skill[] = [
     name: 'Финансовая грамотность',
     description: 'Управляй деньгами как профи',
     emoji: '💰',
-    image: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=200&h=150&fit=crop&q=50',
     category: 'financial',
     color: '#22c55e',
     lessons: [
@@ -61,7 +62,7 @@ const LIFE_SKILLS: Skill[] = [
     name: 'Эмоциональный интеллект',
     description: 'Понимай себя и других',
     emoji: '💜',
-    image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=200&h=150&fit=crop&q=50',
     category: 'emotional',
     color: '#ec4899',
     lessons: [
@@ -75,7 +76,7 @@ const LIFE_SKILLS: Skill[] = [
     name: 'Постановка целей',
     description: 'От мечты к плану действий',
     emoji: '🎯',
-    image: 'https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=400&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=200&h=150&fit=crop&q=50',
     category: 'productivity',
     color: '#f59e0b',
     lessons: [
@@ -89,7 +90,7 @@ const LIFE_SKILLS: Skill[] = [
     name: 'Нетворкинг',
     description: 'Строй полезные связи',
     emoji: '🤝',
-    image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=200&h=150&fit=crop&q=50',
     category: 'social',
     color: '#3b82f6',
     lessons: [
@@ -103,7 +104,7 @@ const LIFE_SKILLS: Skill[] = [
     name: 'Решение проблем',
     description: 'Мысли как инженер',
     emoji: '🧩',
-    image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200&h=150&fit=crop&q=50',
     category: 'productivity',
     color: '#8b5cf6',
     lessons: [

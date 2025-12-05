@@ -11,40 +11,36 @@ import { GratitudeJournal } from './GratitudeJournal';
 import { ZenVisualizer } from './ZenVisualizer';
 import { hapticLight, hapticMedium, hapticSuccess } from '../services/telegramService';
 
-// Unique images for each soundscape
+// 🚀 ОПТИМИЗАЦИЯ: уменьшены размеры изображений + качество для быстрой загрузки
 const SOUNDSCAPE_IMAGES: Record<string, string> = {
-  'RAIN': 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&h=500&fit=crop',
-  'FOREST': 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=500&fit=crop',
-  'OCEAN': 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&h=500&fit=crop',
-  'FIRE': 'https://images.unsplash.com/photo-1475552113915-6fcb52652ba2?w=400&h=500&fit=crop',
-  'WIND': 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=500&fit=crop',
-  'CAFE': 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=400&h=500&fit=crop',
-  'THUNDER': 'https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?w=400&h=500&fit=crop',
-  'NIGHT': 'https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?w=400&h=500&fit=crop',
+  'RAIN': 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=200&h=250&fit=crop&q=50',
+  'FOREST': 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=200&h=250&fit=crop&q=50',
+  'OCEAN': 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=200&h=250&fit=crop&q=50',
+  'FIRE': 'https://images.unsplash.com/photo-1475552113915-6fcb52652ba2?w=200&h=250&fit=crop&q=50',
+  'WIND': 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&h=250&fit=crop&q=50',
+  'CAFE': 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=200&h=250&fit=crop&q=50',
+  'THUNDER': 'https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?w=200&h=250&fit=crop&q=50',
+  'NIGHT': 'https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?w=200&h=250&fit=crop&q=50',
 };
 
-// UNIQUE images for EACH meditation
+// UNIQUE images for EACH meditation - оптимизированы
 const MEDITATION_UNIQUE_IMAGES: Record<string, string> = {
-  // Сон
-  'm1': 'https://images.unsplash.com/photo-1531353826977-0941b4779a1c?w=400&h=400&fit=crop', // Быстрый сон - clouds
-  'm2': 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=400&fit=crop', // Глубокий отдых - dark cinema
-  'm3': 'https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=400&h=400&fit=crop', // Ночные мысли - stars
-  'm4': 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400&h=400&fit=crop', // Сонное царство - moon
-  // Фокус  
-  'm5': 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=400&fit=crop', // Фокус перед экзаменом - meditation
-  'm6': 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&h=400&fit=crop', // Утренняя ясность - sunrise
-  'm7': 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&h=400&fit=crop', // Практика тишины - calm water
-  'm8': 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400&h=400&fit=crop', // Ясный ум - clear sky
-  // Спокойствие
-  'm9': 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400&h=400&fit=crop', // Снять тревогу - zen
-  'm10': 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=400&h=400&fit=crop', // Заземление - nature
-  'm11': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop', // Отпустить страх - freedom
-  'm12': 'https://images.unsplash.com/photo-1528722828814-77b9b83aafb2?w=400&h=400&fit=crop', // Внутренний покой - sky
-  // Энергия
-  'm13': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=400&fit=crop', // Заряд энергии - vibrant
-  'm14': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&h=400&fit=crop', // Перезагрузка - workout
-  'm15': 'https://images.unsplash.com/photo-1476611338391-6f395a0ebc7b?w=400&h=400&fit=crop', // Утренний буст - coffee sunrise
-  'm16': 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=400&h=400&fit=crop', // Сила момента - tree power
+  'm1': 'https://images.unsplash.com/photo-1531353826977-0941b4779a1c?w=200&h=200&fit=crop&q=50',
+  'm2': 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=200&h=200&fit=crop&q=50',
+  'm3': 'https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=200&h=200&fit=crop&q=50',
+  'm4': 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=200&h=200&fit=crop&q=50',
+  'm5': 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=200&h=200&fit=crop&q=50',
+  'm6': 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=200&h=200&fit=crop&q=50',
+  'm7': 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=200&h=200&fit=crop&q=50',
+  'm8': 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=200&h=200&fit=crop&q=50',
+  'm9': 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=200&h=200&fit=crop&q=50',
+  'm10': 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=200&h=200&fit=crop&q=50',
+  'm11': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&q=50',
+  'm12': 'https://images.unsplash.com/photo-1528722828814-77b9b83aafb2?w=200&h=200&fit=crop&q=50',
+  'm13': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=200&h=200&fit=crop&q=50',
+  'm14': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&h=200&fit=crop&q=50',
+  'm15': 'https://images.unsplash.com/photo-1476611338391-6f395a0ebc7b?w=200&h=200&fit=crop&q=50',
+  'm16': 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=200&h=200&fit=crop&q=50',
 };
 
 export const MeditationView: React.FC = () => {

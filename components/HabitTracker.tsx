@@ -23,15 +23,16 @@ interface Habit {
   goal: number;
 }
 
+// 🚀 ОПТИМИЗАЦИЯ: уменьшены размеры изображений + качество
 const HABIT_PRESETS = [
-  { name: 'Медитация', emoji: '🧘', color: '#8b5cf6', image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=200&h=200&fit=crop' },
-  { name: 'Спорт', emoji: '💪', color: '#22c55e', image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop' },
-  { name: 'Чтение', emoji: '📚', color: '#3b82f6', image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=200&h=200&fit=crop' },
-  { name: 'Вода', emoji: '💧', color: '#06b6d4', image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=200&h=200&fit=crop' },
-  { name: 'Сон 8ч', emoji: '😴', color: '#6366f1', image: 'https://images.unsplash.com/photo-1520206183501-b80df61043c2?w=200&h=200&fit=crop' },
-  { name: 'Без соцсетей', emoji: '📵', color: '#ef4444', image: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?w=200&h=200&fit=crop' },
-  { name: 'Учёба', emoji: '📖', color: '#f59e0b', image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=200&h=200&fit=crop' },
-  { name: 'Прогулка', emoji: '🚶', color: '#10b981', image: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=200&h=200&fit=crop' },
+  { name: 'Медитация', emoji: '🧘', color: '#8b5cf6', image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=100&h=100&fit=crop&q=50' },
+  { name: 'Спорт', emoji: '💪', color: '#22c55e', image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=100&h=100&fit=crop&q=50' },
+  { name: 'Чтение', emoji: '📚', color: '#3b82f6', image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=100&h=100&fit=crop&q=50' },
+  { name: 'Вода', emoji: '💧', color: '#06b6d4', image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=100&h=100&fit=crop&q=50' },
+  { name: 'Сон 8ч', emoji: '😴', color: '#6366f1', image: 'https://images.unsplash.com/photo-1520206183501-b80df61043c2?w=100&h=100&fit=crop&q=50' },
+  { name: 'Без соцсетей', emoji: '📵', color: '#ef4444', image: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?w=100&h=100&fit=crop&q=50' },
+  { name: 'Учёба', emoji: '📖', color: '#f59e0b', image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&h=100&fit=crop&q=50' },
+  { name: 'Прогулка', emoji: '🚶', color: '#10b981', image: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=100&h=100&fit=crop&q=50' },
 ];
 
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
