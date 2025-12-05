@@ -298,12 +298,8 @@ export const ZenVisualizer: React.FC<ZenVisualizerProps> = ({ isOpen, onClose })
   const [isPlaying, setIsPlaying] = useState(true);
   const [showControls, setShowControls] = useState(true);
 
-  useEffect(() => {
-    if (isOpen && showControls) {
-      const timer = setTimeout(() => setShowControls(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, showControls]);
+  // Управление не скрывается автоматически - пользователь сам нажимает на экран
+  // чтобы скрыть/показать управление
 
   if (!isOpen) return null;
 
@@ -318,12 +314,15 @@ export const ZenVisualizer: React.FC<ZenVisualizerProps> = ({ isOpen, onClose })
 
   return (
     <motion.div 
-      className="fixed inset-0 z-[90]"
+      className="fixed inset-0 z-[90] bg-slate-950"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={() => setShowControls(!showControls)}
     >
+      {/* Solid background to prevent content showing through */}
+      <div className="absolute inset-0 bg-slate-950" />
+      
       {/* Visualizer */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -389,8 +388,8 @@ export const ZenVisualizer: React.FC<ZenVisualizerProps> = ({ isOpen, onClose })
             </button>
 
             {/* Visualizer selector */}
-            <div className="absolute bottom-8 left-0 right-0 px-6">
-              <div className="flex gap-3 justify-center">
+            <div className="absolute bottom-8 left-0 right-0 px-4">
+              <div className="flex gap-2 justify-center flex-wrap">
                 {VISUALIZERS.map((viz) => {
                   const Icon = viz.icon;
                   const isActive = activeVisualizer === viz.id;
@@ -398,19 +397,19 @@ export const ZenVisualizer: React.FC<ZenVisualizerProps> = ({ isOpen, onClose })
                     <button
                       key={viz.id}
                       onClick={() => setActiveVisualizer(viz.id as VisualizerType)}
-                      className={`px-4 py-3 rounded-2xl flex items-center gap-2 transition-all ${
+                      className={`px-3 py-2 rounded-xl flex flex-col items-center gap-1 transition-all min-w-[70px] ${
                         isActive ? 'text-white scale-105' : 'text-white/60 hover:text-white'
                       }`}
                       style={{
                         background: isActive 
-                          ? `linear-gradient(135deg, var(--tw-gradient-stops))`
+                          ? 'linear-gradient(135deg, rgba(168,85,247,0.5) 0%, rgba(236,72,153,0.5) 100%)'
                           : 'rgba(255,255,255,0.1)',
                         backdropFilter: 'blur(20px)',
-                        border: isActive ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                        border: isActive ? '1px solid rgba(168,85,247,0.5)' : '1px solid rgba(255,255,255,0.1)',
                       }}
                     >
-                      <Icon size={18} />
-                      <span className="text-sm font-medium hidden sm:inline">{viz.name}</span>
+                      <Icon size={20} />
+                      <span className="text-[10px] font-medium">{viz.name}</span>
                     </button>
                   );
                 })}
