@@ -374,30 +374,26 @@ export const ZenVisualizer: React.FC<ZenVisualizerProps> = ({ isOpen, onClose })
               <p className="text-white/50 text-sm">Расслабься и наблюдай</p>
             </div>
 
-            {/* Play/Pause - центральная кнопка */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
-              <motion.button
-                onClick={() => setIsPlaying(!isPlaying)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-24 h-24 rounded-full flex items-center justify-center text-white transition-all shadow-2xl"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(168,85,247,0.4) 0%, rgba(236,72,153,0.4) 100%)',
-                  backdropFilter: 'blur(30px)',
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  boxShadow: '0 8px 32px rgba(168,85,247,0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
-                }}
-              >
-                {isPlaying ? <Pause size={40} /> : <Play size={40} className="ml-1" />}
-              </motion.button>
-              <span className="text-white/50 text-xs font-medium">
-                {isPlaying ? 'Нажми для паузы' : 'Нажми для запуска'}
-              </span>
-            </div>
-
-            {/* Visualizer selector */}
+            {/* Visualizer selector + Play/Pause - всё внизу */}
             <div className="absolute bottom-8 left-0 right-0 px-4">
-              <div className="flex gap-2 justify-center flex-wrap">
+              {/* Play/Pause кнопка - компактная, слева */}
+              <div className="flex gap-2 justify-center items-center flex-wrap">
+                <motion.button
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-3 py-2 rounded-xl flex flex-col items-center gap-1 min-w-[70px] text-white"
+                  style={{
+                    background: isPlaying 
+                      ? 'rgba(255,255,255,0.1)'
+                      : 'linear-gradient(135deg, rgba(34,197,94,0.5) 0%, rgba(16,185,129,0.5) 100%)',
+                    backdropFilter: 'blur(20px)',
+                    border: isPlaying ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(34,197,94,0.5)',
+                  }}
+                >
+                  {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                  <span className="text-[10px] font-medium">{isPlaying ? 'Пауза' : 'Играть'}</span>
+                </motion.button>
                 {VISUALIZERS.map((viz) => {
                   const Icon = viz.icon;
                   const isActive = activeVisualizer === viz.id;
@@ -429,6 +425,8 @@ export const ZenVisualizer: React.FC<ZenVisualizerProps> = ({ isOpen, onClose })
     </motion.div>
   );
 };
+
+
 
 
 
