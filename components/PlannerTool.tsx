@@ -177,7 +177,7 @@ export const PlannerTool: React.FC<PlannerToolProps> = ({ isOpen, onClose, onCom
         </div>
 
         {/* View Toggle */}
-        <div className="px-4 mb-4">
+        <div className="px-4 mb-4 relative z-30">
           <div 
             className="flex p-1 rounded-2xl"
             style={{
@@ -191,11 +191,14 @@ export const PlannerTool: React.FC<PlannerToolProps> = ({ isOpen, onClose, onCom
             ].map((v) => (
               <button
                 key={v.id}
-                onClick={() => setView(v.id as 'list' | 'calendar')}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setView(v.id as 'list' | 'calendar');
+                }}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 active:scale-95 ${
                   view === v.id 
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' 
-                    : 'text-white/50'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg' 
+                    : 'text-white/50 hover:text-white/70'
                 }`}
               >
                 <span>{v.icon}</span>

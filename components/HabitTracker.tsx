@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Check, Flame, Calendar, Trash2, Trophy } from 'lucide-react';
+import { X, Plus, Check, Flame, Calendar, Trash2, Trophy, AlertCircle } from 'lucide-react';
 import { useSyncTool } from '../hooks/useSyncTool';
 import { SyncIndicator } from './SyncIndicator';
+import { hapticSuccess, hapticMedium } from '../services/telegramService';
 
 interface HabitTrackerProps {
   isOpen: boolean;
@@ -78,6 +79,9 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
   const [showAddForm, setShowAddForm] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
   const [selectedPreset, setSelectedPreset] = useState<typeof HABIT_PRESETS[0] | null>(null);
+  
+  // 🎯 Подтверждение выполнения привычки
+  const [confirmingHabit, setConfirmingHabit] = useState<Habit | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -104,30 +108,52 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
     onComplete(10);
   };
 
-  const toggleHabitToday = (habitId: string) => {
+  // 🎯 Открыть подтверждение выполнения
+  const openConfirmation = (habit: Habit) => {
+    const isCompleted = habit.completedDays.includes(today);
+    if (isCompleted) {
+      // Если уже выполнено - отменяем без подтверждения
+      undoHabitToday(habit.id);
+    } else {
+      // Если не выполнено - открываем подтверждение
+      hapticMedium();
+      setConfirmingHabit(habit);
+    }
+  };
+  
+  // ✅ Подтвердить выполнение привычки
+  const confirmHabitComplete = () => {
+    if (!confirmingHabit) return;
+    
+    hapticSuccess();
+    setHabits(habits.map(habit => {
+      if (habit.id !== confirmingHabit.id) return habit;
+      
+      const newCompletedDays = [...habit.completedDays, today];
+      
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      
+      let newStreak = habit.streak;
+      if (habit.completedDays.includes(yesterdayStr) || habit.streak === 0) {
+        newStreak = habit.streak + 1;
+      }
+      
+      return { ...habit, completedDays: newCompletedDays, streak: newStreak };
+    }));
+    
+    onComplete(5);
+    setConfirmingHabit(null);
+  };
+  
+  // ↩️ Отменить выполнение
+  const undoHabitToday = (habitId: string) => {
     setHabits(habits.map(habit => {
       if (habit.id !== habitId) return habit;
       
-      const isCompleted = habit.completedDays.includes(today);
-      let newCompletedDays: string[];
-      let newStreak = habit.streak;
-      
-      if (isCompleted) {
-        newCompletedDays = habit.completedDays.filter(d => d !== today);
-        newStreak = Math.max(0, newStreak - 1);
-      } else {
-        newCompletedDays = [...habit.completedDays, today];
-        
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
-        
-        if (habit.completedDays.includes(yesterdayStr) || habit.streak === 0) {
-          newStreak = habit.streak + 1;
-        }
-        
-        onComplete(5);
-      }
+      const newCompletedDays = habit.completedDays.filter(d => d !== today);
+      const newStreak = Math.max(0, habit.streak - 1);
       
       return { ...habit, completedDays: newCompletedDays, streak: newStreak };
     }));
@@ -433,7 +459,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
                     {/* Header with image */}
                     <div className="flex items-center gap-3 p-4">
                       <button
-                        onClick={() => toggleHabitToday(habit.id)}
+                        onClick={() => openConfirmation(habit)}
                         className="w-14 h-14 rounded-xl overflow-hidden relative shrink-0"
                         style={{
                           boxShadow: isCompletedToday ? `0 4px 15px ${habit.color}40` : 'none',
@@ -621,6 +647,115 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
             </motion.button>
           </div>
         )}
+
+        {/* 🎯 Confirmation Modal */}
+        <AnimatePresence>
+          {confirmingHabit && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4"
+              onClick={() => setConfirmingHabit(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-sm rounded-3xl overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                  backdropFilter: 'blur(40px)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                }}
+              >
+                {/* Header */}
+                <div className="p-6 text-center">
+                  <motion.div 
+                    className="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden relative"
+                    style={{ boxShadow: `0 8px 32px ${confirmingHabit.color}40` }}
+                  >
+                    <img 
+                      src={confirmingHabit.image}
+                      alt={confirmingHabit.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div 
+                      className="absolute inset-0 flex items-center justify-center"
+                      style={{ background: `${confirmingHabit.color}80` }}
+                    >
+                      <span className="text-4xl">{confirmingHabit.emoji}</span>
+                    </div>
+                  </motion.div>
+                  
+                  <h3 className="text-xl font-bold text-white mb-2">{confirmingHabit.name}</h3>
+                  <p className="text-white/50 text-sm">Ты действительно выполнил(а) эту привычку сегодня?</p>
+                </div>
+
+                {/* Stats */}
+                <div className="px-6 pb-4">
+                  <div 
+                    className="flex items-center justify-center gap-6 p-4 rounded-2xl mb-4"
+                    style={{ background: 'rgba(255,255,255,0.03)' }}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-400 flex items-center justify-center gap-1">
+                        {confirmingHabit.streak}
+                        <Flame size={18} />
+                      </div>
+                      <div className="text-white/40 text-xs">Текущий streak</div>
+                    </div>
+                    <div className="w-px h-10 bg-white/10" />
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-400 flex items-center justify-center gap-1">
+                        +5
+                        <span className="text-sm">XP</span>
+                      </div>
+                      <div className="text-white/40 text-xs">Награда</div>
+                    </div>
+                  </div>
+                  
+                  {/* Warning */}
+                  <div 
+                    className="p-3 rounded-xl mb-4 flex items-start gap-3"
+                    style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.2)' }}
+                  >
+                    <AlertCircle size={18} className="text-yellow-400 shrink-0 mt-0.5" />
+                    <p className="text-yellow-300/80 text-xs">
+                      Будь честен(на) с собой! Привычки работают только когда ты действительно их выполняешь. 💪
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="px-6 pb-6 flex gap-3">
+                  <motion.button
+                    onClick={() => setConfirmingHabit(null)}
+                    className="flex-1 py-4 rounded-2xl font-medium text-white/50"
+                    style={{ background: 'rgba(255,255,255,0.05)' }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Отмена
+                  </motion.button>
+                  <motion.button
+                    onClick={confirmHabitComplete}
+                    className="flex-1 py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
+                    style={{
+                      background: `linear-gradient(135deg, ${confirmingHabit.color} 0%, ${confirmingHabit.color}cc 100%)`,
+                      boxShadow: `0 8px 32px ${confirmingHabit.color}40`,
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Check size={20} />
+                    Да, выполнил(а)!
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );

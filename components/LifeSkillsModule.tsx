@@ -306,7 +306,11 @@ export const LifeSkillsModule: React.FC<LifeSkillsModuleProps> = ({ isOpen, onCl
   const nextLessonStep = () => {
     if (!activeLesson) return;
     const content = LESSON_CONTENT[activeLesson.id];
-    if (!content) return;
+    
+    // 🚫 Если контента нет - не даём продолжить
+    if (!content || !content.steps || content.steps.length === 0) {
+      return;
+    }
     
     const totalSteps = content.steps.length + (content.quiz ? 1 : 0);
     const newStep = lessonStep + 1;
@@ -743,7 +747,7 @@ export const LifeSkillsModule: React.FC<LifeSkillsModuleProps> = ({ isOpen, onCl
                   {lessonProgress < 100 ? (
                     <div>
                       {/* Lesson Content */}
-                      {LESSON_CONTENT[activeLesson.id] ? (
+                      {LESSON_CONTENT[activeLesson.id] && LESSON_CONTENT[activeLesson.id].steps?.length > 0 ? (
                         <div className="mb-6">
                           <div 
                             className="p-4 rounded-2xl text-left max-h-64 overflow-y-auto"
@@ -758,9 +762,10 @@ export const LifeSkillsModule: React.FC<LifeSkillsModuleProps> = ({ isOpen, onCl
                           </p>
                         </div>
                       ) : (
-                        <p className="text-white/70 text-sm mb-4 text-center">
-                          Загрузка материала...
-                        </p>
+                        <div className="mb-6 p-4 rounded-2xl text-center" style={{ background: 'rgba(239,68,68,0.1)' }}>
+                          <p className="text-red-400 text-sm mb-2">⚠️ Материал в разработке</p>
+                          <p className="text-white/50 text-xs">Этот урок скоро будет готов!</p>
+                        </div>
                       )}
                       
                       <div className="flex gap-3">
@@ -773,19 +778,21 @@ export const LifeSkillsModule: React.FC<LifeSkillsModuleProps> = ({ isOpen, onCl
                           className="flex-1 py-3 rounded-xl text-white/50 text-sm font-medium"
                           style={{ background: 'rgba(255,255,255,0.05)' }}
                         >
-                          Отмена
+                          {LESSON_CONTENT[activeLesson.id]?.steps?.length > 0 ? 'Отмена' : 'Назад'}
                         </button>
-                        <button
-                          onClick={nextLessonStep}
-                          className="flex-1 py-3 rounded-xl text-white text-sm font-medium"
-                          style={{ 
-                            background: selectedSkill.color,
-                          }}
-                        >
-                          {LESSON_CONTENT[activeLesson.id] && lessonStep < LESSON_CONTENT[activeLesson.id].steps.length - 1 
-                            ? 'Далее →' 
-                            : 'Завершить ✓'}
-                        </button>
+                        {LESSON_CONTENT[activeLesson.id]?.steps?.length > 0 && (
+                          <button
+                            onClick={nextLessonStep}
+                            className="flex-1 py-3 rounded-xl text-white text-sm font-medium"
+                            style={{ 
+                              background: selectedSkill.color,
+                            }}
+                          >
+                            {lessonStep < LESSON_CONTENT[activeLesson.id].steps.length - 1 
+                              ? 'Далее →' 
+                              : 'Завершить ✓'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   ) : (
