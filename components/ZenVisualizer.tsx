@@ -374,18 +374,26 @@ export const ZenVisualizer: React.FC<ZenVisualizerProps> = ({ isOpen, onClose })
               <p className="text-white/50 text-sm">Расслабься и наблюдай</p>
             </div>
 
-            {/* Play/Pause */}
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full flex items-center justify-center text-white transition-all hover:scale-110"
-              style={{
-                background: 'rgba(255,255,255,0.15)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255,255,255,0.2)',
-              }}
-            >
-              {isPlaying ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
-            </button>
+            {/* Play/Pause - центральная кнопка */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
+              <motion.button
+                onClick={() => setIsPlaying(!isPlaying)}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-24 h-24 rounded-full flex items-center justify-center text-white transition-all shadow-2xl"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(168,85,247,0.4) 0%, rgba(236,72,153,0.4) 100%)',
+                  backdropFilter: 'blur(30px)',
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  boxShadow: '0 8px 32px rgba(168,85,247,0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
+                }}
+              >
+                {isPlaying ? <Pause size={40} /> : <Play size={40} className="ml-1" />}
+              </motion.button>
+              <span className="text-white/50 text-xs font-medium">
+                {isPlaying ? 'Нажми для паузы' : 'Нажми для запуска'}
+              </span>
+            </div>
 
             {/* Visualizer selector */}
             <div className="absolute bottom-8 left-0 right-0 px-4">
