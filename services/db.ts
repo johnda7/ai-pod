@@ -933,6 +933,11 @@ function saveUserToStorage(user: User) {
 // TOOLS DATA SYNC (Привычки, Цели, Заметки)
 // ==========================================
 
+// Флаг: существует ли колонка tools_data в Supabase
+// Отключаем синхронизацию tools_data до добавления колонки
+// Чтобы включить: выполнить scripts/ADD_TOOLS_DATA_COLUMN.sql и поставить true
+const TOOLS_DATA_COLUMN_EXISTS = false;
+
 // Ключи всех инструментов в localStorage
 const TOOLS_STORAGE_KEYS = [
   'habit_tracker_data',
@@ -977,6 +982,9 @@ export const setToolsData = (data: Record<string, any>): void => {
 // ПРИМЕЧАНИЕ: Колонка tools_data должна быть добавлена в Supabase вручную
 // Используйте scripts/ADD_TOOLS_DATA_COLUMN.sql для добавления колонки
 export const syncToolsDataToSupabase = async (userId: string): Promise<boolean> => {
+  // Отключено до добавления колонки tools_data в Supabase
+  if (!TOOLS_DATA_COLUMN_EXISTS) return false;
+  
   if (!isSupabaseEnabled) return false;
   
   const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
@@ -985,36 +993,18 @@ export const syncToolsDataToSupabase = async (userId: string): Promise<boolean> 
   try {
     const toolsData = getToolsData();
     
-    // Сначала проверяем существует ли колонка (тихо)
-    const { data: checkData, error: checkError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('id', userId)
-      .single();
-    
-    if (checkError) {
-      // Пользователь не найден - это нормально для гостей
-      return false;
-    }
-    
     const { error } = await supabase
       .from('users')
       .update({ tools_data: toolsData })
       .eq('id', userId);
     
     if (error) {
-      // Тихо игнорируем ошибки колонки (не выводим в консоль!)
-      if (error.message?.includes('column') || error.code === '42703' || error.code === 'PGRST204') {
-        return false;
-      }
-      // Другие ошибки тоже тихо игнорируем, чтобы не засорять консоль
       return false;
     }
     
     console.log('✅ Tools data synced to Supabase');
     return true;
   } catch (e) {
-    // Тихо игнорируем все ошибки
     return false;
   }
 };
@@ -1023,27 +1013,22 @@ export const syncToolsDataToSupabase = async (userId: string): Promise<boolean> 
 // ПРИМЕЧАНИЕ: Колонка tools_data должна быть добавлена в Supabase вручную
 // Используйте scripts/ADD_TOOLS_DATA_COLUMN.sql для добавления колонки
 export const loadToolsDataFromSupabase = async (userId: string): Promise<boolean> => {
+  // Отключено до добавления колонки tools_data в Supabase
+  if (!TOOLS_DATA_COLUMN_EXISTS) return false;
+  
   if (!isSupabaseEnabled) return false;
   
   const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
   if (!isValidUUID) return false;
   
   try {
-    // Используем безопасный запрос без явного указания tools_data
-    // чтобы избежать ошибки 400 если колонка не существует
     const { data, error } = await supabase
       .from('users')
-      .select('*')  // Выбираем все колонки - безопаснее
+      .select('tools_data')
       .eq('id', userId)
       .single();
     
-    // Тихо игнорируем любые ошибки (колонка может не существовать)
-    if (error) {
-      return false;
-    }
-    
-    // Проверяем есть ли tools_data в результате
-    if (!data || !data.tools_data) {
+    if (error || !data?.tools_data) {
       return false;
     }
     
@@ -1055,7 +1040,6 @@ export const loadToolsDataFromSupabase = async (userId: string): Promise<boolean
     const mergedData: Record<string, any> = { ...cloudData };
     Object.entries(localData).forEach(([key, value]) => {
       if (Array.isArray(value) && Array.isArray(cloudData[key])) {
-        // For arrays: merge unique items
         const cloudArray = cloudData[key] as any[];
         const localArray = value as any[];
         const mergedArray = [...cloudArray];
@@ -1073,7 +1057,6 @@ export const loadToolsDataFromSupabase = async (userId: string): Promise<boolean
     console.log('✅ Tools data loaded from Supabase');
     return true;
   } catch (e) {
-    // Тихо игнорируем все ошибки
     return false;
   }
 };
