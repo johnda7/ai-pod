@@ -464,7 +464,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   };
 
   const renderContent = () => {
-    if (activeTab === 'TOOLS') return <ToolsView user={user} onXpEarned={handleGameReward} />;
+    if (activeTab === 'TOOLS') return <ToolsView user={user} onXpEarned={handleGameReward} onNavigateToSection={setActiveTab} />;
     if (activeTab === 'RELAX') return <MeditationView />;
 
     if (activeTab === 'PROFILE') {
