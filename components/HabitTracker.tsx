@@ -106,7 +106,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
     setNewHabitName('');
     setSelectedPreset(null);
     setShowAddForm(false);
-    onComplete(10);
+    // ❌ Убрано: onComplete(10) - XP не даётся за создание, только за выполнение!
   };
 
   // 🎯 Открыть подтверждение выполнения
