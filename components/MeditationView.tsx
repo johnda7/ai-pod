@@ -164,11 +164,13 @@ export const MeditationView: React.FC = () => {
 
       return (
       <motion.div 
-        className="fixed inset-0 z-[80] flex flex-col items-center justify-center"
+        className="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-slate-950"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
+        {/* Полностью непрозрачный фон чтобы скрыть контент под модалкой */}
+        <div className="absolute inset-0 bg-slate-950" />
         <div className="absolute inset-0 bg-gradient-to-b from-indigo-950 via-slate-950 to-slate-950" />
         
         <motion.div 
