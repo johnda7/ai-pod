@@ -1243,7 +1243,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       </div>
 
       {/* DOCK BAR - iOS 26 LIQUID GLASS STYLE */}
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[380px] animate-in slide-in-from-bottom-20 duration-700 delay-200">
+      <div className="fixed bottom-5 left-0 right-0 mx-auto z-50 w-[92%] max-w-[380px] animate-in slide-in-from-bottom-20 duration-700 delay-200">
         <div 
           className="relative flex items-center justify-between p-1.5 rounded-[2rem]"
           style={{
