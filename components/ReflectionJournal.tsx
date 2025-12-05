@@ -129,6 +129,29 @@ export const ReflectionJournal: React.FC<ReflectionJournalProps> = ({ isOpen, on
     return entryDate === new Date().toDateString();
   });
 
+  // 📊 Статистика настроения за последние 7 дней
+  const getMoodStats = () => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    
+    const weekEntries = entries.filter(e => new Date(e.date) >= weekAgo);
+    
+    if (weekEntries.length === 0) return null;
+    
+    const avgMood = weekEntries.reduce((sum, e) => sum + e.mood, 0) / weekEntries.length;
+    const moodCounts = [0, 0, 0, 0, 0]; // 5 настроений
+    weekEntries.forEach(e => moodCounts[e.mood]++);
+    
+    return {
+      avgMood: avgMood.toFixed(1),
+      entriesCount: weekEntries.length,
+      moodCounts,
+      trend: weekEntries.length >= 2 
+        ? weekEntries[weekEntries.length - 1].mood - weekEntries[0].mood 
+        : 0
+    };
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -221,6 +244,52 @@ export const ReflectionJournal: React.FC<ReflectionJournalProps> = ({ isOpen, on
                   </div>
                 </motion.div>
               )}
+
+              {/* 📊 Mood Statistics */}
+              {entries.length > 0 && (() => {
+                const stats = getMoodStats();
+                if (!stats) return null;
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-4 p-4 rounded-2xl"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.08) 100%)',
+                      border: '1px solid rgba(139,92,246,0.15)',
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-white/60 text-xs font-medium">📊 Настроение за неделю</span>
+                      <span className="text-white/40 text-xs">{stats.entriesCount} записей</span>
+                    </div>
+                    
+                    {/* Mood bar */}
+                    <div className="flex gap-1 mb-2">
+                      {stats.moodCounts.map((count, i) => (
+                        <div 
+                          key={i}
+                          className="flex-1 h-2 rounded-full transition-all"
+                          style={{
+                            background: count > 0 
+                              ? `rgba(${i === 0 ? '239,68,68' : i === 1 ? '245,158,11' : i === 2 ? '156,163,175' : i === 3 ? '34,197,94' : '139,92,246'},${0.3 + (count / stats.entriesCount) * 0.7})`
+                              : 'rgba(255,255,255,0.05)'
+                          }}
+                        />
+                      ))}
+                    </div>
+                    
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/50">
+                        {MOOD_EMOJIS[Math.round(parseFloat(stats.avgMood))]} Среднее: {stats.avgMood}
+                      </span>
+                      <span className={stats.trend > 0 ? 'text-green-400' : stats.trend < 0 ? 'text-red-400' : 'text-white/40'}>
+                        {stats.trend > 0 ? '↗️ улучшается' : stats.trend < 0 ? '↘️ снижается' : '→ стабильно'}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })()}
 
               {/* Entries List */}
               {entries.length === 0 ? (
