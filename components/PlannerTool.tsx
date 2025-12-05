@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Check, Trash2, Calendar, Clock, Star, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { useSyncTool } from '../hooks/useSyncTool';
+import { SyncIndicator } from './SyncIndicator';
 
 interface PlannerToolProps {
   isOpen: boolean;
@@ -29,7 +31,12 @@ const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', '�
                 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
 export const PlannerTool: React.FC<PlannerToolProps> = ({ isOpen, onClose, onComplete }) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  // 🔄 useSyncTool вместо ручной синхронизации - автоматическая синхронизация с Supabase!
+  const { data: tasks, setData: setTasks, syncStatus } = useSyncTool<Task[]>([], {
+    storageKey: 'planner_tasks',
+    debounceMs: 1000
+  });
+  
   const [newTaskText, setNewTaskText] = useState('');
   const [selectedPriority, setSelectedPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -37,19 +44,6 @@ export const PlannerTool: React.FC<PlannerToolProps> = ({ isOpen, onClose, onCom
   const [showAddForm, setShowAddForm] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [view, setView] = useState<'list' | 'calendar'>('list');
-
-  // Load tasks from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('planner_tasks');
-    if (saved) {
-      setTasks(JSON.parse(saved));
-    }
-  }, []);
-
-  // Save tasks to localStorage
-  useEffect(() => {
-    localStorage.setItem('planner_tasks', JSON.stringify(tasks));
-  }, [tasks]);
 
   const addTask = () => {
     if (!newTaskText.trim()) return;
@@ -165,12 +159,15 @@ export const PlannerTool: React.FC<PlannerToolProps> = ({ isOpen, onClose, onCom
               </div>
             </div>
             
-            <button
-              onClick={onClose}
-              className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-            >
-              <X size={20} className="text-white" />
-            </button>
+            <div className="flex items-center gap-2">
+              <SyncIndicator status={syncStatus} />
+              <button
+                onClick={onClose}
+                className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+              >
+                <X size={20} className="text-white" />
+              </button>
+            </div>
           </div>
         </div>
 

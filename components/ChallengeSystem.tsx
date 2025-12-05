@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trophy, Flame, Clock, Star, Zap, Target, Check, ChevronRight, Gift, Sparkles, ArrowRight, Play, BookOpen, Timer } from 'lucide-react';
+import { useSyncTool } from '../hooks/useSyncTool';
+import { SyncIndicator } from './SyncIndicator';
 
 interface ChallengeSystemProps {
   isOpen: boolean;
@@ -137,21 +139,15 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
   completedLessons,
   userStreak = 0 
 }) => {
+  // 🔄 useSyncTool вместо ручной синхронизации - автоматическая синхронизация с Supabase!
+  const { data: completedChallenges, setData: setCompletedChallenges, syncStatus } = useSyncTool<string[]>([], {
+    storageKey: 'completed_challenges',
+    debounceMs: 1000
+  });
+  
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'special'>('daily');
-  const [completedChallenges, setCompletedChallenges] = useState<string[]>([]);
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('completed_challenges');
-    if (saved) {
-      setCompletedChallenges(JSON.parse(saved));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('completed_challenges', JSON.stringify(completedChallenges));
-  }, [completedChallenges]);
 
   // Get challenge progress from localStorage counters
   const getChallengeProgress = (challenge: Challenge): number => {
@@ -392,13 +388,16 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
                 </div>
               </div>
               
-              <button
-                onClick={onClose}
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.1)' }}
-              >
-                <X size={20} className="text-white" />
-              </button>
+              <div className="flex items-center gap-2">
+                <SyncIndicator status={syncStatus} />
+                <button
+                  onClick={onClose}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: 'rgba(255,255,255,0.1)' }}
+                >
+                  <X size={20} className="text-white" />
+                </button>
+              </div>
             </div>
 
             {/* Tabs */}

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, ChevronRight, Calendar, Star, Heart, Lightbulb, Target, TrendingUp, Sparkles } from 'lucide-react';
+import { useSyncTool } from '../hooks/useSyncTool';
+import { SyncIndicator } from './SyncIndicator';
 
 /**
  * REFLECTION JOURNAL
@@ -61,7 +63,12 @@ const HIGHLIGHT_OPTIONS = [
 ];
 
 export const ReflectionJournal: React.FC<ReflectionJournalProps> = ({ isOpen, onClose, onComplete }) => {
-  const [entries, setEntries] = useState<ReflectionEntry[]>([]);
+  // 🔄 useSyncTool вместо ручной синхронизации - автоматическая синхронизация с Supabase!
+  const { data: entries, setData: setEntries, syncStatus } = useSyncTool<ReflectionEntry[]>([], {
+    storageKey: 'reflection_journal',
+    debounceMs: 1000
+  });
+  
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [entryType, setEntryType] = useState<'daily' | 'weekly' | 'milestone'>('daily');
   const [currentStep, setCurrentStep] = useState(0);
@@ -73,19 +80,6 @@ export const ReflectionJournal: React.FC<ReflectionJournalProps> = ({ isOpen, on
   });
   const [mood, setMood] = useState(3);
   const [highlights, setHighlights] = useState<string[]>([]);
-
-  // Load entries
-  useEffect(() => {
-    const saved = localStorage.getItem('reflection_journal');
-    if (saved) {
-      setEntries(JSON.parse(saved));
-    }
-  }, []);
-
-  // Save entries
-  useEffect(() => {
-    localStorage.setItem('reflection_journal', JSON.stringify(entries));
-  }, [entries]);
 
   const prompts = REFLECTION_PROMPTS[entryType];
   const steps = ['learned', 'felt', 'did', 'improved', 'mood', 'highlights'];
@@ -177,12 +171,15 @@ export const ReflectionJournal: React.FC<ReflectionJournalProps> = ({ isOpen, on
                 </div>
               </div>
               
-              <button
-                onClick={onClose}
-                className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center"
-              >
-                <X size={20} className="text-white" />
-              </button>
+              <div className="flex items-center gap-2">
+                <SyncIndicator status={syncStatus} />
+                <button
+                  onClick={onClose}
+                  className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center"
+                >
+                  <X size={20} className="text-white" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
