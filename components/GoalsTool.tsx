@@ -137,8 +137,8 @@ export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplet
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] bg-[#020617] overflow-hidden"
       >
-        {/* Background */}
-        <div className="absolute inset-0">
+        {/* Background - pointer-events-none чтобы не блокировать клики! */}
+        <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-20 right-10 w-72 h-72 bg-amber-600/15 rounded-full blur-[100px] animate-pulse" />
           <div className="absolute bottom-40 left-10 w-80 h-80 bg-orange-600/10 rounded-full blur-[120px]" />
         </div>

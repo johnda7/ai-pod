@@ -430,8 +430,8 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] overflow-hidden"
       >
-        {/* Dynamic Background based on selected sound */}
-        <div className="absolute inset-0">
+        {/* Dynamic Background based on selected sound - pointer-events-none! */}
+        <div className="absolute inset-0 pointer-events-none">
           {/* Background Image - changes with selected sound */}
           <motion.div
             key={selectedSound.id}
