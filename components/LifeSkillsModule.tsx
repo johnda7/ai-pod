@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight, Star, Trophy, Zap, Target, Users, Lightbulb, Heart, Shield, Brain, MessageCircle, Clock, Check, Play, Lock, Coins } from 'lucide-react';
+import { useSyncTool } from '../hooks/useSyncTool';
+import { SyncIndicator } from './SyncIndicator';
 
 interface LifeSkillsModuleProps {
   isOpen: boolean;
@@ -132,20 +134,14 @@ const LESSON_TYPE_ICONS = {
 };
 
 export const LifeSkillsModule: React.FC<LifeSkillsModuleProps> = ({ isOpen, onClose, onComplete }) => {
+  // 🔄 useSyncTool вместо ручной синхронизации - автоматическая синхронизация с Supabase!
+  const { data: completedLessons, setData: setCompletedLessons, syncStatus } = useSyncTool<string[]>([], {
+    storageKey: 'life_skills_progress',
+    debounceMs: 1000
+  });
+  
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
-  const [completedLessons, setCompletedLessons] = useState<string[]>([]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('life_skills_progress');
-    if (saved) {
-      setCompletedLessons(JSON.parse(saved));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('life_skills_progress', JSON.stringify(completedLessons));
-  }, [completedLessons]);
 
   const filteredSkills = selectedCategory === 'all' 
     ? LIFE_SKILLS 
@@ -427,17 +423,20 @@ export const LifeSkillsModule: React.FC<LifeSkillsModuleProps> = ({ isOpen, onCl
                 </div>
               </div>
               
-              <button
-                onClick={selectedSkill ? () => setSelectedSkill(null) : onClose}
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.1)' }}
-              >
-                {selectedSkill ? (
-                  <ChevronRight size={20} className="text-white rotate-180" />
-                ) : (
-                  <X size={20} className="text-white" />
-                )}
-              </button>
+              <div className="flex items-center gap-2">
+                <SyncIndicator status={syncStatus} />
+                <button
+                  onClick={selectedSkill ? () => setSelectedSkill(null) : onClose}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: 'rgba(255,255,255,0.1)' }}
+                >
+                    {selectedSkill ? (
+                    <ChevronRight size={20} className="text-white rotate-180" />
+                  ) : (
+                    <X size={20} className="text-white" />
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Total Progress */}
