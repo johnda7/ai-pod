@@ -78,7 +78,7 @@ export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplet
     
     setGoals([...goals, newGoal]);
     resetForm();
-    onComplete(15);
+    // ❌ Убрано: onComplete(15) - XP не даётся за создание цели, только за достижение!
   };
 
   const resetForm = () => {
@@ -96,14 +96,11 @@ export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplet
       if (goal.id === id) {
         const newProgress = Math.max(0, Math.min(goal.target, goal.progress + delta));
         
-        // Award XP for progress
-        if (delta > 0) {
-          onComplete(5);
-        }
+        // ❌ Убрано: +5 XP за каждый клик - это было слишком легко!
         
-        // Award bonus for completing goal
+        // ✅ Оставлено: XP только за ДОСТИЖЕНИЕ цели (100%)
         if (newProgress === goal.target && goal.progress < goal.target) {
-          onComplete(50);
+          onComplete(50); // Награда за достижение цели!
         }
         
         return { ...goal, progress: newProgress };

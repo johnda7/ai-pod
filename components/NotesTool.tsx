@@ -88,7 +88,7 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
         isPinned: false,
       };
       setNotes([newNote, ...notes]);
-      onComplete(10);
+      // ❌ Убрано: onComplete(10) - XP не даётся за создание заметки (слишком легко)
     }
     
     resetEditor();

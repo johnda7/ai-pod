@@ -68,9 +68,7 @@ export const PlannerTool: React.FC<PlannerToolProps> = ({ isOpen, onClose, onCom
     setNewTaskText('');
     setSelectedTime('');
     setShowAddForm(false);
-    
-    // Award XP for adding task
-    onComplete(5);
+    // ❌ Убрано: onComplete(5) - XP не даётся за добавление задачи, только за выполнение!
   };
 
   const toggleTask = (id: string) => {

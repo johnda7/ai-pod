@@ -10,8 +10,8 @@ import { MemoryGame } from './MemoryGame';
 import { ShopView } from './ShopView';
 import { AchievementsView } from './AchievementsView';
 import { ToolsView } from './ToolsView';
-import { purchaseItem, checkAndUpdateStreak, checkMilestoneReward } from '../services/db';
-import { isSupabaseEnabled } from '../services/supabaseClient';
+import { purchaseItem, checkAndUpdateStreak, checkMilestoneReward, syncToolsDataToSupabase } from '../services/db';
+import { isSupabaseEnabled, supabase } from '../services/supabaseClient';
 import { GameTutorial } from './GameTutorial';
 import { hapticMedium, hapticSuccess, hapticLight } from '../services/telegramService';
 import { playXPSound, playCoinSound, playLevelUpSound, playStreakSound, playSurpriseSound } from '../services/soundService';
@@ -404,13 +404,19 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
 
   const inventoryItems = user.inventory.map(id => SHOP_ITEMS.find(item => item.id === id)).filter(Boolean);
 
-  // Обработка награды от игр
-  const handleGameReward = (xp: number, coins: number, bonus?: string) => {
+  // Обработка награды от игр - с синхронизацией Supabase! 🔄
+  const handleGameReward = async (xp: number, coins: number, bonus?: string) => {
+    // ⚠️ ЗАЩИТА: Если XP или coins <= 0, не начисляем
+    if (xp <= 0 && coins <= 0) {
+      console.log('⚠️ Пропуск начисления: xp=', xp, 'coins=', coins);
+      return;
+    }
+    
     const updatedUser = {
       ...user,
       xp: user.xp + xp,
       coins: user.coins + coins,
-      level: Math.floor((user.xp + xp) / 100) + 1,
+      level: Math.floor((user.xp + xp) / 500) + 1, // Исправлено: 500 XP на уровень
     };
     
     // Добавляем бонусный предмет в инвентарь
@@ -418,13 +424,43 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       updatedUser.inventory = [...updatedUser.inventory, bonus];
     }
     
+    // 1. Оптимистичное обновление UI
     setUser(updatedUser);
     localStorage.setItem('ai_pod_user', JSON.stringify(updatedUser));
     onUserUpdate?.(updatedUser);
     
-    // Анимация XP
+    // 2. Анимация XP
     setIsXpAnimating(true);
     setTimeout(() => setIsXpAnimating(false), 500);
+    
+    // 3. 🔄 СИНХРОНИЗАЦИЯ С SUPABASE
+    if (isSupabaseEnabled && supabase) {
+      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+      if (isValidUUID) {
+        try {
+          const { error } = await supabase
+            .from('users')
+            .update({ 
+              xp: updatedUser.xp, 
+              coins: updatedUser.coins, 
+              level: updatedUser.level,
+              inventory: updatedUser.inventory
+            })
+            .eq('id', user.id);
+          
+          if (error) {
+            console.error('❌ Supabase sync error:', error);
+          } else {
+            console.log('✅ XP/Coins synced to Supabase:', { xp, coins });
+          }
+          
+          // Также синхронизируем данные инструментов
+          await syncToolsDataToSupabase(user.id);
+        } catch (e) {
+          console.error('❌ Supabase sync failed:', e);
+        }
+      }
+    }
   };
 
   const renderContent = () => {
