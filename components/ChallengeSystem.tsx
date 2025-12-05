@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trophy, Flame, Clock, Star, Zap, Target, Check, ChevronRight, Gift, Sparkles } from 'lucide-react';
+import { X, Trophy, Flame, Clock, Star, Zap, Target, Check, ChevronRight, Gift, Sparkles, ArrowRight, Play, BookOpen, Timer } from 'lucide-react';
 
 interface ChallengeSystemProps {
   isOpen: boolean;
@@ -139,6 +139,7 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'special'>('daily');
   const [completedChallenges, setCompletedChallenges] = useState<string[]>([]);
   const [claimingId, setClaimingId] = useState<string | null>(null);
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('completed_challenges');
@@ -201,6 +202,98 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
       case 'weekly': return WEEKLY_CHALLENGES;
       case 'special': return SPECIAL_CHALLENGES;
     }
+  };
+
+  // 📋 Инструкции для каждого челленджа
+  const getChallengeInstructions = (challenge: Challenge) => {
+    const instructions: Record<string, { steps: string[]; tip: string; action: string }> = {
+      'd1': {
+        steps: [
+          '🌅 Проснись пораньше и открой приложение',
+          '📚 Выбери любой урок из раздела "Уроки"',
+          '✅ Заверши урок до 12:00',
+        ],
+        tip: 'Утренняя учёба эффективнее в 2 раза! Мозг ещё свежий.',
+        action: 'Перейти к урокам →',
+      },
+      'd2': {
+        steps: [
+          '🍅 Открой Помодоро или Режим Фокуса',
+          '⏱️ Запусти таймер 2 раза',
+          '🎯 Сосредоточься на задаче',
+        ],
+        tip: 'Техника Помодоро: 25 мин работы + 5 мин отдыха. Повтори 2 раза!',
+        action: 'Открыть Помодоро →',
+      },
+      'd3': {
+        steps: [
+          '🧘 Открой раздел "Зона отдыха"',
+          '🎧 Выбери любую медитацию',
+          '⏰ Проведи 5 минут в спокойствии',
+        ],
+        tip: 'Медитация снижает стресс и улучшает концентрацию.',
+        action: 'К медитациям →',
+      },
+      'w1': {
+        steps: [
+          '📚 Заходи в приложение каждый день',
+          '✅ Проходи минимум 1 урок в день',
+          '🏆 Заверши 5 уроков за 7 дней',
+        ],
+        tip: 'Равномерное распределение лучше, чем всё за один день!',
+        action: 'К урокам →',
+      },
+      'w2': {
+        steps: [
+          '⚡ Проходи уроки и получай XP',
+          '🎮 Используй инструменты',
+          '🎯 Набери 500 XP за неделю',
+        ],
+        tip: 'XP = уроки + инструменты + челленджи. Комбинируй!',
+        action: 'Заработать XP →',
+      },
+      'w3': {
+        steps: [
+          '🔥 Заходи в приложение каждый день',
+          '📚 Проходи хотя бы 1 урок',
+          '🎯 Не пропускай ни одного дня!',
+        ],
+        tip: 'Streak = непрерывные дни активности. Не сломай цепочку!',
+        action: 'Поддержать streak →',
+      },
+      's1': {
+        steps: [
+          '👆 Нажми на любой урок',
+          '📖 Пройди все шаги урока',
+          '🎉 Получи награду!',
+        ],
+        tip: 'Первый шаг — самый важный. Ты уже молодец!',
+        action: 'Начать урок →',
+      },
+      's2': {
+        steps: [
+          '🔧 Открой раздел "Полезное"',
+          '🔍 Попробуй каждый инструмент',
+          '✅ Используй все 6 инструментов',
+        ],
+        tip: 'Каждый инструмент полезен по-своему. Найди свой любимый!',
+        action: 'К инструментам →',
+      },
+      's3': {
+        steps: [
+          '📚 Проходи уроки регулярно',
+          '🎮 Используй инструменты',
+          '🏆 Достигни 1000 XP!',
+        ],
+        tip: '1000 XP = примерно 10-15 уроков. Ты справишься!',
+        action: 'Продолжить путь →',
+      },
+    };
+    return instructions[challenge.id] || {
+      steps: ['Выполни задание челленджа', 'Проверь прогресс', 'Получи награду'],
+      tip: 'Каждый челлендж — шаг к лучшей версии себя!',
+      action: 'Начать →',
+    };
   };
 
   const tabs = [
@@ -354,7 +447,8 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`rounded-2xl overflow-hidden ${claimed ? 'opacity-60' : ''}`}
+                  onClick={() => !claimed && setSelectedChallenge(challenge)}
+                  className={`rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform ${claimed ? 'opacity-60' : ''}`}
                   style={{
                     background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
                     border: `1px solid ${isComplete && !claimed ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.1)'}`,
@@ -492,6 +586,195 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
             </div>
           </motion.div>
         </div>
+
+        {/* 📋 Challenge Detail Modal */}
+        <AnimatePresence>
+          {selectedChallenge && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4"
+              onClick={() => setSelectedChallenge(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-sm rounded-3xl overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                  backdropFilter: 'blur(40px)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                }}
+              >
+                {/* Header Image */}
+                <div className="h-32 relative">
+                  <img 
+                    src={selectedChallenge.image}
+                    alt={selectedChallenge.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+                  
+                  <button
+                    onClick={() => setSelectedChallenge(null)}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center"
+                  >
+                    <X size={16} className="text-white" />
+                  </button>
+                  
+                  <div className="absolute bottom-3 left-4 right-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl">{selectedChallenge.emoji}</span>
+                      <div>
+                        <h3 className="text-white font-bold text-lg">{selectedChallenge.title}</h3>
+                        <p className="text-white/60 text-sm">{selectedChallenge.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-5">
+                  {/* Progress */}
+                  {(() => {
+                    const progress = getChallengeProgress(selectedChallenge);
+                    const isComplete = isChallengeComplete(selectedChallenge);
+                    const claimed = isClaimed(selectedChallenge.id);
+                    const progressPercent = Math.min((progress / selectedChallenge.requirement.value) * 100, 100);
+                    
+                    return (
+                      <>
+                        <div className="mb-5">
+                          <div className="flex justify-between text-sm mb-2">
+                            <span className="text-white/50">Прогресс</span>
+                            <span className={isComplete ? 'text-green-400 font-bold' : 'text-white/70'}>
+                              {progress}/{selectedChallenge.requirement.value}
+                            </span>
+                          </div>
+                          <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${progressPercent}%` }}
+                              className="h-full rounded-full"
+                              style={{
+                                background: isComplete 
+                                  ? 'linear-gradient(90deg, #22c55e, #10b981)'
+                                  : 'linear-gradient(90deg, #f59e0b, #ea580c)',
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Instructions */}
+                        {!claimed && (
+                          <div className="mb-5">
+                            <h4 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
+                              <BookOpen size={16} className="text-amber-400" />
+                              Как выполнить:
+                            </h4>
+                            <div className="space-y-2">
+                              {getChallengeInstructions(selectedChallenge).steps.map((step, idx) => (
+                                <div 
+                                  key={idx}
+                                  className="flex items-start gap-3 p-2.5 rounded-xl"
+                                  style={{ background: 'rgba(255,255,255,0.03)' }}
+                                >
+                                  <div 
+                                    className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
+                                    style={{ 
+                                      background: idx < progress ? '#22c55e' : 'rgba(255,255,255,0.1)',
+                                      color: idx < progress ? 'white' : 'rgba(255,255,255,0.5)',
+                                    }}
+                                  >
+                                    {idx < progress ? <Check size={12} /> : idx + 1}
+                                  </div>
+                                  <span className="text-white/80 text-sm">{step}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Tip */}
+                        <div 
+                          className="mb-5 p-3 rounded-xl"
+                          style={{ 
+                            background: 'rgba(139,92,246,0.1)',
+                            border: '1px solid rgba(139,92,246,0.2)',
+                          }}
+                        >
+                          <p className="text-purple-300 text-xs">
+                            💡 {getChallengeInstructions(selectedChallenge).tip}
+                          </p>
+                        </div>
+
+                        {/* Reward */}
+                        <div className="flex items-center justify-center gap-4 mb-5">
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-yellow-500/10">
+                            <Zap size={16} className="text-yellow-400" />
+                            <span className="text-yellow-400 font-bold">+{selectedChallenge.reward.xp} XP</span>
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-yellow-500/10">
+                            <span className="text-yellow-400">🪙</span>
+                            <span className="text-yellow-400 font-bold">+{selectedChallenge.reward.coins}</span>
+                          </div>
+                        </div>
+
+                        {/* Action Button */}
+                        {claimed ? (
+                          <div className="py-4 rounded-2xl text-center bg-green-500/20">
+                            <span className="text-green-400 font-bold flex items-center justify-center gap-2">
+                              <Check size={20} />
+                              Награда получена!
+                            </span>
+                          </div>
+                        ) : isComplete ? (
+                          <motion.button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              claimReward(selectedChallenge);
+                              setTimeout(() => setSelectedChallenge(null), 1000);
+                            }}
+                            className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
+                            style={{
+                              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                              boxShadow: '0 8px 32px rgba(34,197,94,0.4)',
+                            }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Gift size={20} />
+                            Забрать награду!
+                          </motion.button>
+                        ) : (
+                          <motion.button
+                            onClick={() => {
+                              setSelectedChallenge(null);
+                              onClose();
+                            }}
+                            className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
+                            style={{
+                              background: 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)',
+                              boxShadow: '0 8px 32px rgba(245,158,11,0.4)',
+                            }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Play size={20} />
+                            {getChallengeInstructions(selectedChallenge).action}
+                          </motion.button>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );

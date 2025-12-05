@@ -1,27 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, Sparkles, Heart } from 'lucide-react';
+import { X, Sparkles, Heart, ArrowRight } from 'lucide-react';
 import { hapticLight, hapticMedium, hapticSuccess } from '../services/telegramService';
 
-// Видео Кати на YouTube
-export const KATYA_VIDEOS = {
-  welcome: {
-    id: 'EfLG_uMGqTo',
-    title: 'Привет! Я Катя 👋',
-    description: 'Твой личный коуч по развитию',
-    duration: 17,
-  },
-  motivation: {
-    id: 'uw3BJghYc4o', 
-    title: 'Ты молодец! 🎉',
-    description: 'Так держать!',
-    duration: 9,
-  },
-};
+// 🇷🇺 НОВАЯ ВЕРСИЯ БЕЗ YOUTUBE - работает в России без VPN
+// Анимированные карточки с Катей вместо видео
 
-// Скрытый YouTube плеер без брендинга
+// Изображение Кати
+const KATYA_IMAGE = 'https://i.ibb.co/Vp9WVGN/photo-2025-05-25-00-35-42.jpg';
+
+// Тексты для приветствия (анимированные слайды)
+// Порядок: сначала представление, потом главное послание, потом мотивация
+const WELCOME_SLIDES = [
+  { emoji: '👋', title: 'Привет!', text: 'Я Катя — психолог и автор книги "Шаг к себе"' },
+  { emoji: '✨', title: 'Моё главное послание:', text: 'С тобой всё нормально. Уже нормально. 💜' },
+  { emoji: '🚀', title: 'Это твоё путешествие', text: 'К лучшей версии себя. Я буду рядом!' },
+];
+
+// Тексты для мотивации после урока
+const MOTIVATION_MESSAGES = [
+  { emoji: '🎉', title: 'Отлично!', text: 'Ты молодец! Каждый шаг важен.' },
+  { emoji: '💪', title: 'Так держать!', text: 'Ты становишься лучше каждый день!' },
+  { emoji: '⭐', title: 'Супер!', text: 'Продолжай в том же духе!' },
+  { emoji: '🌟', title: 'Вау!', text: 'Это был крутой урок!' },
+];
+
+// Анимированный модал с Катей (без YouTube!)
 interface KatyaVideoModalProps {
-  videoId: string;
+  videoId?: string; // Оставляем для совместимости, но не используем
   isOpen: boolean;
   onClose: () => void;
   title?: string;
@@ -30,37 +36,56 @@ interface KatyaVideoModalProps {
 }
 
 export const KatyaVideoModal: React.FC<KatyaVideoModalProps> = ({ 
-  videoId, 
   isOpen, 
   onClose,
-  title,
-  subtitle,
   type = 'welcome'
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // Получаем длительность видео
-  const videoDuration = type === 'welcome' ? KATYA_VIDEOS.welcome.duration : KATYA_VIDEOS.motivation.duration;
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const slides = type === 'welcome' ? WELCOME_SLIDES : [MOTIVATION_MESSAGES[Math.floor(Math.random() * MOTIVATION_MESSAGES.length)]];
+  const autoCloseTime = type === 'welcome' ? 8000 : 4000;
 
   useEffect(() => {
     if (isOpen) {
-      setIsPlaying(true);
       hapticMedium();
+      setCurrentSlide(0);
       
-      // Автозакрытие ЗА СЕКУНДУ ДО окончания видео, чтобы не показывать YouTube рекомендации
+      // Автопереключение слайдов для welcome
+      if (type === 'welcome' && slides.length > 1) {
+        const slideInterval = setInterval(() => {
+          setCurrentSlide(prev => {
+            if (prev >= slides.length - 1) {
+              clearInterval(slideInterval);
+              return prev;
+            }
+            return prev + 1;
+          });
+        }, 2500);
+        
+        return () => clearInterval(slideInterval);
+      }
+      
+      // Автозакрытие
       const autoCloseTimer = setTimeout(() => {
         onClose();
-      }, (videoDuration - 1) * 1000);
+      }, autoCloseTime);
       
       return () => clearTimeout(autoCloseTimer);
-    } else {
-      setIsPlaying(false);
     }
-  }, [isOpen, videoDuration, onClose]);
+  }, [isOpen, type, onClose]);
 
   const handleClose = () => {
     hapticLight();
     onClose();
+  };
+
+  const handleNext = () => {
+    hapticLight();
+    if (currentSlide < slides.length - 1) {
+      setCurrentSlide(prev => prev + 1);
+    } else {
+      onClose();
+    }
   };
 
   return (
@@ -70,85 +95,161 @@ export const KatyaVideoModal: React.FC<KatyaVideoModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4"
+          className="fixed inset-0 z-[300] flex items-center justify-center p-4"
+          style={{ background: 'linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0f0f2a 100%)' }}
           onClick={handleClose}
         >
+          {/* Фоновые эффекты */}
+          <motion.div
+            className="absolute top-0 left-0 w-full h-1/2"
+            style={{
+              background: type === 'welcome' 
+                ? 'radial-gradient(ellipse at 30% 0%, rgba(139,92,246,0.3) 0%, transparent 60%)'
+                : 'radial-gradient(ellipse at 50% 0%, rgba(236,72,153,0.3) 0%, transparent 60%)',
+              filter: 'blur(60px)',
+            }}
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          />
+          
           <motion.div
             initial={{ scale: 0.8, opacity: 0, y: 50 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: 50 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-xs"
+            className="relative w-full max-w-sm"
             onClick={e => e.stopPropagation()}
-          >
-            {/* Header */}
-            {title && (
-              <motion.div 
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-center mb-4"
-              >
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  {type === 'welcome' ? (
-                    <Sparkles className="text-purple-400" size={20} />
-                  ) : (
-                    <Heart className="text-pink-400" size={20} fill="currentColor" />
-                  )}
-                  <h2 className="text-white font-bold text-xl">{title}</h2>
-                </div>
-                {subtitle && (
-                  <p className="text-white/60 text-sm">{subtitle}</p>
-                )}
-              </motion.div>
-            )}
-
-            {/* Video Container - компактный размер */}
-            <div 
-              className="relative rounded-3xl overflow-hidden"
-            style={{
-                aspectRatio: '9/16',
-                maxHeight: '60vh',
-              boxShadow: '0 25px 80px rgba(0,0,0,0.5), 0 0 60px rgba(139,92,246,0.3)',
-            }}
           >
             {/* Close button */}
             <button
-                onClick={handleClose}
-                className="absolute top-3 right-3 z-50 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white hover:bg-black/80 transition-all"
-              >
-                <X size={18} />
+              onClick={handleClose}
+              className="absolute -top-2 -right-2 z-50 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white hover:bg-white/20 transition-all"
+            >
+              <X size={20} />
             </button>
 
-              {/* YouTube Embed - без повтора, автозакрытие */}
-              {isPlaying && (
-                <div className="relative w-full h-full overflow-hidden">
-            <iframe
-                    id="katya-video-player"
-                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=0&playsinline=1&loop=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0&disablekb=1&cc_load_policy=0&enablejsapi=1`}
-                    className="absolute inset-0 w-[115%] h-[115%] top-0 -left-[7.5%]"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    title="Катя"
-                    style={{ border: 'none', pointerEvents: 'none' }}
-                  />
+            {/* Katya Avatar */}
+            <motion.div 
+              initial={{ scale: 0, y: -20 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
+              className="flex justify-center mb-6"
+            >
+              <div 
+                className="relative w-32 h-32 rounded-full overflow-hidden"
+                style={{
+                  boxShadow: type === 'welcome'
+                    ? '0 0 60px rgba(139,92,246,0.5), 0 20px 40px rgba(0,0,0,0.3)'
+                    : '0 0 60px rgba(236,72,153,0.5), 0 20px 40px rgba(0,0,0,0.3)',
+                  border: '3px solid rgba(255,255,255,0.2)',
+                }}
+              >
+                <img 
+                  src={KATYA_IMAGE} 
+                  alt="Катя" 
+                  className="w-full h-full object-cover"
+                />
+                {/* Pulse animation */}
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  style={{ 
+                    border: type === 'welcome' 
+                      ? '2px solid rgba(139,92,246,0.5)' 
+                      : '2px solid rgba(236,72,153,0.5)'
+                  }}
+                  animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </div>
+            </motion.div>
+
+            {/* Content Card */}
+            <motion.div
+              className="rounded-3xl p-6 text-center relative overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                backdropFilter: 'blur(40px)',
+                border: '1px solid rgba(255,255,255,0.15)',
+              }}
+            >
+              {/* Slide content */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentSlide}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <span className="text-4xl">{slides[currentSlide].emoji}</span>
+                    {type === 'welcome' ? (
+                      <Sparkles className="text-purple-400" size={24} />
+                    ) : (
+                      <Heart className="text-pink-400" size={24} fill="currentColor" />
+                    )}
+                  </div>
+                  
+                  <h2 className="text-2xl font-black text-white mb-2">
+                    {slides[currentSlide].title}
+                  </h2>
+                  
+                  <p className="text-white/70 text-base leading-relaxed">
+                    {slides[currentSlide].text}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Progress dots for welcome */}
+              {type === 'welcome' && slides.length > 1 && (
+                <div className="flex justify-center gap-2 mt-6">
+                  {slides.map((_, idx) => (
+                    <motion.div
+                      key={idx}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        idx === currentSlide ? 'w-6 bg-purple-400' : 'w-1.5 bg-white/20'
+                      }`}
+                    />
+                  ))}
                 </div>
               )}
+            </motion.div>
 
-              {/* Overlays to hide YouTube branding - уменьшены чтобы не закрывать голову */}
-              <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-black/70 to-transparent pointer-events-none z-10" />
-              <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-10" />
-            </div>
+            {/* Action button */}
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              onClick={handleNext}
+              className="mt-4 w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2 active:scale-95 transition-transform"
+              style={{
+                background: type === 'welcome'
+                  ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+                  : 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+                boxShadow: type === 'welcome'
+                  ? '0 8px 32px rgba(139,92,246,0.4)'
+                  : '0 8px 32px rgba(236,72,153,0.4)',
+              }}
+            >
+              {currentSlide < slides.length - 1 ? (
+                <>Далее <ArrowRight size={18} /></>
+              ) : (
+                'Поехали! 🚀'
+              )}
+            </motion.button>
 
             {/* Skip button */}
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              onClick={handleClose}
-              className="mt-4 w-full py-3 rounded-2xl text-white/60 text-sm font-medium hover:text-white/80 transition-colors"
-            >
-              Пропустить
-            </motion.button>
+            {type === 'welcome' && currentSlide < slides.length - 1 && (
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+                onClick={handleClose}
+                className="mt-3 w-full py-2 text-white/40 text-sm font-medium hover:text-white/60 transition-colors"
+              >
+                Пропустить
+              </motion.button>
+            )}
           </motion.div>
         </motion.div>
       )}
@@ -162,7 +263,7 @@ interface KatyaWelcomeProps {
 }
 
 export const KatyaWelcome: React.FC<KatyaWelcomeProps> = ({ onComplete }) => {
-  const [showVideo, setShowVideo] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [hasSeenWelcome, setHasSeenWelcome] = useState(() => {
     return localStorage.getItem('katya_welcome_seen') === 'true';
   });
@@ -171,14 +272,14 @@ export const KatyaWelcome: React.FC<KatyaWelcomeProps> = ({ onComplete }) => {
     // Показываем приветствие только один раз
     if (!hasSeenWelcome) {
       const timer = setTimeout(() => {
-        setShowVideo(true);
+        setShowModal(true);
       }, 500);
       return () => clearTimeout(timer);
     }
   }, [hasSeenWelcome]);
 
   const handleClose = () => {
-    setShowVideo(false);
+    setShowModal(false);
     localStorage.setItem('katya_welcome_seen', 'true');
     setHasSeenWelcome(true);
     hapticSuccess();
@@ -189,11 +290,8 @@ export const KatyaWelcome: React.FC<KatyaWelcomeProps> = ({ onComplete }) => {
 
   return (
     <KatyaVideoModal
-      videoId={KATYA_VIDEOS.welcome.id}
-      isOpen={showVideo}
+      isOpen={showModal}
       onClose={handleClose}
-      title="Привет! Я Катя 👋"
-      subtitle="Твой личный коуч"
       type="welcome"
     />
   );
@@ -218,11 +316,8 @@ export const KatyaMotivation: React.FC<KatyaMotivationProps> = ({
 
   return (
     <KatyaVideoModal
-      videoId={KATYA_VIDEOS.motivation.id}
       isOpen={isOpen}
       onClose={handleClose}
-      title="Отличная работа! 🎉"
-      subtitle={lessonTitle ? `Урок "${lessonTitle}" пройден!` : 'Так держать!'}
       type="motivation"
     />
   );
