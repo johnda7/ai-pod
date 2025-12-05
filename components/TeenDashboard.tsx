@@ -524,7 +524,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                     <div className="relative z-10 grid grid-cols-4 gap-2 w-full mb-4">
                         <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
                             <div className="text-lg font-black text-white">{user.level}</div>
-                            <div className="text-[8px] font-bold text-slate-400 uppercase">LVL</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase">УРОВЕНЬ</div>
                         </div>
                         <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
                             <div className="text-lg font-black text-white">{user.xp}</div>
@@ -532,11 +532,11 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                         </div>
                         <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
                             <div className="text-lg font-black text-yellow-400">{user.coins || 0}</div>
-                            <div className="text-[8px] font-bold text-slate-400 uppercase">COINS</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase">МОНЕТ</div>
                         </div>
                         <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
                             <div className="text-lg font-black text-orange-400">{user.streak}</div>
-                            <div className="text-[8px] font-bold text-slate-400 uppercase">DAYS</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase">ДНЕЙ</div>
                         </div>
                     </div>
 
@@ -626,7 +626,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                           </div>
                         </div>
                         <div className="text-xs font-bold text-indigo-400 bg-indigo-500/20 px-2 py-1 rounded-lg">
-                          LVL {user.level < 3 ? 3 : user.level < 5 ? 5 : user.level < 7 ? 7 : 10}
+                          УР. {user.level < 3 ? 3 : user.level < 5 ? 5 : user.level < 7 ? 7 : 10}
                         </div>
                       </div>
                     </div>
