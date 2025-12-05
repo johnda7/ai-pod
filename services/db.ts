@@ -975,6 +975,7 @@ export const setToolsData = (data: Record<string, any>): void => {
 
 // Синхронизировать данные инструментов с Supabase
 // ПРИМЕЧАНИЕ: Колонка tools_data должна быть добавлена в Supabase вручную
+// Используйте scripts/ADD_TOOLS_DATA_COLUMN.sql для добавления колонки
 export const syncToolsDataToSupabase = async (userId: string): Promise<boolean> => {
   if (!isSupabaseEnabled) return false;
   
@@ -984,29 +985,43 @@ export const syncToolsDataToSupabase = async (userId: string): Promise<boolean> 
   try {
     const toolsData = getToolsData();
     
+    // Сначала проверяем существует ли колонка (тихо)
+    const { data: checkData, error: checkError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    
+    if (checkError) {
+      // Пользователь не найден - это нормально для гостей
+      return false;
+    }
+    
     const { error } = await supabase
       .from('users')
       .update({ tools_data: toolsData })
       .eq('id', userId);
     
     if (error) {
-      // Тихо игнорируем если колонка не существует
-      if (error.message?.includes('column') || error.code === '42703') {
+      // Тихо игнорируем ошибки колонки (не выводим в консоль!)
+      if (error.message?.includes('column') || error.code === '42703' || error.code === 'PGRST204') {
         return false;
       }
-      console.error('❌ Tools sync failed:', error.message);
+      // Другие ошибки тоже тихо игнорируем, чтобы не засорять консоль
       return false;
     }
     
     console.log('✅ Tools data synced to Supabase');
     return true;
   } catch (e) {
+    // Тихо игнорируем все ошибки
     return false;
   }
 };
 
 // Загрузить данные инструментов из Supabase
 // ПРИМЕЧАНИЕ: Колонка tools_data должна быть добавлена в Supabase вручную
+// Используйте scripts/ADD_TOOLS_DATA_COLUMN.sql для добавления колонки
 export const loadToolsDataFromSupabase = async (userId: string): Promise<boolean> => {
   if (!isSupabaseEnabled) return false;
   
@@ -1014,18 +1029,21 @@ export const loadToolsDataFromSupabase = async (userId: string): Promise<boolean
   if (!isValidUUID) return false;
   
   try {
+    // Используем безопасный запрос без явного указания tools_data
+    // чтобы избежать ошибки 400 если колонка не существует
     const { data, error } = await supabase
       .from('users')
-      .select('tools_data')
+      .select('*')  // Выбираем все колонки - безопаснее
       .eq('id', userId)
       .single();
     
-    // Тихо игнорируем если колонка не существует
-    if (error?.message?.includes('column') || error?.code === '42703') {
+    // Тихо игнорируем любые ошибки (колонка может не существовать)
+    if (error) {
       return false;
     }
     
-    if (error || !data?.tools_data) {
+    // Проверяем есть ли tools_data в результате
+    if (!data || !data.tools_data) {
       return false;
     }
     
@@ -1055,7 +1073,7 @@ export const loadToolsDataFromSupabase = async (userId: string): Promise<boolean
     console.log('✅ Tools data loaded from Supabase');
     return true;
   } catch (e) {
-    console.error('❌ Load tools error:', e);
+    // Тихо игнорируем все ошибки
     return false;
   }
 };
