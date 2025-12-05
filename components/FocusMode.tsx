@@ -16,51 +16,52 @@ const FOCUS_DURATIONS = [
 ];
 
 // Ambient звуки - спокойные, не раздражающие (loopable)
+// 🚀 ОПТИМИЗАЦИЯ: уменьшены размеры изображений + качество для быстрой загрузки
 const AMBIENT_SOUNDS = [
   { 
     id: 'none', 
     name: 'Тишина', 
     emoji: '🌙', 
-    image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&h=200&fit=crop&q=80',
-    bgImage: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&h=1800&fit=crop&q=80',
-    gradient: 'linear-gradient(180deg, rgba(15,23,42,0.7) 0%, rgba(15,23,42,0.9) 100%)',
-    audioUrl: '', // Тишина - без звука
+    image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=120&h=120&fit=crop&q=50',
+    bgImage: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&h=1200&fit=crop&q=40',
+    gradient: 'linear-gradient(180deg, rgba(15,23,42,0.8) 0%, rgba(15,23,42,0.95) 100%)',
+    audioUrl: '',
   },
   { 
     id: 'rain', 
     name: 'Дождь', 
     emoji: '🌧️', 
-    image: 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=200&h=200&fit=crop&q=80',
-    bgImage: 'https://images.unsplash.com/photo-1428592953211-077101b2021b?w=1200&h=1800&fit=crop&q=80',
-    gradient: 'linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.9) 100%)',
-    audioUrl: 'https://cdn.pixabay.com/audio/2022/05/13/audio_257112094f.mp3', // Мягкий дождь
+    image: 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=120&h=120&fit=crop&q=50',
+    bgImage: 'https://images.unsplash.com/photo-1428592953211-077101b2021b?w=800&h=1200&fit=crop&q=40',
+    gradient: 'linear-gradient(180deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.95) 100%)',
+    audioUrl: 'https://cdn.pixabay.com/audio/2022/05/13/audio_257112094f.mp3',
   },
   { 
     id: 'forest', 
     name: 'Лес', 
     emoji: '🌲', 
-    image: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=200&h=200&fit=crop&q=80',
-    bgImage: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&h=1800&fit=crop&q=80',
-    gradient: 'linear-gradient(180deg, rgba(6,78,59,0.6) 0%, rgba(2,44,34,0.9) 100%)',
-    audioUrl: 'https://cdn.pixabay.com/audio/2022/03/10/audio_d72a5a1c34.mp3', // Птицы в лесу
+    image: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=120&h=120&fit=crop&q=50',
+    bgImage: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&h=1200&fit=crop&q=40',
+    gradient: 'linear-gradient(180deg, rgba(6,78,59,0.7) 0%, rgba(2,44,34,0.95) 100%)',
+    audioUrl: 'https://cdn.pixabay.com/audio/2022/03/10/audio_d72a5a1c34.mp3',
   },
   { 
     id: 'cafe', 
     name: 'Кафе', 
     emoji: '☕', 
-    image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=200&h=200&fit=crop&q=80',
-    bgImage: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1200&h=1800&fit=crop&q=80',
-    gradient: 'linear-gradient(180deg, rgba(120,53,15,0.6) 0%, rgba(30,20,10,0.9) 100%)',
-    audioUrl: 'https://cdn.pixabay.com/audio/2022/10/30/audio_f8e58b2f50.mp3', // Кафе атмосфера
+    image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=120&h=120&fit=crop&q=50',
+    bgImage: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800&h=1200&fit=crop&q=40',
+    gradient: 'linear-gradient(180deg, rgba(120,53,15,0.7) 0%, rgba(30,20,10,0.95) 100%)',
+    audioUrl: 'https://cdn.pixabay.com/audio/2022/10/30/audio_f8e58b2f50.mp3',
   },
   { 
     id: 'fire', 
     name: 'Камин', 
     emoji: '🔥', 
-    image: 'https://images.unsplash.com/photo-1517329782449-810562a4ec2f?w=200&h=200&fit=crop&q=80',
-    bgImage: 'https://images.unsplash.com/photo-1475552113915-6fcb52652ba2?w=1200&h=1800&fit=crop&q=80',
-    gradient: 'linear-gradient(180deg, rgba(154,52,18,0.5) 0%, rgba(30,15,10,0.9) 100%)',
-    audioUrl: 'https://cdn.pixabay.com/audio/2022/02/23/audio_ea70ad08e0.mp3', // Треск камина
+    image: 'https://images.unsplash.com/photo-1517329782449-810562a4ec2f?w=120&h=120&fit=crop&q=50',
+    bgImage: 'https://images.unsplash.com/photo-1475552113915-6fcb52652ba2?w=800&h=1200&fit=crop&q=40',
+    gradient: 'linear-gradient(180deg, rgba(154,52,18,0.6) 0%, rgba(30,15,10,0.95) 100%)',
+    audioUrl: 'https://cdn.pixabay.com/audio/2022/02/23/audio_ea70ad08e0.mp3',
   },
 ];
 
@@ -210,25 +211,25 @@ const AnimatedTree: React.FC<{ growth: number; isRunning: boolean }> = ({ growth
         </motion.g>
       )}
       
-      {/* Floating leaves animation */}
-      {isRunning && growth >= 30 && [...Array(leafCount)].map((_, i) => (
+      {/* Floating leaves animation - ОПТИМИЗАЦИЯ: максимум 3 листа */}
+      {isRunning && growth >= 40 && [...Array(Math.min(leafCount, 3))].map((_, i) => (
         <motion.text
           key={i}
-          fontSize="12"
+          fontSize="10"
           initial={{ 
             x: 100, 
             y: 130 - trunkHeight * 0.4,
             opacity: 0,
           }}
           animate={{ 
-            x: 100 + Math.sin(i * 1.5) * 40,
-            y: [130 - trunkHeight * 0.4, 130 - trunkHeight * 0.4 - 30, 130 - trunkHeight * 0.4],
-            opacity: [0, 0.8, 0],
+            x: 100 + Math.sin(i * 2) * 30,
+            y: [130 - trunkHeight * 0.4, 130 - trunkHeight * 0.4 - 20, 130 - trunkHeight * 0.4],
+            opacity: [0, 0.6, 0],
           }}
           transition={{
-            duration: 3,
+            duration: 4,
             repeat: Infinity,
-            delay: i * 0.5,
+            delay: i * 1,
             ease: "easeInOut",
           }}
         >
@@ -236,22 +237,22 @@ const AnimatedTree: React.FC<{ growth: number; isRunning: boolean }> = ({ growth
         </motion.text>
       ))}
       
-      {/* Sparkles when complete */}
-      {growth >= 100 && [...Array(6)].map((_, i) => (
+      {/* Sparkles when complete - ОПТИМИЗАЦИЯ: 4 вместо 6 */}
+      {growth >= 100 && [...Array(4)].map((_, i) => (
         <motion.text
           key={`sparkle-${i}`}
-          fontSize="14"
+          fontSize="12"
           initial={{ opacity: 0, scale: 0 }}
           animate={{ 
-            opacity: [0, 1, 0],
-            scale: [0.5, 1.2, 0.5],
-            x: 100 + Math.cos(i * Math.PI / 3) * 50,
-            y: 100 + Math.sin(i * Math.PI / 3) * 50,
+            opacity: [0, 0.8, 0],
+            scale: [0.8, 1, 0.8],
+            x: 100 + Math.cos(i * Math.PI / 2) * 40,
+            y: 100 + Math.sin(i * Math.PI / 2) * 40,
           }}
           transition={{
-            duration: 2,
+            duration: 2.5,
             repeat: Infinity,
-            delay: i * 0.3,
+            delay: i * 0.5,
           }}
         >
           ✨
@@ -477,27 +478,27 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
             transition={{ duration: 4, repeat: Infinity }}
           />
 
-          {/* Floating leaves when running */}
+          {/* Floating leaves when running - ОПТИМИЗАЦИЯ: уменьшено с 8 до 4 */}
           {isRunning && (
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {[...Array(8)].map((_, i) => (
+            <div className="absolute inset-0 overflow-hidden pointer-events-none will-change-transform">
+              {[...Array(4)].map((_, i) => (
                 <motion.div
                   key={i}
-                  className="absolute text-2xl"
+                  className="absolute text-xl"
                   style={{
-                    left: `${10 + Math.random() * 80}%`,
+                    left: `${15 + i * 20}%`,
+                    willChange: 'transform, opacity',
                   }}
-                  initial={{ y: -50, rotate: 0, opacity: 0 }}
+                  initial={{ y: -30, rotate: 0, opacity: 0 }}
                   animate={{
                     y: ['0vh', '100vh'],
-                    rotate: [0, 360],
-                    opacity: [0, 0.6, 0],
-                    x: [0, Math.random() * 100 - 50],
+                    rotate: [0, 180],
+                    opacity: [0, 0.5, 0],
                   }}
                   transition={{
-                    duration: 8 + Math.random() * 4,
+                    duration: 10,
                     repeat: Infinity,
-                    delay: i * 1.5,
+                    delay: i * 2.5,
                     ease: "linear",
                   }}
                 >
@@ -507,26 +508,19 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
             </div>
           )}
 
-          {/* Stars */}
+          {/* Stars - ОПТИМИЗАЦИЯ: уменьшено с 25 до 12, статические позиции */}
           {!isRunning && (
-            <div className="absolute inset-0">
-              {[...Array(25)].map((_, i) => (
-                <motion.div
+            <div className="absolute inset-0 pointer-events-none">
+              {[15, 25, 35, 45, 55, 65, 75, 85, 20, 40, 60, 80].map((pos, i) => (
+                <div
                   key={i}
-                  className="absolute w-1 h-1 bg-white rounded-full"
+                  className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
                   style={{
-                    left: `${Math.random() * 100}%`,
-                    top: `${Math.random() * 60}%`,
-                    opacity: 0.3 + Math.random() * 0.4,
-                  }}
-                  animate={{
-                    opacity: [0.2, 0.8, 0.2],
-                    scale: [0.8, 1.2, 0.8],
-                  }}
-                  transition={{
-                    duration: 2 + Math.random() * 3,
-                    repeat: Infinity,
-                    delay: Math.random() * 2,
+                    left: `${pos}%`,
+                    top: `${10 + (i % 4) * 15}%`,
+                    opacity: 0.4,
+                    animationDelay: `${i * 0.3}s`,
+                    animationDuration: '3s',
                   }}
                 />
               ))}

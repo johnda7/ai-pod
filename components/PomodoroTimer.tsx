@@ -384,13 +384,14 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
           transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
         />
 
+        {/* 🚀 ОПТИМИЗАЦИЯ: уменьшено с 15 до 6 партиклей */}
         {state === 'running' && (
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(15)].map((_, i) => (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none will-change-transform">
+            {[10, 25, 40, 55, 70, 85].map((pos, i) => (
               <motion.div key={i} className="absolute w-1 h-1 rounded-full"
-                style={{ background: config.color, left: `${Math.random() * 100}%`, opacity: 0.3 }}
-                animate={{ y: [800, -20], opacity: [0, 0.6, 0] }}
-                transition={{ duration: 5 + Math.random() * 5, repeat: Infinity, delay: Math.random() * 5, ease: 'linear' }}
+                style={{ background: config.color, left: `${pos}%`, opacity: 0.25, willChange: 'transform, opacity' }}
+                animate={{ y: [800, -20], opacity: [0, 0.4, 0] }}
+                transition={{ duration: 8, repeat: Infinity, delay: i * 1.3, ease: 'linear' }}
               />
             ))}
           </div>

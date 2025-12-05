@@ -1,6 +1,6 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Timer, Target, BookHeart, ChevronRight, BarChart3, Heart, Calendar, FileText, TreePine, Trophy, Flame, BookOpen, Zap, Star, Sparkles, Cloud, CheckCircle, Loader } from 'lucide-react';
+import { Timer, Target, BookHeart, BarChart3, Heart, Calendar, FileText, TreePine, Trophy, Flame, BookOpen, Zap, Star, Sparkles, Cloud, CheckCircle, Loader } from 'lucide-react';
 import { syncToolsDataToSupabase, loadToolsDataFromSupabase } from '../services/db';
 import { User } from '../types';
 
@@ -34,19 +34,19 @@ interface ToolsViewProps {
   onXpEarned?: (xp: number, coins: number) => void;
 }
 
-// High-quality images for each tool
+// 🚀 ОПТИМИЗАЦИЯ: Уменьшены размеры изображений + качество для быстрой загрузки
 const TOOL_IMAGES: Record<string, string> = {
-  focus: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=400&h=400&fit=crop', // Beautiful tree
-  challenges: 'https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=400&h=400&fit=crop', // Trophy/achievement
-  habits: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400&h=400&fit=crop', // Checklist
-  lifeskills: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=400&fit=crop', // Galaxy/growth
-  reflection: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=400&h=400&fit=crop', // Journal
-  pomodoro: 'https://images.unsplash.com/photo-1495364141860-b0d03eccd065?w=400&h=400&fit=crop', // Clock
-  planner: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=400&h=400&fit=crop', // Calendar
-  goals: 'https://images.unsplash.com/photo-1533073526757-2c8ca1df9f1c?w=400&h=400&fit=crop', // Target/arrow
-  notes: 'https://images.unsplash.com/photo-1517842645767-c639042777db?w=400&h=400&fit=crop', // Notebook
-  balance: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=400&fit=crop', // Balance/meditation
-  emotions: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400&h=400&fit=crop', // Peaceful
+  focus: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=200&h=200&fit=crop&q=60',
+  challenges: 'https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=200&h=200&fit=crop&q=60',
+  habits: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=200&h=200&fit=crop&q=60',
+  lifeskills: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=200&h=200&fit=crop&q=60',
+  reflection: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=200&h=200&fit=crop&q=60',
+  pomodoro: 'https://images.unsplash.com/photo-1495364141860-b0d03eccd065?w=200&h=200&fit=crop&q=60',
+  planner: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=200&h=200&fit=crop&q=60',
+  goals: 'https://images.unsplash.com/photo-1533073526757-2c8ca1df9f1c?w=200&h=200&fit=crop&q=60',
+  notes: 'https://images.unsplash.com/photo-1517842645767-c639042777db?w=200&h=200&fit=crop&q=60',
+  balance: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=200&h=200&fit=crop&q=60',
+  emotions: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=200&h=200&fit=crop&q=60',
 };
 
 interface Tool {
@@ -222,7 +222,9 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
-  const stats = getToolStats();
+  
+  // 🚀 ОПТИМИЗАЦИЯ: Мемоизация статистики (пересчёт только при изменении activeTool)
+  const stats = useMemo(() => getToolStats(), [activeTool]);
 
   // Загрузка данных из Supabase при первом рендере
   useEffect(() => {
@@ -391,9 +393,9 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
             {CATEGORIES.map((cat, index) => (
               <motion.button
                 key={cat.id}
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.02 }}
                 onClick={() => setSelectedCategory(cat.id)}
                 className="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5"
                 style={{
@@ -449,10 +451,12 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
                   }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {/* Background Image - smaller */}
+                  {/* Background Image - smaller + lazy loading */}
                   <img 
                     src={TOOL_IMAGES[tool.id]}
                     alt={tool.name}
+                    loading="lazy"
+                    decoding="async"
                     className="absolute inset-0 w-full h-full object-cover opacity-40"
                   />
                   
@@ -624,7 +628,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned }) => {
           {/* Background image */}
           <div className="absolute inset-0 opacity-20">
             <img 
-              src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600&h=200&fit=crop"
+              src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=300&h=100&fit=crop&q=40"
               alt=""
               className="w-full h-full object-cover"
             />

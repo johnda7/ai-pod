@@ -20,13 +20,14 @@ interface AreaScore {
   tip: string;
 }
 
+// 🚀 ОПТИМИЗАЦИЯ: уменьшены размеры изображений + качество
 const LIFE_AREAS: Omit<AreaScore, 'score'>[] = [
   { 
     id: 'study', 
     name: 'Учёба', 
     emoji: '📚', 
     color: '#6366f1',
-    image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=300&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=150&h=150&fit=crop&q=50',
     tip: 'Попробуй технику Помодоро для лучшей концентрации'
   },
   { 
@@ -34,7 +35,7 @@ const LIFE_AREAS: Omit<AreaScore, 'score'>[] = [
     name: 'Здоровье', 
     emoji: '💪', 
     color: '#22c55e',
-    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=150&h=150&fit=crop&q=50',
     tip: 'Начни с 10 минут зарядки каждое утро'
   },
   { 
@@ -42,7 +43,7 @@ const LIFE_AREAS: Omit<AreaScore, 'score'>[] = [
     name: 'Друзья', 
     emoji: '👥', 
     color: '#f59e0b',
-    image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=300&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=150&h=150&fit=crop&q=50',
     tip: 'Напиши другу, с которым давно не общался'
   },
   { 
@@ -50,7 +51,7 @@ const LIFE_AREAS: Omit<AreaScore, 'score'>[] = [
     name: 'Семья', 
     emoji: '🏠', 
     color: '#ec4899',
-    image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=300&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=150&h=150&fit=crop&q=50',
     tip: 'Проведи вечер без телефона с семьёй'
   },
   { 
@@ -58,7 +59,7 @@ const LIFE_AREAS: Omit<AreaScore, 'score'>[] = [
     name: 'Хобби', 
     emoji: '🎨', 
     color: '#8b5cf6',
-    image: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=300&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=150&h=150&fit=crop&q=50',
     tip: 'Выдели час в неделю только для себя'
   },
   { 
@@ -66,7 +67,7 @@ const LIFE_AREAS: Omit<AreaScore, 'score'>[] = [
     name: 'Отдых', 
     emoji: '😴', 
     color: '#14b8a6',
-    image: 'https://images.unsplash.com/photo-1520206183501-b80df61043c2?w=300&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1520206183501-b80df61043c2?w=150&h=150&fit=crop&q=50',
     tip: 'Ложись спать в одно время каждый день'
   },
   { 
@@ -74,7 +75,7 @@ const LIFE_AREAS: Omit<AreaScore, 'score'>[] = [
     name: 'Развитие', 
     emoji: '🌱', 
     color: '#f97316',
-    image: 'https://images.unsplash.com/photo-1492552181161-62217fc3076d?w=300&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1492552181161-62217fc3076d?w=150&h=150&fit=crop&q=50',
     tip: 'Читай 10 страниц полезной книги каждый день'
   },
   { 
@@ -82,7 +83,7 @@ const LIFE_AREAS: Omit<AreaScore, 'score'>[] = [
     name: 'Настроение', 
     emoji: '😊', 
     color: '#3b82f6',
-    image: 'https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?w=300&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?w=150&h=150&fit=crop&q=50',
     tip: 'Веди дневник благодарности'
   },
 ];
