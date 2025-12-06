@@ -730,6 +730,20 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                                 case 'streak_freeze': return '❄️';
                                 case 'mystery_box': return '🎁';
                                 case 'frame_gold': return '👑';
+                                case 'frame_rainbow': return '🌈';
+                                case 'badge_pro': return '⭐';
+                                case 'title_ninja': return '🥷';
+                                case 'title_master': return '🏆';
+                                case 'xp_boost': return '⚡';
+                                case 'hint_pack': return '💡';
+                                case 'skip_task': return '⏭️';
+                                case 'avatar_ninja': return '🥷';
+                                case 'avatar_unicorn': return '🦄';
+                                case 'frame_diamond': return '💎';
+                                case 'title_legend': return '🏆';
+                                case 'katya_book': return '📚';
+                                case 'discount_20': return '🎫';
+                                case 'vip_week': return '👑';
                                 default: return '📦';
                               }
                             };
@@ -739,6 +753,20 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                                 case 'streak_freeze': return 'Заморозка';
                                 case 'mystery_box': return 'Сюрприз';
                                 case 'frame_gold': return 'Рамка';
+                                case 'frame_rainbow': return 'Радуга';
+                                case 'badge_pro': return 'PRO';
+                                case 'title_ninja': return 'Ниндзя';
+                                case 'title_master': return 'Мастер';
+                                case 'xp_boost': return 'XP x2';
+                                case 'hint_pack': return 'Подсказки';
+                                case 'skip_task': return 'Пропуск';
+                                case 'avatar_ninja': return 'Аватар';
+                                case 'avatar_unicorn': return 'Единорог';
+                                case 'frame_diamond': return 'Алмаз';
+                                case 'title_legend': return 'Легенда';
+                                case 'katya_book': return 'Книга';
+                                case 'discount_20': return 'Скидка';
+                                case 'vip_week': return 'VIP';
                                 default: return 'Предмет';
                               }
                             };

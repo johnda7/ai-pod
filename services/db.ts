@@ -661,6 +661,12 @@ export const purchaseItem = async (userId: string, item: any): Promise<boolean> 
     } else if (item.id === 'streak_freeze') {
         // Streak Freeze - add to inventory for later use
         user.inventory.push(item.id);
+    } else if (item.type === 'POWERUP') {
+        // All POWERUP items (hints, xp_boost, skip_task, etc.) go to inventory
+        user.inventory.push(item.id);
+    } else if (item.type === 'PRIZE') {
+        // PRIZE items (book, discount, VIP) go to inventory
+        user.inventory.push(item.id);
     }
 
     // 4. Save Local
