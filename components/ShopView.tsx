@@ -66,17 +66,8 @@ const LEADERBOARD_MOCK = [
   { id: '5', name: 'Алина В.', coins: 1680, avatar: '👩' },
 ];
 
-// Extended shop items with more options
-const EXTENDED_SHOP_ITEMS = [
-  ...SHOP_ITEMS,
-  { id: 'xp_boost', name: 'XP Буст x2', description: '⚡ Двойной опыт на следующий урок!', price: 80, icon: 'xp_boost', type: 'POWERUP' as const },
-  { id: 'hint_pack', name: 'Подсказки', description: '💡 3 подсказки для сложных заданий', price: 60, icon: 'hint_pack', type: 'POWERUP' as const },
-  { id: 'skip_task', name: 'Пропуск', description: '⏭️ Пропусти одно сложное задание', price: 120, icon: 'skip_task', type: 'POWERUP' as const },
-  { id: 'avatar_ninja', name: 'Аватар "Ниндзя"', description: '🥷 Крутой аватар для твоего профиля', price: 200, icon: 'avatar', type: 'COSMETIC' as const },
-  { id: 'avatar_unicorn', name: 'Аватар "Единорог"', description: '🦄 Редкий магический аватар', price: 300, icon: 'avatar', type: 'COSMETIC' as const },
-  { id: 'frame_diamond', name: 'Рамка "Алмаз"', description: '💎 Сияющая рамка профиля', price: 250, icon: 'frame', type: 'COSMETIC' as const },
-  { id: 'title_legend', name: 'Титул "Легенда"', description: '🏆 Особый титул под именем', price: 400, icon: 'title', type: 'COSMETIC' as const },
-];
+// All shop items are now defined in constants.ts
+const EXTENDED_SHOP_ITEMS = SHOP_ITEMS;
 
 export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }) => {
   const [mysteryReward, setMysteryReward] = useState<MysteryReward | null>(null);

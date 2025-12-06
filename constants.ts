@@ -4440,12 +4440,18 @@ export const SHOP_ITEMS: ShopItem[] = [
     { id: 'xp_boost', name: 'XP Буст', description: '⚡ x2 XP на следующий урок!', price: 80, icon: 'xp_boost', type: 'POWERUP' },
     { id: 'hint_pack', name: 'Подсказки', description: '💡 3 подсказки для сложных вопросов', price: 60, icon: 'hint_pack', type: 'POWERUP' },
     
+    { id: 'skip_task', name: 'Пропуск', description: '⏭️ Пропусти одно сложное задание', price: 120, icon: 'skip_task', type: 'POWERUP' },
+    
     // COSMETICS - Косметика
     { id: 'frame_gold', name: 'Золотая Рамка', description: '👑 Эксклюзивная рамка для аватара', price: 500, icon: 'frame_gold', type: 'COSMETIC' },
     { id: 'frame_rainbow', name: 'Радужная Рамка', description: '🌈 Анимированная радужная рамка', price: 750, icon: 'frame_rainbow', type: 'COSMETIC' },
+    { id: 'frame_diamond', name: 'Рамка "Алмаз"', description: '💎 Сияющая рамка профиля', price: 250, icon: 'frame_diamond', type: 'COSMETIC' },
     { id: 'badge_pro', name: 'Значок PRO', description: '⭐ Показывает что ты профи!', price: 300, icon: 'badge_pro', type: 'COSMETIC' },
     { id: 'title_ninja', name: 'Титул "Ниндзя"', description: '🥷 Особый титул возле имени', price: 400, icon: 'title_ninja', type: 'COSMETIC' },
     { id: 'title_master', name: 'Титул "Мастер"', description: '🏆 Легендарный титул', price: 1000, icon: 'title_master', type: 'COSMETIC' },
+    { id: 'title_legend', name: 'Титул "Легенда"', description: '🏆 Особый титул под именем', price: 400, icon: 'title_legend', type: 'COSMETIC' },
+    { id: 'avatar_ninja', name: 'Аватар "Ниндзя"', description: '🥷 Крутой аватар для твоего профиля', price: 200, icon: 'avatar_ninja', type: 'COSMETIC' },
+    { id: 'avatar_unicorn', name: 'Аватар "Единорог"', description: '🦄 Редкий магический аватар', price: 300, icon: 'avatar_unicorn', type: 'COSMETIC' },
     
     // PRIZES - Призы и бонусы
     { id: 'katya_book', name: 'Книга Кати', description: '📚 "Путь к успеху" - книга с советами от Кати!', price: 800, icon: 'katya_book', type: 'PRIZE' },
