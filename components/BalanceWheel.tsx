@@ -166,7 +166,7 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
       if (lastEntry) {
         setStep('compare');
       } else {
-        setStep('result');
+      setStep('result');
       }
       
       onComplete?.(scores);
@@ -224,7 +224,7 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] overflow-hidden"
     >
-      {/* 🎨 iOS 26 LIQUID GLASS BACKGROUND */}
+      {/* 🎨 iOS 26 OPTIMIZED BACKGROUND - без тяжёлых анимаций */}
       <div className="absolute inset-0 pointer-events-none">
         <div 
           className="absolute inset-0"
@@ -233,55 +233,21 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
           }}
         />
         
-        {/* Animated aurora blobs */}
-        <motion.div
-          className="absolute top-0 left-1/4 w-96 h-96 rounded-full"
+        {/* Static gradient blobs - NO animation for performance */}
+        <div
+          className="absolute top-0 left-1/4 w-80 h-80 rounded-full opacity-40"
           style={{
-            background: 'radial-gradient(circle, rgba(99,102,241,0.4) 0%, transparent 70%)',
-            filter: 'blur(80px)',
+            background: 'radial-gradient(circle, rgba(99,102,241,0.5) 0%, transparent 70%)',
+            filter: 'blur(40px)',
           }}
-          animate={{ 
-            x: [0, 50, 0], 
-            y: [0, 30, 0],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
-        <motion.div
-          className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full"
+        <div
+          className="absolute bottom-20 right-1/4 w-64 h-64 rounded-full opacity-30"
           style={{
-            background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)',
-            filter: 'blur(60px)',
+            background: 'radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 70%)',
+            filter: 'blur(40px)',
           }}
-          animate={{ 
-            x: [0, -30, 0], 
-            y: [0, -40, 0],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
         />
-
-        {/* Floating particles */}
-        {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1.5 h-1.5 bg-white/30 rounded-full"
-            style={{
-              left: `${10 + Math.random() * 80}%`,
-              top: `${10 + Math.random() * 80}%`,
-            }}
-            animate={{
-              opacity: [0.2, 0.6, 0.2],
-              scale: [0.8, 1.2, 0.8],
-              y: [0, -20, 0],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
       </div>
 
       {/* Close button */}
@@ -303,7 +269,7 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
           
           {/* 📊 HISTORY - показываем последний результат */}
           {step === 'history' && lastEntry && (
-            <motion.div
+        <motion.div
               key="history"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -329,7 +295,7 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 className="p-6 rounded-3xl mb-6 text-center"
-                style={{
+          style={{
                   background: 'rgba(255,255,255,0.08)',
                   backdropFilter: 'blur(40px)',
                   border: '1px solid rgba(255,255,255,0.12)',
@@ -357,13 +323,13 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
               {/* Areas grid - iOS 26 style */}
               <div className="grid grid-cols-4 gap-2 mb-6">
                 {lastEntry.scores.map((area, i) => (
-                  <motion.div
+          <motion.div
                     key={area.id}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.05 }}
                     className="aspect-square rounded-2xl flex flex-col items-center justify-center p-2"
-                    style={{
+            style={{
                       background: `${area.color}25`,
                       border: `1px solid ${area.color}40`,
                     }}
@@ -414,13 +380,13 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
                   </div>
                   <TrendingUp size={20} className="text-emerald-400" />
                 </div>
-              </div>
-              
+      </div>
+
               {/* Action buttons */}
               <motion.button
                 onClick={handleStartNew}
                 className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2 mb-3"
-                style={{
+        style={{
                   background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                   boxShadow: '0 8px 32px rgba(99,102,241,0.4)',
                 }}
@@ -436,7 +402,7 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
                 className="w-full py-3 rounded-xl text-white/60 text-sm"
               >
                 Закрыть
-              </button>
+      </button>
             </motion.div>
           )}
 
@@ -484,7 +450,7 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.05 }}
                     className="aspect-square rounded-2xl flex items-center justify-center"
-                    style={{
+                      style={{
                       background: area.gradient,
                       boxShadow: `0 8px 24px ${area.color}40`,
                     }}
@@ -569,15 +535,15 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
                   <div className="flex items-center gap-4">
                     <div 
                       className="w-20 h-20 rounded-2xl flex items-center justify-center"
-                      style={{
+                    style={{
                         background: 'rgba(255,255,255,0.2)',
                         backdropFilter: 'blur(20px)',
                       }}
                     >
                       <span className="text-5xl">{currentArea.emoji}</span>
                     </div>
-                    <div>
-                      <h3 className="text-2xl font-black text-white">{currentArea.name}</h3>
+                      <div>
+                        <h3 className="text-2xl font-black text-white">{currentArea.name}</h3>
                       <p className="text-white/80 text-sm">Как оцениваешь эту сферу?</p>
                     </div>
                   </div>
