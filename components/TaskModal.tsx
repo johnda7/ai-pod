@@ -804,13 +804,19 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
                 <X size={20} />
             </button>
             
-            {/* Progress Bar */}
-            <div className="flex-1 h-2 bg-slate-800/50 rounded-full overflow-hidden backdrop-blur-sm border border-white/5">
-                <div 
-                    className={`h-full rounded-full transition-all duration-700 ease-out shadow-[0_0_15px_rgba(99,102,241,0.6)] ${task.isBoss ? 'bg-red-500' : 'bg-indigo-500'}`}
-                    style={{ width: `${progress}%` }}
-                >
-                     <div className="absolute inset-0 bg-white/20 animate-[pulse_2s_infinite]"></div>
+            {/* Progress Bar + Slide Counter */}
+            <div className="flex-1 flex flex-col gap-1">
+                <div className="h-2 bg-slate-800/50 rounded-full overflow-hidden backdrop-blur-sm border border-white/5">
+                    <div 
+                        className={`h-full rounded-full transition-all duration-700 ease-out shadow-[0_0_15px_rgba(99,102,241,0.6)] ${task.isBoss ? 'bg-red-500' : 'bg-indigo-500'}`}
+                        style={{ width: `${progress}%` }}
+                    >
+                         <div className="absolute inset-0 bg-white/20 animate-[pulse_2s_infinite]"></div>
+                    </div>
+                </div>
+                {/* Slide Counter */}
+                <div className="text-[10px] text-slate-400 text-center font-medium tracking-wide">
+                    {currentSlideIndex + 1} / {slides.length} {slides.length - currentSlideIndex - 1 > 0 && `• осталось ${slides.length - currentSlideIndex - 1}`}
                 </div>
             </div>
 
