@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Sparkles, TrendingUp, Calendar, Heart, Zap, Flame } from 'lucide-react';
+import { X, Check, Sparkles, TrendingUp, Calendar, Zap, Flame } from 'lucide-react';
 import { useSyncTool } from '../hooks/useSyncTool';
 
 interface EmotionEntry {
@@ -17,19 +17,20 @@ interface EmotionDiaryProps {
   onComplete: (xp: number) => void;
 }
 
+// 🎨 iOS 26 LIQUID GLASS - градиенты вместо фото, без наезжающих элементов
 const EMOTIONS = [
-  { emoji: '😊', name: 'Радость', color: '#fbbf24', image: 'https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?w=150&h=150&fit=crop' },
-  { emoji: '😌', name: 'Спокойствие', color: '#22c55e', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=150&h=150&fit=crop' },
-  { emoji: '🤔', name: 'Задумчивость', color: '#6366f1', image: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=150&h=150&fit=crop' },
-  { emoji: '😤', name: 'Раздражение', color: '#ef4444', image: 'https://images.unsplash.com/photo-1534330207526-8e81f10ec6fc?w=150&h=150&fit=crop' },
-  { emoji: '😢', name: 'Грусть', color: '#3b82f6', image: 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=150&h=150&fit=crop' },
-  { emoji: '😰', name: 'Тревога', color: '#f97316', image: 'https://images.unsplash.com/photo-1475137979732-b349acb6b7e3?w=150&h=150&fit=crop' },
-  { emoji: '😴', name: 'Усталость', color: '#8b5cf6', image: 'https://images.unsplash.com/photo-1520206183501-b80df61043c2?w=150&h=150&fit=crop' },
-  { emoji: '🤩', name: 'Восторг', color: '#ec4899', image: 'https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=150&h=150&fit=crop' },
-  { emoji: '😐', name: 'Нейтрально', color: '#6b7280', image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=150&h=150&fit=crop' },
-  { emoji: '💪', name: 'Уверенность', color: '#14b8a6', image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=150&h=150&fit=crop' },
-  { emoji: '🥰', name: 'Любовь', color: '#f43f5e', image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=150&h=150&fit=crop' },
-  { emoji: '😎', name: 'Крутость', color: '#0ea5e9', image: 'https://images.unsplash.com/photo-1492681290082-e932832941e6?w=150&h=150&fit=crop' },
+  { emoji: '😊', name: 'Радость', color: '#fbbf24', gradient: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' },
+  { emoji: '😌', name: 'Спокойствие', color: '#22c55e', gradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' },
+  { emoji: '🤔', name: 'Задумчивость', color: '#6366f1', gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' },
+  { emoji: '😤', name: 'Раздражение', color: '#ef4444', gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
+  { emoji: '😢', name: 'Грусть', color: '#3b82f6', gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
+  { emoji: '😰', name: 'Тревога', color: '#f97316', gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' },
+  { emoji: '😴', name: 'Усталость', color: '#8b5cf6', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
+  { emoji: '🤩', name: 'Восторг', color: '#ec4899', gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' },
+  { emoji: '😐', name: 'Нейтрально', color: '#6b7280', gradient: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' },
+  { emoji: '💪', name: 'Уверенность', color: '#14b8a6', gradient: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)' },
+  { emoji: '🥰', name: 'Любовь', color: '#f43f5e', gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)' },
+  { emoji: '😎', name: 'Крутость', color: '#0ea5e9', gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' },
 ];
 
 const ENERGY_LEVELS = [
@@ -164,78 +165,84 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] overflow-y-auto"
     >
-      {/* Beautiful Background */}
-      <div className="absolute inset-0">
+      {/* 🎨 iOS 26 LIQUID GLASS Background - pointer-events-none! */}
+      <div className="absolute inset-0 pointer-events-none">
         <div 
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(180deg, #1a0a2e 0%, #2a1040 30%, #1a0a2e 100%)',
+            background: 'linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
           }}
         />
         
-        {/* Aurora effects */}
+        {/* Aurora effects - уменьшенные и не блокирующие клики */}
         <motion.div
-          className="absolute top-0 left-0 w-full h-1/2"
+          className="absolute top-0 left-1/4 w-80 h-80 rounded-full"
           style={{
-            background: 'radial-gradient(ellipse at 30% 0%, rgba(236,72,153,0.25) 0%, transparent 60%)',
+            background: 'radial-gradient(circle, rgba(236,72,153,0.3) 0%, transparent 70%)',
             filter: 'blur(60px)',
           }}
-          animate={{ opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 4, repeat: Infinity }}
+          animate={{ 
+            x: [0, 30, 0], 
+            y: [0, 20, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute top-20 right-0 w-1/2 h-1/2"
+          className="absolute bottom-0 right-1/4 w-64 h-64 rounded-full"
           style={{
-            background: 'radial-gradient(ellipse at 100% 20%, rgba(139,92,246,0.2) 0%, transparent 60%)',
+            background: 'radial-gradient(circle, rgba(139,92,246,0.25) 0%, transparent 70%)',
             filter: 'blur(50px)',
           }}
-          animate={{ opacity: [0.4, 0.7, 0.4] }}
-          transition={{ duration: 5, repeat: Infinity, delay: 1 }}
+          animate={{ 
+            x: [0, -20, 0], 
+            y: [0, -30, 0],
+            scale: [1, 1.15, 1],
+          }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         />
 
-        {/* Stars */}
-        {[...Array(20)].map((_, i) => (
+        {/* Floating particles */}
+        {[...Array(12)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-white rounded-full"
+            className="absolute w-1.5 h-1.5 bg-white/30 rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              opacity: 0.3 + Math.random() * 0.4,
+              left: `${15 + Math.random() * 70}%`,
+              top: `${15 + Math.random() * 70}%`,
             }}
-            animate={{ opacity: [0.2, 0.8, 0.2] }}
-            transition={{ duration: 2 + Math.random() * 3, repeat: Infinity, delay: Math.random() * 2 }}
+            animate={{ 
+              opacity: [0.2, 0.6, 0.2],
+              y: [0, -15, 0],
+            }}
+            transition={{ duration: 3 + Math.random() * 2, repeat: Infinity, delay: Math.random() * 2 }}
           />
         ))}
       </div>
 
-      {/* Header */}
+      {/* 🎨 iOS 26 LIQUID GLASS Header - без картинки */}
       <div className="sticky top-0 z-30 px-4 pt-4 pb-4">
         <motion.div 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="p-4 rounded-3xl"
+          className="p-4 rounded-[24px]"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+            background: 'rgba(255,255,255,0.08)',
             backdropFilter: 'blur(40px)',
-            border: '1px solid rgba(255,255,255,0.15)',
+            border: '1px solid rgba(255,255,255,0.12)',
           }}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              {/* Gradient emoji icon вместо фото */}
               <div 
-                className="w-14 h-14 rounded-xl overflow-hidden relative"
-                style={{ boxShadow: '0 4px 20px rgba(236,72,153,0.3)' }}
+                className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{ 
+                  background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
+                  boxShadow: '0 8px 24px rgba(236,72,153,0.4)' 
+                }}
               >
-                <img 
-                  src="https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=100&h=100&fit=crop"
-                  alt="Emotions"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-pink-600/60 to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Heart size={24} className="text-white" />
-                </div>
+                <span className="text-3xl">💜</span>
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">Дневник Эмоций</h1>
@@ -255,17 +262,23 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
                     setNote('');
                   }}
                   className="px-3 h-10 rounded-xl flex items-center justify-center text-white/70 text-sm"
-                  style={{ background: 'rgba(255,255,255,0.1)' }}
+                  style={{ 
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                  }}
                 >
                   ← Назад
                 </button>
               )}
               <button
                 onClick={onClose}
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.1)' }}
+                className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                style={{ 
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
               >
-                <X size={20} className="text-white" />
+                <X size={20} className="text-white/80" />
               </button>
             </div>
           </div>
@@ -455,41 +468,33 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
             >
               <p className="text-white/80 mb-4 text-center">Какую эмоцию ты сейчас чувствуешь?</p>
               
+              {/* 🎨 iOS 26 LIQUID GLASS - градиенты вместо фото */}
               <div className="grid grid-cols-3 gap-3 mb-6">
                 {EMOTIONS.map((emotion) => (
                   <motion.button
                     key={emotion.name}
                     onClick={() => setSelectedEmotion(emotion)}
-                    className="rounded-2xl overflow-hidden relative aspect-square"
+                    className="rounded-2xl relative aspect-square flex flex-col items-center justify-center"
                     style={{
+                      background: emotion.gradient,
                       border: selectedEmotion?.name === emotion.name
-                        ? `3px solid ${emotion.color}`
+                        ? '3px solid white'
                         : '3px solid transparent',
                       boxShadow: selectedEmotion?.name === emotion.name
-                        ? `0 4px 20px ${emotion.color}50`
-                        : 'none',
+                        ? `0 8px 32px ${emotion.color}60`
+                        : `0 4px 16px ${emotion.color}30`,
                     }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
                   >
-                    <img 
-                      src={emotion.image}
-                      alt={emotion.name}
-                      className="w-full h-full object-cover"
-                    />
-                    <div 
-                      className="absolute inset-0 flex flex-col items-center justify-center"
-                      style={{ background: `${emotion.color}80` }}
-                    >
-                      <span className="text-3xl mb-1">{emotion.emoji}</span>
-                      <span className="text-white text-xs font-medium">{emotion.name}</span>
-                    </div>
+                    <span className="text-4xl mb-1">{emotion.emoji}</span>
+                    <span className="text-white text-xs font-semibold">{emotion.name}</span>
                     
                     {selectedEmotion?.name === emotion.name && (
                       <motion.div 
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white flex items-center justify-center"
+                        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/90 flex items-center justify-center"
                       >
                         <Check size={14} style={{ color: emotion.color }} />
                       </motion.div>
