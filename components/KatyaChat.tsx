@@ -147,11 +147,11 @@ export const KatyaChat: React.FC = () => {
 
   return (
     <>
-      {/* Trigger Button (Minimised) */}
+      {/* Trigger Button (Minimised) - ВСЕГДА ПОВЕРХ ВСЕГО */}
       {!isOpen && (
         <button 
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-24 right-4 z-40 group hover:scale-105 transition-transform duration-300"
+          className="fixed bottom-28 right-4 z-[200] group hover:scale-105 transition-transform duration-300"
         >
           <div className="relative">
              {/* Pulsing rings for attention */}
@@ -170,9 +170,9 @@ export const KatyaChat: React.FC = () => {
         </button>
       )}
 
-      {/* Chat Window (Maximized) */}
+      {/* Chat Window (Maximized) - ПОВЕРХ ВСЕГО */}
       {isOpen && (
-        <div className="fixed bottom-0 right-0 w-full md:w-96 md:bottom-4 md:right-4 z-50 flex flex-col h-[85vh] md:h-[650px] bg-white/95 backdrop-blur-2xl md:rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-500 border border-white/40 ring-1 ring-black/5">
+        <div className="fixed bottom-0 right-0 w-full md:w-96 md:bottom-4 md:right-4 z-[210] flex flex-col h-[85vh] md:h-[650px] bg-white/95 backdrop-blur-2xl md:rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-500 border border-white/40 ring-1 ring-black/5">
            
            {/* Header with Large Avatar */}
            <div className="relative bg-gradient-to-b from-indigo-50 to-white/50 p-6 pb-4 border-b border-slate-100 z-10">

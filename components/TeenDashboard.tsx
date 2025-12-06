@@ -803,26 +803,37 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                          <ChevronRight size={18} className="text-indigo-400/50" />
                      </button>
 
-                     <button 
-                        className="w-full p-3 rounded-xl flex items-center gap-3 transition-all active:scale-[0.98]"
-                        style={{
-                          background: 'rgba(255,255,255,0.05)',
-                          border: '1px solid rgba(255,255,255,0.08)',
-                        }}
-                     >
-                         <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
-                             <HelpCircle size={18} className="text-white/50" />
-                             </div>
-                         <div className="flex-1 text-left">
-                             <div className="text-sm font-bold text-white/80">Поддержка</div>
-                                 </div>
-                         <ChevronRight size={18} className="text-white/30" />
-                         </button>
-                     
-                     <button className="w-full mt-6 p-4 rounded-[1.5rem] border border-red-500/20 text-red-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-500/10 transition-all active:scale-95">
-                         <LogOut size={18} />
-                         Выйти из аккаунта
-                     </button>
+                    <a 
+                       href="https://t.me/ai_pod_support"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       className="w-full p-3 rounded-xl flex items-center gap-3 transition-all active:scale-[0.98]"
+                       style={{
+                         background: 'rgba(255,255,255,0.05)',
+                         border: '1px solid rgba(255,255,255,0.08)',
+                       }}
+                    >
+                        <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
+                            <HelpCircle size={18} className="text-white/50" />
+                        </div>
+                        <div className="flex-1 text-left">
+                            <div className="text-sm font-bold text-white/80">Поддержка</div>
+                        </div>
+                        <ChevronRight size={18} className="text-white/30" />
+                    </a>
+                    
+                    <button 
+                      onClick={() => {
+                        // Очистка всех данных
+                        localStorage.clear();
+                        // Перезагрузка страницы
+                        window.location.reload();
+                      }}
+                      className="w-full mt-6 p-4 rounded-[1.5rem] border border-red-500/20 text-red-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-500/10 transition-all active:scale-95"
+                    >
+                        <LogOut size={18} />
+                        Выйти из аккаунта
+                    </button>
                 </div>
 
             </div>
