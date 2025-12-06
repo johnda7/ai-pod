@@ -8,83 +8,84 @@ import {
 
 interface TutorialSlide {
   id: string;
-  icon: React.ReactNode;
+  emoji: string;
   title: string;
   description: string;
-  color: string;
+  gradient: string;
   tips?: string[];
 }
 
+// 🎨 iOS 26 LIQUID GLASS - эмодзи вместо иконок, градиенты
 const tutorialSlides: TutorialSlide[] = [
   {
     id: 'welcome',
-    icon: <Brain className="w-16 h-16" />,
+    emoji: '🧠',
     title: 'Привет! Как ты?',
     description: 'Я — Катя, психолог для подростков. 💜\n\nГлавное, что я хочу тебе сказать:\n\n✨ С тобой всё нормально.\nУже нормально.\n\n🤝 Я не буду тебя осуждать\n💪 В тебе много внутренней силы',
-    color: 'from-indigo-500 to-purple-600',
+    gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
   },
   {
     id: 'app',
-    icon: <Gamepad2 className="w-16 h-16" />,
+    emoji: '🎮',
     title: 'Это твоя игра',
     description: 'AI Pod — приложение для прокачки себя.\n\nПроходи уроки, побеждай боссов и становись лучшей версией себя!',
-    color: 'from-purple-500 to-pink-600',
+    gradient: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
     tips: ['🎮 Это как RPG, только для реальной жизни']
   },
   {
     id: 'xp',
-    icon: <Star className="w-16 h-16" />,
+    emoji: '⭐',
     title: 'Опыт (XP)',
     description: 'За каждый урок ты получаешь XP — очки опыта.\n\nЧем больше XP — тем выше твой уровень!',
-    color: 'from-yellow-500 to-orange-500',
+    gradient: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)',
     tips: ['⭐ Боссы дают x5 XP', '📈 Уровни открывают новые возможности']
   },
   {
     id: 'coins',
-    icon: <Coins className="w-16 h-16" />,
+    emoji: '💎',
     title: 'Монеты',
     description: 'Монеты — валюта для магазина.\n\nТрать их на полезные предметы: сюрпризы, заморозки, зелья!',
-    color: 'from-yellow-400 to-amber-500',
+    gradient: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
     tips: ['💰 Больше монет = больше возможностей', '🛒 Магазин в нижнем меню']
   },
   {
     id: 'hp',
-    icon: <Heart className="w-16 h-16" />,
+    emoji: '❤️',
     title: 'Жизни (HP)',
     description: 'У тебя 5 жизней. Ошибка в уроке = -1 HP.\n\nЕсли HP = 0, урок нужно начать заново.',
-    color: 'from-red-500 to-pink-500',
+    gradient: 'linear-gradient(135deg, #ef4444 0%, #ec4899 100%)',
     tips: ['❤️ HP восстанавливается со временем', '🧪 Зелье HP восстанавливает сразу']
   },
   {
     id: 'streak',
-    icon: <Flame className="w-16 h-16" />,
+    emoji: '🔥',
     title: 'Серия дней',
     description: 'Заходи каждый день и увеличивай серию!\n\nЧем длиннее серия — тем больше бонусов.',
-    color: 'from-orange-500 to-red-500',
+    gradient: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
     tips: ['🔥 7 дней подряд = особая награда', '❄️ Заморозка спасает серию']
   },
   {
     id: 'shop',
-    icon: <ShoppingBag className="w-16 h-16" />,
+    emoji: '🛍️',
     title: 'Магазин',
     description: 'В магазине ты можешь купить:\n\n🎁 Сюрприз — случайная награда\n❄️ Заморозка — защита серии\n🧪 Зелье HP — восстановление жизней',
-    color: 'from-emerald-500 to-teal-500',
+    gradient: 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)',
     tips: ['💡 Копи монеты на нужные предметы']
   },
   {
     id: 'boss',
-    icon: <Trophy className="w-16 h-16" />,
+    emoji: '👑',
     title: 'Боссы',
     description: 'В конце каждой недели тебя ждёт БОСС!\n\nЭто сложный урок, который проверит все знания.',
-    color: 'from-purple-500 to-pink-600',
+    gradient: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
     tips: ['👑 Победа над боссом = огромные награды', '💪 Готовься, проходя обычные уроки']
   },
   {
     id: 'ready',
-    icon: <Gamepad2 className="w-16 h-16" />,
+    emoji: '🚀',
     title: 'Готов начать?',
     description: 'Твоё путешествие начинается!\n\nПервый урок ждёт тебя. Удачи, герой! 🚀',
-    color: 'from-indigo-500 to-purple-600',
+    gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
     tips: ['🎯 Начни с урока "Мозг v2.0"']
   }
 ];
@@ -116,59 +117,150 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({ isOpen, onClose }) =
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl"
+        className="fixed inset-0 z-[100] flex items-center justify-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
+        {/* 🎨 iOS 26 LIQUID GLASS Background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+            }}
+          />
+          
+          {/* Animated aurora blobs */}
+          <motion.div
+            className="absolute top-1/4 left-1/4 w-80 h-80 rounded-full"
+            style={{
+              background: 'radial-gradient(circle, rgba(99,102,241,0.4) 0%, transparent 70%)',
+              filter: 'blur(80px)',
+            }}
+            animate={{ 
+              x: [0, 40, 0], 
+              y: [0, 30, 0],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full"
+            style={{
+              background: 'radial-gradient(circle, rgba(139,92,246,0.35) 0%, transparent 70%)',
+              filter: 'blur(60px)',
+            }}
+            animate={{ 
+              x: [0, -30, 0], 
+              y: [0, -40, 0],
+              scale: [1, 1.15, 1],
+            }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          />
+          <motion.div
+            className="absolute top-1/2 right-1/3 w-48 h-48 rounded-full"
+            style={{
+              background: 'radial-gradient(circle, rgba(236,72,153,0.25) 0%, transparent 70%)',
+              filter: 'blur(50px)',
+            }}
+            animate={{ 
+              x: [0, 20, 0], 
+              y: [0, -25, 0],
+            }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          />
+
+          {/* Floating particles */}
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1.5 h-1.5 bg-white/30 rounded-full"
+              style={{
+                left: `${10 + Math.random() * 80}%`,
+                top: `${10 + Math.random() * 80}%`,
+              }}
+              animate={{
+                opacity: [0.2, 0.6, 0.2],
+                scale: [0.8, 1.2, 0.8],
+                y: [0, -15, 0],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Skip button */}
+        <button
+          onClick={handleSkip}
+          className="absolute top-14 right-4 z-50 w-11 h-11 rounded-2xl flex items-center justify-center"
+          style={{
+            background: 'rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+          }}
+        >
+          <X size={20} className="text-white/80" />
+        </button>
+
+        {/* 🎨 iOS 26 LIQUID GLASS Card */}
         <motion.div
-          className="w-full max-w-md mx-4 bg-[#0A0F1C] rounded-[2rem] overflow-hidden shadow-2xl border border-white/10"
+          className="relative w-full max-w-md mx-4 rounded-[32px] overflow-hidden"
+          style={{
+            background: 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(40px)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
+          }}
           initial={{ scale: 0.9, y: 20 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.9, y: 20 }}
         >
           {/* Progress dots */}
-          <div className="flex justify-center gap-2 pt-6 pb-2">
+          <div className="flex justify-center gap-2 pt-6 pb-4">
             {tutorialSlides.map((_, idx) => (
-              <div
+              <motion.div
                 key={idx}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  idx === currentSlide 
-                    ? 'bg-white w-6' 
+                className="h-2 rounded-full transition-all"
+                style={{
+                  width: idx === currentSlide ? 24 : 8,
+                  background: idx === currentSlide 
+                    ? 'linear-gradient(90deg, #8b5cf6, #ec4899)'
                     : idx < currentSlide 
-                      ? 'bg-white/50' 
-                      : 'bg-white/20'
-                }`}
+                      ? 'rgba(139,92,246,0.6)' 
+                      : 'rgba(255,255,255,0.15)',
+                }}
+                animate={{ width: idx === currentSlide ? 24 : 8 }}
               />
             ))}
           </div>
-
-          {/* Skip button - LOWERED FOR TELEGRAM */}
-          <button
-            onClick={handleSkip}
-            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors z-50"
-          >
-            <X className="w-5 h-5" />
-          </button>
 
           {/* Content */}
           <AnimatePresence mode="wait">
             <motion.div
               key={slide.id}
-              className="p-8"
+              className="px-6 pb-6"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Icon */}
+              {/* Emoji Icon with gradient background */}
               <motion.div
-                className={`w-28 h-28 mx-auto mb-6 rounded-3xl bg-gradient-to-br ${slide.color} flex items-center justify-center text-white shadow-2xl`}
+                className="w-28 h-28 mx-auto mb-6 rounded-[28px] flex items-center justify-center"
+                style={{
+                  background: slide.gradient,
+                  boxShadow: '0 16px 48px rgba(139,92,246,0.4)',
+                }}
                 initial={{ scale: 0.8, rotate: -10 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', stiffness: 200 }}
               >
-                {slide.icon}
+                <span className="text-6xl">{slide.emoji}</span>
               </motion.div>
 
               {/* Title */}
@@ -177,23 +269,27 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({ isOpen, onClose }) =
               </h2>
 
               {/* Description */}
-              <p className="text-slate-300 text-center leading-relaxed whitespace-pre-line mb-6">
+              <p className="text-white/70 text-center leading-relaxed whitespace-pre-line mb-6">
                 {slide.description}
               </p>
 
-              {/* Tips */}
+              {/* Tips - iOS 26 liquid glass style */}
               {slide.tips && (
                 <div className="space-y-2 mb-6">
                   {slide.tips.map((tip, idx) => (
                     <motion.div
                       key={idx}
-                      className="flex items-center gap-3 bg-white/5 px-4 py-3 rounded-xl border border-white/10"
+                      className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+                      style={{
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                      }}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.2 + idx * 0.1 }}
                     >
-                      <Sparkles className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-                      <span className="text-sm text-slate-200">{tip}</span>
+                      <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                      <span className="text-sm text-white/80">{tip}</span>
                     </motion.div>
                   ))}
                 </div>
@@ -201,22 +297,26 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({ isOpen, onClose }) =
             </motion.div>
           </AnimatePresence>
 
-          {/* Button */}
-          <div className="p-6 pt-0">
+          {/* Button - iOS 26 style */}
+          <div className="px-6 pb-6">
             <motion.button
               onClick={handleNext}
-              className={`w-full py-4 rounded-2xl font-black text-white uppercase tracking-wider flex items-center justify-center gap-2 bg-gradient-to-r ${slide.color} shadow-lg`}
+              className="w-full py-4 rounded-2xl font-bold text-white uppercase tracking-wider flex items-center justify-center gap-2"
+              style={{
+                background: slide.gradient,
+                boxShadow: '0 8px 32px rgba(139,92,246,0.4)',
+              }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               {currentSlide < tutorialSlides.length - 1 ? (
                 <>
-                  Далее
+                  ДАЛЕЕ
                   <ChevronRight className="w-5 h-5" />
                 </>
               ) : (
                 <>
-                  Начать!
+                  НАЧАТЬ!
                   <Sparkles className="w-5 h-5" />
                 </>
               )}
@@ -232,46 +332,53 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({ isOpen, onClose }) =
 export const RewardInfoCard: React.FC<{ type: 'xp' | 'coins' | 'hp' | 'streak' }> = ({ type }) => {
   const configs = {
     xp: {
-      icon: <Star className="w-5 h-5" />,
+      emoji: '⭐',
       title: 'Опыт',
       desc: 'Повышай уровень',
-      color: 'from-yellow-500 to-orange-500'
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)'
     },
     coins: {
-      icon: <Coins className="w-5 h-5" />,
+      emoji: '💎',
       title: 'Монеты',
       desc: 'Трать в магазине',
-      color: 'from-yellow-400 to-amber-500'
+      gradient: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)'
     },
     hp: {
-      icon: <Heart className="w-5 h-5" />,
+      emoji: '❤️',
       title: 'Жизни',
       desc: 'Не теряй их!',
-      color: 'from-red-500 to-pink-500'
+      gradient: 'linear-gradient(135deg, #ef4444 0%, #ec4899 100%)'
     },
     streak: {
-      icon: <Flame className="w-5 h-5" />,
+      emoji: '🔥',
       title: 'Серия',
       desc: 'Заходи каждый день',
-      color: 'from-orange-500 to-red-500'
+      gradient: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)'
     }
   };
 
   const config = configs[type];
 
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r ${config.color} bg-opacity-20`}>
-      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${config.color} flex items-center justify-center text-white`}>
-        {config.icon}
+    <div 
+      className="flex items-center gap-3 p-3 rounded-xl"
+      style={{
+        background: 'rgba(255,255,255,0.06)',
+        border: '1px solid rgba(255,255,255,0.1)',
+      }}
+    >
+      <div 
+        className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+        style={{ background: config.gradient }}
+      >
+        {config.emoji}
       </div>
       <div>
         <div className="text-white font-bold text-sm">{config.title}</div>
-        <div className="text-white/70 text-xs">{config.desc}</div>
+        <div className="text-white/60 text-xs">{config.desc}</div>
       </div>
     </div>
   );
 };
 
 export default GameTutorial;
-
-
