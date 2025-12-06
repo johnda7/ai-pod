@@ -55,11 +55,48 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
     debounceMs: 1000
   });
   
+  // Режим: история или запись
+  const [mode, setMode] = useState<'history' | 'record'>('history');
   const [step, setStep] = useState<'emotion' | 'energy' | 'note' | 'done'>('emotion');
   const [selectedEmotion, setSelectedEmotion] = useState<typeof EMOTIONS[0] | null>(null);
   const [selectedEnergy, setSelectedEnergy] = useState<number>(3);
   const [note, setNote] = useState('');
   const [prompt] = useState(PROMPTS[Math.floor(Math.random() * PROMPTS.length)]);
+  
+  // Проверяем записана ли сегодняшняя эмоция
+  const todayEntry = useMemo(() => {
+    const today = new Date().toDateString();
+    return entries.find(e => new Date(e.date).toDateString() === today);
+  }, [entries]);
+  
+  // Статистика эмоций за последние 7 дней
+  const weekStats = useMemo(() => {
+    const week = entries.slice(0, 7);
+    const emotionCounts: Record<string, number> = {};
+    week.forEach(e => {
+      emotionCounts[e.emotion] = (emotionCounts[e.emotion] || 0) + 1;
+    });
+    return emotionCounts;
+  }, [entries]);
+  
+  // Генерируем календарь на месяц
+  const calendarDays = useMemo(() => {
+    const days = [];
+    const today = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toDateString();
+      const entry = entries.find(e => new Date(e.date).toDateString() === dateStr);
+      days.push({
+        date: date,
+        dayNum: date.getDate(),
+        entry: entry || null,
+        isToday: i === 0
+      });
+    }
+    return days;
+  }, [entries]);
   
   // Вычисляем streak на лету
   const streak = useMemo(() => {
@@ -108,6 +145,13 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
     setStep('done');
     setTimeout(() => {
       onComplete(totalXP);
+      // Возвращаемся в историю через 2 секунды
+      setTimeout(() => {
+        setMode('history');
+        setStep('emotion');
+        setSelectedEmotion(null);
+        setNote('');
+      }, 500);
     }, 2000);
   };
 
@@ -201,13 +245,29 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
               </div>
             </div>
             
-            <button
-              onClick={onClose}
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: 'rgba(255,255,255,0.1)' }}
-            >
-              <X size={20} className="text-white" />
-            </button>
+            <div className="flex gap-2">
+              {mode === 'record' && (
+                <button
+                  onClick={() => {
+                    setMode('history');
+                    setStep('emotion');
+                    setSelectedEmotion(null);
+                    setNote('');
+                  }}
+                  className="px-3 h-10 rounded-xl flex items-center justify-center text-white/70 text-sm"
+                  style={{ background: 'rgba(255,255,255,0.1)' }}
+                >
+                  ← Назад
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.1)' }}
+              >
+                <X size={20} className="text-white" />
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -215,8 +275,178 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
       {/* Content */}
       <div className="relative z-10 px-4 pb-20">
         <AnimatePresence mode="wait">
+          {/* ИСТОРИЯ - главный экран */}
+          {mode === 'history' && (
+            <motion.div
+              key="history"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              {/* Стрик и статистика */}
+              <div 
+                className="p-4 rounded-2xl mb-4"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(236,72,153,0.1) 100%)',
+                  border: '1px solid rgba(139,92,246,0.3)',
+                }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="text-4xl">🔥</div>
+                    <div>
+                      <div className="text-3xl font-black text-white">{streak}</div>
+                      <div className="text-white/60 text-sm">дней подряд</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-white">{entries.length}</div>
+                    <div className="text-white/60 text-sm">всего записей</div>
+                  </div>
+                </div>
+                
+                {/* Прогресс до 21 дня */}
+                <div className="mb-2">
+                  <div className="flex justify-between text-xs text-white/60 mb-1">
+                    <span>Цель: 21 день</span>
+                    <span>{Math.min(streak, 21)}/21</span>
+                  </div>
+                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <motion.div 
+                      className="h-full rounded-full"
+                      style={{ background: 'linear-gradient(90deg, #8b5cf6, #ec4899)' }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(streak / 21 * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Календарь эмоций */}
+              <div 
+                className="p-4 rounded-2xl mb-4"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+                  <Calendar size={16} />
+                  Последние 30 дней
+                </h3>
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarDays.map((day, i) => (
+                    <div
+                      key={i}
+                      className={`aspect-square rounded-lg flex items-center justify-center text-xs ${
+                        day.isToday ? 'ring-2 ring-purple-500' : ''
+                      }`}
+                      style={{
+                        background: day.entry 
+                          ? EMOTIONS.find(e => e.name === day.entry?.emotion)?.color + '40'
+                          : 'rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      {day.entry ? (
+                        <span className="text-base">{day.entry.emoji}</span>
+                      ) : (
+                        <span className="text-white/30">{day.dayNum}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Кнопка записи */}
+              <motion.button
+                onClick={() => {
+                  if (todayEntry) return;
+                  setMode('record');
+                  setStep('emotion');
+                }}
+                disabled={!!todayEntry}
+                className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2 mb-4"
+                style={{
+                  background: todayEntry 
+                    ? 'rgba(34,197,94,0.3)' 
+                    : 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+                  boxShadow: todayEntry ? 'none' : '0 8px 32px rgba(139,92,246,0.4)',
+                }}
+                whileHover={!todayEntry ? { scale: 1.02 } : {}}
+                whileTap={!todayEntry ? { scale: 0.98 } : {}}
+              >
+                {todayEntry ? (
+                  <>
+                    <Check size={20} />
+                    Сегодня записано: {todayEntry.emoji} {todayEntry.emotion}
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={20} />
+                    Записать эмоцию сегодня
+                  </>
+                )}
+              </motion.button>
+              
+              {/* История записей */}
+              {entries.length > 0 && (
+                <div>
+                  <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+                    <TrendingUp size={16} />
+                    Последние записи
+                  </h3>
+                  <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-hide">
+                    {entries.slice(0, 10).map((entry, i) => {
+                      const emotion = EMOTIONS.find(e => e.name === entry.emotion);
+                      const entryDate = new Date(entry.date);
+                      const isToday = entryDate.toDateString() === new Date().toDateString();
+                      const isYesterday = entryDate.toDateString() === new Date(Date.now() - 86400000).toDateString();
+                      
+                      return (
+                        <div
+                          key={i}
+                          className="p-3 rounded-xl flex items-center gap-3"
+                          style={{
+                            background: `${emotion?.color}15`,
+                            border: `1px solid ${emotion?.color}30`,
+                          }}
+                        >
+                          <span className="text-2xl">{entry.emoji}</span>
+                          <div className="flex-1">
+                            <div className="text-white font-medium text-sm">{entry.emotion}</div>
+                            <div className="text-white/50 text-xs">
+                              {isToday ? 'Сегодня' : isYesterday ? 'Вчера' : entryDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                              {entry.note && ` • ${entry.note.slice(0, 30)}${entry.note.length > 30 ? '...' : ''}`}
+                            </div>
+                          </div>
+                          <div className="flex gap-0.5">
+                            {[1,2,3,4,5].map(n => (
+                              <div 
+                                key={n}
+                                className="w-1 h-3 rounded-full"
+                                style={{ background: n <= entry.energy ? emotion?.color : 'rgba(255,255,255,0.1)' }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {entries.length === 0 && (
+                <div className="text-center py-8">
+                  <div className="text-5xl mb-3">📔</div>
+                  <p className="text-white/60">Начни отслеживать свои эмоции!</p>
+                  <p className="text-white/40 text-sm">Записывай каждый день и смотри прогресс</p>
+                </div>
+              )}
+            </motion.div>
+          )}
+          
           {/* Step 1: Emotion Selection */}
-          {step === 'emotion' && (
+          {mode === 'record' && step === 'emotion' && (
             <motion.div
               key="emotion"
               initial={{ opacity: 0, x: 20 }}
@@ -287,7 +517,7 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
           )}
           
           {/* Step 2: Energy Level */}
-          {step === 'energy' && (
+          {mode === 'record' && step === 'energy' && (
             <motion.div
               key="energy"
               initial={{ opacity: 0, x: 20 }}
@@ -347,7 +577,7 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
           )}
           
           {/* Step 3: Note */}
-          {step === 'note' && (
+          {mode === 'record' && step === 'note' && (
             <motion.div
               key="note"
               initial={{ opacity: 0, x: 20 }}
@@ -410,7 +640,7 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
           )}
           
           {/* Step 4: Done */}
-          {step === 'done' && (
+          {mode === 'record' && step === 'done' && (
             <motion.div
               key="done"
               initial={{ opacity: 0, scale: 0.8 }}
@@ -459,7 +689,7 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
         </AnimatePresence>
         
         {/* Progress dots */}
-        {step !== 'done' && (
+        {mode === 'record' && step !== 'done' && (
           <div className="flex justify-center gap-2 mt-6">
             {['emotion', 'energy', 'note'].map((s, i) => (
               <motion.div
