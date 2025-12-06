@@ -4446,6 +4446,11 @@ export const SHOP_ITEMS: ShopItem[] = [
     { id: 'badge_pro', name: 'Значок PRO', description: '⭐ Показывает что ты профи!', price: 300, icon: 'badge_pro', type: 'COSMETIC' },
     { id: 'title_ninja', name: 'Титул "Ниндзя"', description: '🥷 Особый титул возле имени', price: 400, icon: 'title_ninja', type: 'COSMETIC' },
     { id: 'title_master', name: 'Титул "Мастер"', description: '🏆 Легендарный титул', price: 1000, icon: 'title_master', type: 'COSMETIC' },
+    
+    // PRIZES - Призы и бонусы
+    { id: 'katya_book', name: 'Книга Кати', description: '📚 "Путь к успеху" - книга с советами от Кати!', price: 800, icon: 'katya_book', type: 'PRIZE' },
+    { id: 'module_discount', name: 'Скидка 20%', description: '🎫 Скидка на следующий модуль обучения!', price: 500, icon: 'module_discount', type: 'PRIZE' },
+    { id: 'vip_week', name: 'VIP на неделю', description: '👑 VIP статус + x2 награды на 7 дней!', price: 1200, icon: 'vip_week', type: 'PRIZE' },
 ];
 
 // Система достижений

@@ -134,7 +134,7 @@ export interface ShopItem {
   description: string;
   price: number;
   icon: string;
-  type: 'POWERUP' | 'COSMETIC';
+  type: 'POWERUP' | 'COSMETIC' | 'PRIZE';
 }
 
 // --- LEGACY/OTHER TYPES ---

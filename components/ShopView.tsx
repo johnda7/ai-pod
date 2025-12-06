@@ -82,7 +82,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }
   const [mysteryReward, setMysteryReward] = useState<MysteryReward | null>(null);
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<'all' | 'powerups' | 'cosmetic'>('all');
+  const [activeCategory, setActiveCategory] = useState<'all' | 'powerups' | 'cosmetic' | 'prizes' | 'challenge'>('all');
 
   // Check for mystery box reward after purchase
   useEffect(() => {
@@ -155,7 +155,8 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }
     { id: 'all', label: 'Всё', icon: '🛒' },
     { id: 'powerups', label: 'Усиления', icon: '⚡' },
     { id: 'cosmetic', label: 'Стиль', icon: '✨' },
-    { id: 'challenge', label: 'Призы', icon: '🏆' },
+    { id: 'prizes', label: 'Бонусы', icon: '🎁' },
+    { id: 'challenge', label: 'Топ', icon: '🏆' },
   ];
   
   // Находим позицию пользователя в лидерборде
@@ -166,6 +167,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ user, onBuy, onRefreshUser }
     if (activeCategory === 'all') return true;
     if (activeCategory === 'powerups') return item.type === 'POWERUP';
     if (activeCategory === 'cosmetic') return item.type === 'COSMETIC';
+    if (activeCategory === 'prizes') return item.type === 'PRIZE';
     return true;
   });
 
