@@ -26,6 +26,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [lives, setLives] = useState(5);
   const [feedbackStatus, setFeedbackStatus] = useState<'NONE' | 'CORRECT' | 'WRONG'>('NONE');
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
   
   // Slide Specific States
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -58,14 +59,71 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
   const currentSlide = slides[currentSlideIndex];
   const progress = ((currentSlideIndex) / slides.length) * 100;
 
+  // 💾 СОХРАНЕНИЕ ПРОГРЕССА УРОКА
+  const PROGRESS_KEY = `lesson_progress_${task.id}`;
+  
+  // Сохранить прогресс при изменении слайда
+  useEffect(() => {
+    if (isOpen && currentSlideIndex > 0) {
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+        slideIndex: currentSlideIndex,
+        lives: lives,
+        timestamp: Date.now()
+      }));
+    }
+  }, [currentSlideIndex, lives, isOpen]);
+  
+  // Загрузить прогресс при открытии урока
   useEffect(() => {
     if (isOpen) {
-        setLives(5);
-        setCurrentSlideIndex(0);
-        setFeedbackStatus('NONE');
-        resetSlideState();
+      const savedProgress = localStorage.getItem(PROGRESS_KEY);
+      if (savedProgress && !isPreviouslyCompleted) {
+        try {
+          const { slideIndex, lives: savedLives, timestamp } = JSON.parse(savedProgress);
+          // Проверяем что прогресс не старше 7 дней
+          if (Date.now() - timestamp < 7 * 24 * 60 * 60 * 1000 && slideIndex > 0) {
+            setShowResumePrompt(true);
+            return; // Не сбрасываем состояние, ждём выбора пользователя
+          }
+        } catch (e) {
+          console.warn('Failed to parse lesson progress');
+        }
+      }
+      // Начать с начала
+      setLives(5);
+      setCurrentSlideIndex(0);
+      setFeedbackStatus('NONE');
+      resetSlideState();
     }
   }, [isOpen]);
+  
+  // Продолжить с сохранённого места
+  const handleResume = () => {
+    const savedProgress = localStorage.getItem(PROGRESS_KEY);
+    if (savedProgress) {
+      try {
+        const { slideIndex, lives: savedLives } = JSON.parse(savedProgress);
+        setCurrentSlideIndex(slideIndex);
+        setLives(savedLives);
+        setFeedbackStatus('NONE');
+        resetSlideState();
+      } catch (e) {
+        setCurrentSlideIndex(0);
+        setLives(5);
+      }
+    }
+    setShowResumePrompt(false);
+  };
+  
+  // Начать сначала
+  const handleStartOver = () => {
+    localStorage.removeItem(PROGRESS_KEY);
+    setCurrentSlideIndex(0);
+    setLives(5);
+    setFeedbackStatus('NONE');
+    resetSlideState();
+    setShowResumePrompt(false);
+  };
 
   useEffect(() => {
       resetSlideState();
@@ -98,6 +156,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
       } else {
           hapticSuccess(); // 📳 Урок завершён!
           playCompleteSound(); // 🔊 Завершение урока!
+          // 💾 Очищаем сохранённый прогресс после завершения
+          localStorage.removeItem(PROGRESS_KEY);
           onComplete();
       }
   };
