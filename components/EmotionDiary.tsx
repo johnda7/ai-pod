@@ -573,10 +573,11 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
                       return (
                         <div
                           key={i}
-                          className="p-3 rounded-xl flex items-center gap-3"
+                          className="p-3 rounded-xl flex items-center gap-3 backdrop-blur-xl"
                           style={{
-                            background: `${emotion?.color}15`,
-                            border: `1px solid ${emotion?.color}30`,
+                            background: `linear-gradient(135deg, ${emotion?.color}40 0%, ${emotion?.color}25 100%)`,
+                            border: `1px solid ${emotion?.color}50`,
+                            boxShadow: `0 4px 12px ${emotion?.color}20`,
                           }}
                         >
                           <span className="text-2xl">{entry.emoji}</span>
