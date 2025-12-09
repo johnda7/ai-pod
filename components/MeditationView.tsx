@@ -10,6 +10,7 @@ import {
 import { GratitudeJournal } from './GratitudeJournal';
 import { ZenVisualizer } from './ZenVisualizer';
 import { hapticLight, hapticMedium, hapticSuccess } from '../services/telegramService';
+import { ambientSoundService, SoundType } from '../services/ambientSoundService';
 
 // 🚀 ОПТИМИЗАЦИЯ: уменьшены размеры изображений + качество для быстрой загрузки
 const SOUNDSCAPE_IMAGES: Record<string, string> = {
@@ -102,6 +103,34 @@ export const MeditationView: React.FC = () => {
     }, 8000);
     return () => clearInterval(interval);
   }, []);
+
+  // 🎵 Web Audio API для звуков (вместо YouTube - работает в России!)
+  useEffect(() => {
+    if (activeSound && isPlaying) {
+      // Маппинг iconType на SoundType
+      const soundTypeMap: Record<string, SoundType> = {
+        'RAIN': 'RAIN',
+        'FOREST': 'FOREST',
+        'OCEAN': 'OCEAN',
+        'FIRE': 'FIRE',
+        'WIND': 'WIND',
+        'CAFE': 'CAFE',
+        'THUNDER': 'THUNDER',
+        'NIGHT': 'NIGHT',
+      };
+      const soundType = soundTypeMap[activeSound.iconType];
+      if (soundType) {
+        ambientSoundService.play(soundType);
+      }
+    } else {
+      ambientSoundService.stop();
+    }
+    
+    // Cleanup при unmount
+    return () => {
+      ambientSoundService.stop();
+    };
+  }, [activeSound, isPlaying]);
 
   const filteredMeditations = selectedCategory 
     ? MEDITATIONS.filter(m => m.category === selectedCategory)
@@ -560,18 +589,7 @@ export const MeditationView: React.FC = () => {
                    </div>
            </div>
 
-           {/* Hidden YouTube Embed */}
-            {activeSound && isPlaying && (
-              <div className="absolute w-1 h-1 opacity-0 pointer-events-none overflow-hidden">
-                 <iframe 
-                  key={activeSound.id + isPlaying}
-                   width="1" height="1" 
-                  src={`https://www.youtube-nocookie.com/embed/${activeSound.youtubeId}?autoplay=1&controls=0&loop=1&playlist=${activeSound.youtubeId}&playsinline=1&modestbranding=1&rel=0`} 
-                   title="Audio Player" 
-                   allow="autoplay; encrypted-media"
-                />
-               </div>
-           )}
+           {/* 🎵 Web Audio API управляет звуками (не YouTube!) - работает в РФ и офлайн */}
           </motion.div>
         )}
       </AnimatePresence>
@@ -645,19 +663,8 @@ export const MeditationView: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Hidden YouTube Audio */}
-            {meditationPlaying && selectedMeditation.youtubeId && (
-              <div className="absolute w-1 h-1 opacity-0 pointer-events-none overflow-hidden">
-                <iframe
-                  key={selectedMeditation.id + meditationPlaying}
-                  width="1"
-                  height="1"
-                  src={`https://www.youtube-nocookie.com/embed/${selectedMeditation.youtubeId}?autoplay=1&controls=0&playsinline=1&modestbranding=1&rel=0`}
-                  title="Meditation Audio"
-                   allow="autoplay; encrypted-media"
-                />
-               </div>
-           )}
+            {/* 🧘 Медитации работают с ambient звуками или в тишине */}
+            {/* Включи звук из Чилл-зоны (Дождь, Лес и др.) для фона */}
           </motion.div>
         )}
       </AnimatePresence>
