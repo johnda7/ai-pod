@@ -248,9 +248,28 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
     }, 1000);
   };
 
+  // 🎯 Авторотация: показываем 3 дневных челленджа в зависимости от дня недели
+  const getDailyChallengesByDay = () => {
+    const dayOfWeek = new Date().getDay(); // 0 = воскресенье, 1 = понедельник, ...
+    
+    // Ротация: показываем 3 челленджа на каждый день
+    const rotations: Record<number, string[]> = {
+      0: ['d1', 'd6', 'd7'], // Воскресенье: Учёба, Баланс, Цели
+      1: ['d1', 'd2', 'd5'], // Понедельник: Учёба, Фокус, Привычки
+      2: ['d2', 'd3', 'd4'], // Вторник: Фокус, Медитация, Дневник
+      3: ['d1', 'd4', 'd5'], // Среда: Учёба, Дневник, Привычки
+      4: ['d2', 'd5', 'd6'], // Четверг: Фокус, Привычки, Баланс
+      5: ['d3', 'd4', 'd7'], // Пятница: Медитация, Дневник, Цели
+      6: ['d1', 'd3', 'd6'], // Суббота: Учёба, Медитация, Баланс
+    };
+    
+    const todayIds = rotations[dayOfWeek] || ['d1', 'd2', 'd3'];
+    return DAILY_CHALLENGES.filter(c => todayIds.includes(c.id));
+  };
+  
   const getChallenges = () => {
     switch (activeTab) {
-      case 'daily': return DAILY_CHALLENGES;
+      case 'daily': return getDailyChallengesByDay();
       case 'weekly': return WEEKLY_CHALLENGES;
       case 'special': return SPECIAL_CHALLENGES;
     }
@@ -404,8 +423,11 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
     return navigationMap[challengeId] || null;
   };
 
+  // Используем getDailyChallengesByDay для подсчёта дневных челленджей
+  const todayDailyChallenges = getDailyChallengesByDay();
+  
   const tabs = [
-    { id: 'daily', label: 'Дневные', emoji: '☀️', count: DAILY_CHALLENGES.filter(c => !isClaimed(c.id) && isChallengeComplete(c)).length },
+    { id: 'daily', label: 'Сегодня', emoji: '☀️', count: todayDailyChallenges.filter(c => !isClaimed(c.id) && isChallengeComplete(c)).length },
     { id: 'weekly', label: 'Недельные', emoji: '📅', count: WEEKLY_CHALLENGES.filter(c => !isClaimed(c.id) && isChallengeComplete(c)).length },
     { id: 'special', label: 'Особые', emoji: '⭐', count: SPECIAL_CHALLENGES.filter(c => !isClaimed(c.id) && isChallengeComplete(c)).length },
   ];
