@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Check, Flame, Calendar, Trash2, Trophy, AlertCircle } from 'lucide-react';
 import { useSyncTool } from '../hooks/useSyncTool';
 import { SyncIndicator } from './SyncIndicator';
-import { hapticSuccess, hapticMedium } from '../services/telegramService';
+import { hapticSuccess, hapticMedium, soundSuccess, soundStreak, premiumClick } from '../services/telegramService';
 
 interface HabitTrackerProps {
   isOpen: boolean;
@@ -89,6 +89,9 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
   const addHabit = () => {
     if (!newHabitName.trim() && !selectedPreset) return;
     
+    // 🎵 Premium feedback при создании привычки
+    premiumClick();
+    
     const preset = selectedPreset || HABIT_PRESETS[0];
     const newHabit: Habit = {
       id: Date.now().toString(),
@@ -126,7 +129,10 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
   const confirmHabitComplete = () => {
     if (!confirmingHabit) return;
     
+    // 🎵 Premium звук и вибрация!
     hapticSuccess();
+    soundSuccess();
+    
     setHabits(habits.map(habit => {
       if (habit.id !== confirmingHabit.id) return habit;
       
@@ -139,6 +145,10 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ isOpen, onClose, onC
       let newStreak = habit.streak;
       if (habit.completedDays.includes(yesterdayStr) || habit.streak === 0) {
         newStreak = habit.streak + 1;
+        // 🎵 Бонусный звук за streak!
+        if (newStreak > 0 && newStreak % 7 === 0) {
+          soundStreak();
+        }
       }
       
       return { ...habit, completedDays: newCompletedDays, streak: newStreak };

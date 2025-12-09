@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trophy, Flame, Clock, Star, Zap, Target, Check, ChevronRight, Gift, Sparkles, ArrowRight, Play, BookOpen, Timer } from 'lucide-react';
 import { useSyncTool } from '../hooks/useSyncTool';
 import { SyncIndicator } from './SyncIndicator';
+import { premiumSuccess, premiumClick, premiumCoin } from '../services/telegramService';
 
 interface ChallengeSystemProps {
   isOpen: boolean;
@@ -234,9 +235,13 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
   const claimReward = (challenge: Challenge) => {
     if (!isChallengeComplete(challenge) || isClaimed(challenge.id)) return;
     
+    // 🎵 Premium feedback при начале получения награды
+    premiumClick();
     setClaimingId(challenge.id);
     
     setTimeout(() => {
+      // 🎵 Premium feedback при получении награды!
+      premiumCoin();
       setCompletedChallenges([...completedChallenges, challenge.id]);
       onComplete(challenge.reward.xp, challenge.reward.coins);
       setClaimingId(null);

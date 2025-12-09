@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Trophy, ChevronRight, Trash2 } from 'lucide-react';
 import { useSyncTool } from '../hooks/useSyncTool';
 import { SyncIndicator } from './SyncIndicator';
+import { premiumSuccess, premiumClick, hapticLight, hapticMedium, soundComplete } from '../services/telegramService';
 
 interface GoalsToolProps {
   isOpen: boolean;
@@ -61,6 +62,10 @@ export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplet
   const addGoal = () => {
     if (!newTitle.trim()) return;
     
+    // 🎵 Premium feedback при создании цели
+    hapticMedium();
+    soundComplete();
+    
     const category = CATEGORIES.find(c => c.id === newCategory);
     
     const newGoal: Goal = {
@@ -92,6 +97,9 @@ export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplet
   };
 
   const updateProgress = (id: string, delta: number) => {
+    // 🎵 Haptic для каждого клика на прогресс
+    hapticLight();
+    
     setGoals(goals.map(goal => {
       if (goal.id === id) {
         const newProgress = Math.max(0, Math.min(goal.target, goal.progress + delta));
@@ -100,6 +108,8 @@ export const GoalsTool: React.FC<GoalsToolProps> = ({ isOpen, onClose, onComplet
         
         // ✅ Оставлено: XP только за ДОСТИЖЕНИЕ цели (100%)
         if (newProgress === goal.target && goal.progress < goal.target) {
+          // 🎵 Premium feedback при достижении цели!
+          premiumSuccess();
           onComplete(50); // Награда за достижение цели!
         }
         

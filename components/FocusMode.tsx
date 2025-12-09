@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Play, Pause, RotateCcw, Zap, Trophy, Flame, TreePine, Leaf, Sparkles } from 'lucide-react';
+import { premiumTimerStart, premiumTimerEnd, premiumClick, premiumSuccess, hapticMedium, hapticWarning } from '../services/telegramService';
 
 interface FocusModeProps {
   isOpen: boolean;
@@ -379,6 +380,9 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
   }, [selectedDuration]);
 
   const handleComplete = () => {
+    // 🎵 Premium звук и вибрация завершения!
+    premiumTimerEnd();
+    
     setIsRunning(false);
     setIsComplete(true);
     setTreeGrowth(100);
@@ -398,6 +402,9 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
   };
 
   const handleGiveUp = () => {
+    // 🎵 Предупреждающая вибрация
+    hapticWarning();
+    
     setIsRunning(false);
     setTreeGrowth(0);
     setTimeLeft(selectedDuration.minutes * 60);
@@ -406,6 +413,18 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
       streak: 0,
       lastDate: new Date().toDateString(),
     }));
+  };
+  
+  // 🎵 Функция старта таймера с premium feedback
+  const handleStart = () => {
+    premiumTimerStart();
+    setIsRunning(true);
+  };
+  
+  // 🎵 Функция паузы с haptic
+  const handlePause = () => {
+    hapticMedium();
+    setIsRunning(false);
   };
 
   const formatTime = (seconds: number) => {
@@ -672,7 +691,10 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
                   {FOCUS_DURATIONS.map((duration) => (
                     <button
                       key={duration.minutes}
-                      onClick={() => setSelectedDuration(duration)}
+                      onClick={() => {
+                        premiumClick();
+                        setSelectedDuration(duration);
+                      }}
                       className="px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
                       style={{
                         background: selectedDuration.minutes === duration.minutes
@@ -701,7 +723,10 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
                   {AMBIENT_SOUNDS.map((sound) => (
                     <motion.button
                       key={sound.id}
-                      onClick={() => setSelectedSound(sound)}
+                      onClick={() => {
+                        premiumClick();
+                        setSelectedSound(sound);
+                      }}
                       className="w-16 h-16 rounded-2xl overflow-hidden relative transition-all"
                       style={{
                         border: selectedSound.id === sound.id 
@@ -768,7 +793,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
                   </motion.button>
                 ) : (
                   <motion.button
-                    onClick={() => setIsRunning(true)}
+                    onClick={handleStart}
                     className="px-8 py-4 rounded-2xl font-bold text-white flex items-center gap-2"
                     style={{
                       background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
@@ -889,6 +914,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
               <div className="flex gap-3">
                 <motion.button
                   onClick={() => {
+                    premiumClick();
                     setIsComplete(false);
                     setTimeLeft(selectedDuration.minutes * 60);
                     setTreeGrowth(0);
@@ -904,7 +930,10 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isOpen, onClose, onComplet
                   <span className="text-white/70">Ещё раз</span>
                 </motion.button>
                 <motion.button
-                  onClick={onClose}
+                  onClick={() => {
+                    premiumSuccess();
+                    onClose();
+                  }}
                   className="flex-1 py-4 rounded-2xl font-bold text-white"
                   style={{
                     background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
