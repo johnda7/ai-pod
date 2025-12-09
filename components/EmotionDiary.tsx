@@ -558,7 +558,10 @@ export const EmotionDiary: React.FC<EmotionDiaryProps> = ({ isOpen, onClose, onC
               
               {/* История записей */}
               {entries.length > 0 && (
-                <div>
+                <div 
+                  className="p-4 rounded-2xl"
+                  style={{ background: '#0f172a' }}
+                >
                   <h3 className="text-white font-bold mb-3 flex items-center gap-2">
                     <TrendingUp size={16} />
                     Последние записи
