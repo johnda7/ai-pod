@@ -1,21 +1,17 @@
-import React, { useState, useEffect, lazy, Suspense, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Timer, Target, BookHeart, BarChart3, Heart, Calendar, FileText, TreePine, Trophy, Flame, BookOpen, Zap, Star, Sparkles, Cloud, CheckCircle, Loader } from 'lucide-react';
+import { Target, BarChart3, TreePine, Trophy, Flame, BookOpen, Zap, Star, Sparkles, Cloud, CheckCircle, Loader } from 'lucide-react';
 import { syncToolsDataToSupabase, loadToolsDataFromSupabase } from '../services/db';
 import { User } from '../types';
 
-// 🚀 Lazy loading для тяжёлых компонентов (-30% начальная загрузка)
-const PomodoroTimer = lazy(() => import('./PomodoroTimer').then(m => ({ default: m.PomodoroTimer })));
+// 🚀 Lazy loading для тяжёлых компонентов
+// ⚠️ ОПТИМИЗАЦИЯ: Убраны дубли (Помодоро, Life Skills, Планировщик, Рефлексия, Дневник Эмоций)
 const BalanceWheel = lazy(() => import('./BalanceWheel').then(m => ({ default: m.BalanceWheel })));
-const EmotionDiary = lazy(() => import('./EmotionDiary').then(m => ({ default: m.EmotionDiary })));
-const PlannerTool = lazy(() => import('./PlannerTool').then(m => ({ default: m.PlannerTool })));
 const GoalsTool = lazy(() => import('./GoalsTool').then(m => ({ default: m.GoalsTool })));
 const NotesTool = lazy(() => import('./NotesTool').then(m => ({ default: m.NotesTool })));
 const HabitTracker = lazy(() => import('./HabitTracker').then(m => ({ default: m.HabitTracker })));
 const ChallengeSystem = lazy(() => import('./ChallengeSystem').then(m => ({ default: m.ChallengeSystem })));
 const FocusMode = lazy(() => import('./FocusMode').then(m => ({ default: m.FocusMode })));
-const ReflectionJournal = lazy(() => import('./ReflectionJournal').then(m => ({ default: m.ReflectionJournal })));
-const LifeSkillsModule = lazy(() => import('./LifeSkillsModule').then(m => ({ default: m.LifeSkillsModule })));
 
 // 🔄 Компонент загрузки
 const ToolLoader = () => (
@@ -35,19 +31,14 @@ interface ToolsViewProps {
   onNavigateToSection?: (section: 'PATH' | 'TOOLS' | 'RELAX' | 'PROFILE') => void;
 }
 
-// 🚀 ОПТИМИЗАЦИЯ: Уменьшены размеры изображений + качество для быстрой загрузки
+// 🚀 Изображения для инструментов
 const TOOL_IMAGES: Record<string, string> = {
   focus: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=200&h=200&fit=crop&q=60',
   challenges: 'https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=200&h=200&fit=crop&q=60',
   habits: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=200&h=200&fit=crop&q=60',
-  lifeskills: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=200&h=200&fit=crop&q=60',
-  reflection: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=200&h=200&fit=crop&q=60',
-  pomodoro: 'https://images.unsplash.com/photo-1495364141860-b0d03eccd065?w=200&h=200&fit=crop&q=60',
-  planner: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=200&h=200&fit=crop&q=60',
   goals: 'https://images.unsplash.com/photo-1533073526757-2c8ca1df9f1c?w=200&h=200&fit=crop&q=60',
-  notes: 'https://images.unsplash.com/photo-1517842645767-c639042777db?w=200&h=200&fit=crop&q=60',
+  diary: 'https://images.unsplash.com/photo-1517842645767-c639042777db?w=200&h=200&fit=crop&q=60',
   balance: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=200&h=200&fit=crop&q=60',
-  emotions: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=200&h=200&fit=crop&q=60',
 };
 
 interface Tool {
@@ -62,10 +53,12 @@ interface Tool {
   category: 'featured' | 'productivity' | 'growth' | 'wellness';
 }
 
+// ✅ ОПТИМИЗИРОВАННЫЙ СПИСОК: 6 инструментов вместо 11
+// Убраны: Помодоро (дубль), Life Skills (в уроки), Планировщик, Рефлексия (в Дневник), Дневник Эмоций (в Дневник)
 const TOOLS: Tool[] = [
   {
     id: 'focus',
-    name: 'Режим Фокуса',
+    name: 'Фокус',
     description: 'Вырасти дерево концентрации',
     icon: TreePine,
     color: '#22c55e',
@@ -90,64 +83,26 @@ const TOOLS: Tool[] = [
     icon: Flame,
     color: '#ef4444',
     xpReward: 15,
-    isNew: true,
     category: 'growth',
-  },
-  {
-    id: 'lifeskills',
-    name: 'Life Skills',
-    description: 'Навыки для реальной жизни',
-    icon: BookOpen,
-    color: '#6366f1',
-    xpReward: 40,
-    isNew: true,
-    category: 'growth',
-  },
-  {
-    id: 'reflection',
-    name: 'Рефлексия',
-    description: 'Дневник самопознания',
-    icon: BookHeart,
-    color: '#8b5cf6',
-    xpReward: 25,
-    isNew: true,
-    category: 'wellness',
-  },
-  {
-    id: 'pomodoro',
-    name: 'Помодоро',
-    description: 'Техника фокусировки 25/5',
-    icon: Timer,
-    color: '#ef4444',
-    xpReward: 20,
-    category: 'productivity',
-  },
-  {
-    id: 'planner',
-    name: 'Планировщик',
-    description: 'Организуй свой день',
-    icon: Calendar,
-    color: '#22c55e',
-    xpReward: 15,
-    category: 'productivity',
   },
   {
     id: 'goals',
     name: 'Цели',
-    description: 'Отслеживай прогресс',
+    description: 'Отслеживай свой прогресс',
     icon: Target,
     color: '#f59e0b',
     xpReward: 25,
     category: 'growth',
   },
   {
-    id: 'notes',
-    name: 'Заметки',
-    description: 'Записывай мысли и идеи',
-    icon: FileText,
+    id: 'diary',
+    name: 'Дневник',
+    description: 'Записывай мысли, эмоции, рефлексию',
+    icon: BookOpen,
     color: '#8b5cf6',
-    xpReward: 10,
-    category: 'productivity',
+    xpReward: 15,
+    isNew: true,
+    category: 'wellness',
   },
   {
     id: 'balance',
@@ -158,21 +113,12 @@ const TOOLS: Tool[] = [
     xpReward: 30,
     category: 'wellness',
   },
-  {
-    id: 'emotions',
-    name: 'Дневник Эмоций',
-    description: 'Отслеживай настроение',
-    icon: Heart,
-    color: '#ec4899',
-    xpReward: 25,
-    category: 'wellness',
-  },
 ];
 
+// Упрощённые категории
 const CATEGORIES = [
   { id: 'all', name: 'Все', emoji: '✨' },
   { id: 'featured', name: 'Топ', emoji: '🔥' },
-  { id: 'productivity', name: 'Продуктивность', emoji: '⚡' },
   { id: 'growth', name: 'Рост', emoji: '🌱' },
   { id: 'wellness', name: 'Баланс', emoji: '🧘' },
 ];
@@ -182,20 +128,11 @@ const getToolStats = () => {
   const stats: Record<string, number | string> = {};
   
   try {
-    const pomodoroStats = localStorage.getItem('pomodoro_stats');
-    if (pomodoroStats) stats.pomodoro = JSON.parse(pomodoroStats).totalTime || 0;
-    
     const habits = localStorage.getItem('habit_tracker_data');
     if (habits) stats.habits = JSON.parse(habits).length || 0;
     
-    const reflection = localStorage.getItem('reflection_journal');
-    if (reflection) stats.reflection = JSON.parse(reflection).length || 0;
-    
     const focusStreak = localStorage.getItem('focus_streak');
     if (focusStreak) stats.focus = JSON.parse(focusStreak).streak || 0;
-    
-    const lifeSkills = localStorage.getItem('life_skills_progress');
-    if (lifeSkills) stats.lifeskills = JSON.parse(lifeSkills).length || 0;
     
     const goals = localStorage.getItem('goals_tracker');
     if (goals) {
@@ -204,14 +141,19 @@ const getToolStats = () => {
       stats.goals = parsed.length > 0 ? `${completed}/${parsed.length}` : 0;
     }
     
-    const notes = localStorage.getItem('notes_journal');
-    if (notes) stats.notes = JSON.parse(notes).length || 0;
+    // Объединённая статистика Дневника
+    const notes = localStorage.getItem('notes_journal_v2');
+    const emotions = localStorage.getItem('emotion_diary_entries');
+    const reflection = localStorage.getItem('reflection_journal');
+    
+    let diaryCount = 0;
+    if (notes) diaryCount += JSON.parse(notes).length || 0;
+    if (emotions) diaryCount += JSON.parse(emotions).length || 0;
+    if (reflection) diaryCount += JSON.parse(reflection).length || 0;
+    if (diaryCount > 0) stats.diary = diaryCount;
     
     const balance = localStorage.getItem('balance_wheel_history');
     if (balance) stats.balance = JSON.parse(balance).length || 0;
-    
-    const emotions = localStorage.getItem('emotion_diary_entries');
-    if (emotions) stats.emotions = JSON.parse(emotions).length || 0;
   } catch (e) {
     console.error('Error loading stats:', e);
   }
@@ -224,7 +166,6 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
   
-  // 🚀 ОПТИМИЗАЦИЯ: Мемоизация статистики (пересчёт только при изменении activeTool)
   const stats = useMemo(() => getToolStats(), [activeTool]);
 
   // Загрузка данных из Supabase при первом рендере
@@ -252,7 +193,6 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
     const today = new Date().toDateString();
     const lastToolsDate = localStorage.getItem('tools_used_date');
     
-    // Сбросить счётчик если новый день
     if (lastToolsDate !== today) {
       localStorage.setItem('tools_used_date', today);
       localStorage.setItem('tools_used_today', '1');
@@ -261,10 +201,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
       localStorage.setItem('tools_used_today', String(current + 1));
     }
     
-    // Сохраняем информацию о последнем использованном инструменте для дебага
     localStorage.setItem('last_tool_used', toolId);
-    
-    console.log('[ChallengeTracker] Tool completed:', toolId, 'Total today:', localStorage.getItem('tools_used_today'));
   };
 
   const getStatLabel = (toolId: string) => {
@@ -272,15 +209,11 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
     if (!stat) return null;
     
     const labels: Record<string, string> = {
-      pomodoro: `${stat} мин`,
       habits: `${stat} привычек`,
-      reflection: `${stat} записей`,
       focus: `${stat} 🔥`,
-      lifeskills: `${stat} уроков`,
       goals: typeof stat === 'string' ? stat : null,
-      notes: `${stat} записей`,
+      diary: `${stat} записей`,
       balance: `${stat} раз`,
-      emotions: `${stat} записей`,
     } as Record<string, string>;
     
     return labels[toolId] || null;
@@ -294,7 +227,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
 
   return (
     <div className="min-h-screen pb-40 relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, #0f0f2a 50%, #0a0a1a 100%)' }}>
-      {/* Static background - optimized for performance */}
+      {/* Background */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
         <div 
           className="absolute top-0 left-1/4 w-[400px] h-[300px] rounded-full opacity-30"
@@ -312,7 +245,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
         />
       </div>
 
-      {/* Header - MORE PADDING FOR TELEGRAM */}
+      {/* Header */}
       <div className="sticky top-0 z-20 px-4 pt-4 pb-3">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -327,12 +260,9 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
           }}
         >
           <div className="flex items-center gap-4 mb-4">
-            {/* Tool icon with image */}
             <div 
               className="w-14 h-14 rounded-2xl overflow-hidden relative"
-              style={{
-                boxShadow: '0 4px 20px rgba(99,102,241,0.3)',
-              }}
+              style={{ boxShadow: '0 4px 20px rgba(99,102,241,0.3)' }}
             >
               <img 
                 src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=100&h=100&fit=crop"
@@ -351,7 +281,6 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
             
             {/* Sync & XP Badge */}
             <div className="flex items-center gap-2">
-              {/* Sync Status */}
               <AnimatePresence>
                 {syncStatus !== 'idle' && (
                   <motion.div
@@ -360,9 +289,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
                     exit={{ opacity: 0, scale: 0.8 }}
                     className="p-2 rounded-xl"
                     style={{
-                      background: syncStatus === 'synced' 
-                        ? 'rgba(34,197,94,0.2)' 
-                        : 'rgba(99,102,241,0.2)',
+                      background: syncStatus === 'synced' ? 'rgba(34,197,94,0.2)' : 'rgba(99,102,241,0.2)',
                     }}
                   >
                     {syncStatus === 'syncing' ? (
@@ -418,7 +345,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
         </motion.div>
       </div>
 
-      {/* Featured Section - Large Cards with Images */}
+      {/* Featured Section */}
       {selectedCategory === 'all' && (
         <div className="px-4 pt-2 pb-4">
           <motion.div 
@@ -452,7 +379,6 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
                   }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {/* Background Image - smaller + lazy loading */}
                   <img 
                     src={TOOL_IMAGES[tool.id]}
                     alt={tool.name}
@@ -461,29 +387,20 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
                     className="absolute inset-0 w-full h-full object-cover opacity-40"
                   />
                   
-                  {/* iOS 26 Liquid Glass Overlay */}
                   <div 
                     className="absolute inset-0"
-                    style={{
-                      background: 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%)',
-                    }}
+                    style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%)' }}
                   />
                   
-                  {/* Hot badge - compact */}
                   <div 
                     className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"
-                    style={{
-                      background: 'rgba(239,68,68,0.9)',
-                      backdropFilter: 'blur(10px)',
-                    }}
+                    style={{ background: 'rgba(239,68,68,0.9)', backdropFilter: 'blur(10px)' }}
                   >
                     <span>🔥</span>
                     <span className="text-white">HOT</span>
                   </div>
                   
-                  {/* Content - compact */}
                   <div className="absolute inset-0 p-3 flex flex-col justify-end">
-                    {/* Icon - smaller */}
                     <div 
                       className="w-9 h-9 rounded-xl flex items-center justify-center mb-2"
                       style={{
@@ -498,15 +415,11 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
                     <h3 className="text-white font-bold text-sm mb-0.5">{tool.name}</h3>
                     <p className="text-white/60 text-[10px] mb-1.5 line-clamp-1">{tool.description}</p>
                     
-                    {/* Stats - compact */}
                     <div className="flex items-center justify-between">
                       {stat ? (
                         <span 
                           className="text-[10px] font-medium px-1.5 py-0.5 rounded"
-                          style={{
-                            background: 'rgba(255,255,255,0.15)',
-                            backdropFilter: 'blur(10px)',
-                          }}
+                          style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)' }}
                         >
                           {stat}
                         </span>
@@ -515,10 +428,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
                       )}
                       <span 
                         className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                        style={{
-                          background: 'rgba(245,158,11,0.25)',
-                          color: '#fbbf24',
-                        }}
+                        style={{ background: 'rgba(245,158,11,0.25)', color: '#fbbf24' }}
                       >
                         +{tool.xpReward}
                       </span>
@@ -567,7 +477,6 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
                 whileTap={{ scale: 0.99 }}
               >
                 <div className="flex items-center gap-3 p-3">
-                  {/* Icon thumbnail - compact */}
                   <div 
                     className="w-11 h-11 rounded-xl overflow-hidden shrink-0 relative"
                     style={{
@@ -580,7 +489,6 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
                     </div>
                   </div>
                   
-                  {/* Content - compact */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <h3 className="text-sm font-bold text-white">{tool.name}</h3>
@@ -596,13 +504,9 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
                     <p className="text-white/40 text-xs truncate">{tool.description}</p>
                   </div>
                   
-                  {/* XP Badge */}
                   <div 
                     className="px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1"
-                    style={{
-                      background: 'rgba(245,158,11,0.15)',
-                      color: '#fbbf24',
-                    }}
+                    style={{ background: 'rgba(245,158,11,0.15)', color: '#fbbf24' }}
                   >
                     <Zap size={10} />
                     +{tool.xpReward}
@@ -626,7 +530,6 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
             boxShadow: '0 8px 32px rgba(99,102,241,0.15)',
           }}
         >
-          {/* Background image */}
           <div className="absolute inset-0 opacity-20">
             <img 
               src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=300&h=100&fit=crop&q=40"
@@ -646,15 +549,15 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
             <div>
               <h4 className="text-white font-bold mb-1">Совет от Кати</h4>
               <p className="text-white/60 text-sm leading-relaxed">
-                Попробуй "Режим Фокуса" — вырасти своё дерево концентрации! 
-                Чем дольше фокусируешься, тем больше оно растёт 🌲
+                Начни с "Фокуса" — вырасти дерево концентрации! 
+                А потом заполни "Дневник" — это поможет понять себя лучше 🌲
               </p>
             </div>
           </div>
         </motion.div>
       </div>
 
-      {/* Tool Modals - Lazy Loaded */}
+      {/* Tool Modals - только нужные! */}
       <Suspense fallback={<ToolLoader />}>
         <AnimatePresence>
           {activeTool === 'focus' && (
@@ -688,42 +591,6 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
             />
           )}
           
-          {activeTool === 'lifeskills' && (
-            <LifeSkillsModule
-              isOpen={true}
-              onClose={() => setActiveTool(null)}
-              onComplete={(xp, coins) => handleToolComplete('lifeskills', xp, coins)}
-            />
-          )}
-          
-          {activeTool === 'reflection' && (
-            <ReflectionJournal
-              isOpen={true}
-              onClose={() => setActiveTool(null)}
-              onComplete={(xp) => handleToolComplete('reflection', xp)}
-            />
-          )}
-          
-          {activeTool === 'pomodoro' && (
-            <PomodoroTimer 
-              isOpen={true}
-              onClose={() => setActiveTool(null)}
-              onSessionComplete={(type) => {
-                if (type === 'work') {
-                  handleToolComplete('pomodoro', 20);
-                }
-              }}
-            />
-          )}
-          
-          {activeTool === 'planner' && (
-            <PlannerTool
-              isOpen={true}
-              onClose={() => setActiveTool(null)}
-              onComplete={(xp) => handleToolComplete('planner', xp)}
-            />
-          )}
-          
           {activeTool === 'goals' && (
             <GoalsTool
               isOpen={true}
@@ -732,11 +599,12 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
             />
           )}
           
-          {activeTool === 'notes' && (
+          {/* Дневник = бывшие Заметки (включает функционал эмоций и рефлексии) */}
+          {activeTool === 'diary' && (
             <NotesTool
               isOpen={true}
               onClose={() => setActiveTool(null)}
-              onComplete={(xp) => handleToolComplete('notes', xp)}
+              onComplete={(xp) => handleToolComplete('diary', xp)}
             />
           )}
           
@@ -745,14 +613,6 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ user, onXpEarned, onNaviga
               isOpen={true}
               onClose={() => setActiveTool(null)}
               onComplete={() => handleToolComplete('balance', 30)}
-            />
-          )}
-          
-          {activeTool === 'emotions' && (
-            <EmotionDiary 
-              isOpen={true}
-              onClose={() => setActiveTool(null)}
-              onComplete={(xp) => handleToolComplete('emotions', xp)}
             />
           )}
         </AnimatePresence>
