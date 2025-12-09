@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, ChevronRight, RotateCcw, Sparkles, TrendingUp, TrendingDown, Award, Lightbulb, Calendar, ArrowRight, History } from 'lucide-react';
+import { X, Check, ChevronRight, RotateCcw, Sparkles, TrendingUp, TrendingDown, Award, Lightbulb, Calendar, ArrowRight, History, Flame, Trophy, Target, Star, Zap } from 'lucide-react';
 import { useSyncTool } from '../hooks/useSyncTool';
 
 interface BalanceWheelProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete?: (results: AreaScore[]) => void;
+  onXPGain?: (xp: number) => void;
 }
 
 interface AreaScore {
@@ -23,7 +24,66 @@ interface HistoryEntry {
   date: string;
   scores: AreaScore[];
   average: number;
+  xpEarned?: number;
 }
+
+interface Achievement {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+  unlocked: boolean;
+  unlockedAt?: string;
+}
+
+// 🎮 XP REWARDS SYSTEM
+const XP_REWARDS = {
+  completeWheel: 30,
+  improvement: 5,
+  perfectBalance: 50,
+  streak3Days: 20,
+  streak7Days: 50,
+  firstWheel: 100,
+  breakthrough: 30,
+};
+
+// 🏆 ACHIEVEMENTS
+const ACHIEVEMENTS_CONFIG: Omit<Achievement, 'unlocked' | 'unlockedAt'>[] = [
+  { id: 'first_wheel', name: 'Первый Баланс', emoji: '🎯', description: 'Заполни колесо впервые' },
+  { id: 'harmony', name: 'Гармония', emoji: '⚖️', description: 'Все сферы 7+' },
+  { id: 'perfectionist', name: 'Перфекционист', emoji: '🏆', description: 'Все сферы 10' },
+  { id: 'week_streak', name: 'Неделя Баланса', emoji: '🔥', description: '7 дней подряд' },
+  { id: 'month_streak', name: 'Мастер Баланса', emoji: '🌟', description: '30 дней подряд' },
+  { id: 'breakthrough', name: 'Прорыв', emoji: '💪', description: 'Улучши сферу на 3+ балла' },
+  { id: 'consistent', name: 'Стабильность', emoji: '📈', description: '4 недели подряд' },
+];
+
+// 🎨 KATYA INSIGHTS
+const KATYA_INSIGHTS = {
+  declining: [
+    "😟 Заметила, что {area} немного просела. Давай вместе разберёмся почему?",
+    "💭 {area} требует внимания. Может, стоит уделить ей больше времени?",
+    "🤔 Хм, {area} падает... Что произошло на этой неделе?",
+  ],
+  improving: [
+    "🎉 Вау! {area} растёт! Расскажи, что помогло?",
+    "💪 Отличный прогресс в {area}! Так держать!",
+    "✨ {area} на подъёме! Ты молодец!",
+  ],
+  weak: [
+    "💡 Фокус недели: {area}. Попробуй: {tip}",
+    "🎯 {area} — твоя зона роста. Маленькие шаги каждый день!",
+    "🌱 Давай вместе поработаем над {area}?",
+  ],
+  balanced: [
+    "⚖️ Отличный баланс! Продолжай в том же духе!",
+    "🌟 Все сферы в гармонии — это редкость!",
+    "👏 Впечатляющий результат! Ты настоящий мастер баланса!",
+  ],
+};
+
+// 🎨 CONFETTI COLORS
+const CONFETTI_COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#22c55e', '#3b82f6'];
 
 // 🎨 iOS 26 LIQUID GLASS - без фото, градиенты + эмодзи
 const LIFE_AREAS: Omit<AreaScore, 'score'>[] = [
@@ -105,23 +165,186 @@ const getScoreDescription = (score: number) => {
   return SCORE_DESCRIPTIONS.find(d => score >= d.min && score <= d.max) || SCORE_DESCRIPTIONS[2];
 };
 
-export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onComplete }) => {
+export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onComplete, onXPGain }) => {
   // 🔄 useSyncTool для автоматической синхронизации
   const { data: history, setData: setHistory } = useSyncTool<HistoryEntry[]>([], {
     storageKey: 'balance_wheel_history',
     debounceMs: 1000
   });
   
+  // 🏆 Достижения
+  const { data: achievements, setData: setAchievements } = useSyncTool<Achievement[]>(
+    ACHIEVEMENTS_CONFIG.map(a => ({ ...a, unlocked: false })),
+    { storageKey: 'balance_wheel_achievements', debounceMs: 1000 }
+  );
+  
+  // 🔥 Стрик
+  const { data: streakData, setData: setStreakData } = useSyncTool<{ count: number; lastDate: string }>( 
+    { count: 0, lastDate: '' },
+    { storageKey: 'balance_wheel_streak', debounceMs: 1000 }
+  );
+  
   // Определяем начальный экран на основе истории
-  const [step, setStep] = useState<'history' | 'intro' | 'scoring' | 'result' | 'compare'>('intro');
+  const [step, setStep] = useState<'history' | 'intro' | 'scoring' | 'result' | 'compare' | 'celebrate'>('intro');
   const [currentAreaIndex, setCurrentAreaIndex] = useState(0);
   const [scores, setScores] = useState<AreaScore[]>(
     LIFE_AREAS.map(area => ({ ...area, score: 5 }))
   );
   const [showTip, setShowTip] = useState(false);
+  const [earnedXP, setEarnedXP] = useState(0);
+  const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [katyaInsight, setKatyaInsight] = useState('');
   
   // Последняя запись в истории
   const lastEntry = useMemo(() => history.length > 0 ? history[0] : null, [history]);
+  
+  // 🔥 Расчёт стрика
+  const currentStreak = useMemo(() => {
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    
+    if (streakData.lastDate === today) {
+      return streakData.count;
+    } else if (streakData.lastDate === yesterday) {
+      return streakData.count; // Стрик сохраняется
+    }
+    return 0; // Стрик сброшен
+  }, [streakData]);
+  
+  // 🎯 Генерация инсайта от Кати
+  const generateKatyaInsight = useCallback((currentScores: AreaScore[], prevScores?: AreaScore[]) => {
+    const avgScore = currentScores.reduce((sum, s) => sum + s.score, 0) / currentScores.length;
+    const weakest = [...currentScores].sort((a, b) => a.score - b.score)[0];
+    
+    // Если есть предыдущие оценки - сравниваем
+    if (prevScores) {
+      const declining = currentScores.filter(s => {
+        const prev = prevScores.find(p => p.id === s.id);
+        return prev && s.score < prev.score - 1;
+      });
+      
+      const improving = currentScores.filter(s => {
+        const prev = prevScores.find(p => p.id === s.id);
+        return prev && s.score > prev.score + 1;
+      });
+      
+      if (declining.length > 0) {
+        const templates = KATYA_INSIGHTS.declining;
+        return templates[Math.floor(Math.random() * templates.length)]
+          .replace('{area}', declining[0].name);
+      }
+      
+      if (improving.length > 0) {
+        const templates = KATYA_INSIGHTS.improving;
+        return templates[Math.floor(Math.random() * templates.length)]
+          .replace('{area}', improving[0].name);
+      }
+    }
+    
+    // Проверяем баланс
+    if (avgScore >= 7 && currentScores.every(s => s.score >= 6)) {
+      const templates = KATYA_INSIGHTS.balanced;
+      return templates[Math.floor(Math.random() * templates.length)];
+    }
+    
+    // Рекомендация по слабой сфере
+    const templates = KATYA_INSIGHTS.weak;
+    return templates[Math.floor(Math.random() * templates.length)]
+      .replace('{area}', weakest.name)
+      .replace('{tip}', weakest.tip);
+  }, []);
+  
+  // 🏆 Проверка достижений
+  const checkAchievements = useCallback((currentScores: AreaScore[], prevScores?: AreaScore[]) => {
+    const newUnlocked: Achievement[] = [];
+    const updatedAchievements = [...achievements];
+    
+    const unlock = (id: string) => {
+      const idx = updatedAchievements.findIndex(a => a.id === id);
+      if (idx !== -1 && !updatedAchievements[idx].unlocked) {
+        updatedAchievements[idx] = { ...updatedAchievements[idx], unlocked: true, unlockedAt: new Date().toISOString() };
+        newUnlocked.push(updatedAchievements[idx]);
+      }
+    };
+    
+    // Первое колесо
+    if (history.length === 0) {
+      unlock('first_wheel');
+    }
+    
+    // Гармония - все сферы 7+
+    if (currentScores.every(s => s.score >= 7)) {
+      unlock('harmony');
+    }
+    
+    // Перфекционист - все сферы 10
+    if (currentScores.every(s => s.score === 10)) {
+      unlock('perfectionist');
+    }
+    
+    // Прорыв - улучшить сферу на 3+
+    if (prevScores) {
+      const hasBreakthrough = currentScores.some(s => {
+        const prev = prevScores.find(p => p.id === s.id);
+        return prev && s.score >= prev.score + 3;
+      });
+      if (hasBreakthrough) unlock('breakthrough');
+    }
+    
+    // Стрики
+    const newStreakCount = currentStreak + 1;
+    if (newStreakCount >= 7) unlock('week_streak');
+    if (newStreakCount >= 30) unlock('month_streak');
+    if (newStreakCount >= 28) unlock('consistent');
+    
+    if (newUnlocked.length > 0) {
+      setAchievements(updatedAchievements);
+    }
+    
+    return newUnlocked;
+  }, [achievements, history.length, currentStreak, setAchievements]);
+  
+  // 💰 Расчёт XP
+  const calculateXP = useCallback((currentScores: AreaScore[], prevScores?: AreaScore[], newAchievements: Achievement[] = []) => {
+    let xp = XP_REWARDS.completeWheel;
+    
+    // Первое колесо
+    if (history.length === 0) {
+      xp += XP_REWARDS.firstWheel;
+    }
+    
+    // Улучшения
+    if (prevScores) {
+      const improvements = currentScores.filter(s => {
+        const prev = prevScores.find(p => p.id === s.id);
+        return prev && s.score > prev.score;
+      }).length;
+      xp += improvements * XP_REWARDS.improvement;
+      
+      // Прорыв
+      const hasBreakthrough = currentScores.some(s => {
+        const prev = prevScores.find(p => p.id === s.id);
+        return prev && s.score >= prev.score + 3;
+      });
+      if (hasBreakthrough) xp += XP_REWARDS.breakthrough;
+    }
+    
+    // Идеальный баланс
+    if (currentScores.every(s => s.score >= 7)) {
+      xp += XP_REWARDS.perfectBalance;
+    }
+    
+    // Бонус за стрик
+    const newStreakCount = currentStreak + 1;
+    if (newStreakCount === 3) xp += XP_REWARDS.streak3Days;
+    if (newStreakCount === 7) xp += XP_REWARDS.streak7Days;
+    
+    // Бонус за достижения (по 20 XP за каждое)
+    xp += newAchievements.length * 20;
+    
+    return xp;
+  }, [history.length, currentStreak]);
   
   // При открытии: если есть история → показать её, иначе intro
   useEffect(() => {
@@ -153,23 +376,48 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
     } else {
       // Завершаем оценку
       const average = scores.reduce((sum, s) => sum + s.score, 0) / scores.length;
+      
+      // 🏆 Проверяем достижения
+      const prevScores = lastEntry?.scores;
+      const unlockedAchievements = checkAchievements(scores, prevScores);
+      setNewAchievements(unlockedAchievements);
+      
+      // 💰 Считаем XP
+      const xp = calculateXP(scores, prevScores, unlockedAchievements);
+      setEarnedXP(xp);
+      
+      // 🤖 Генерируем инсайт от Кати
+      const insight = generateKatyaInsight(scores, prevScores);
+      setKatyaInsight(insight);
+      
+      // 🔥 Обновляем стрик
+      const today = new Date().toDateString();
+      if (streakData.lastDate !== today) {
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        const newCount = streakData.lastDate === yesterday ? streakData.count + 1 : 1;
+        setStreakData({ count: newCount, lastDate: today });
+      }
+      
       const newEntry: HistoryEntry = {
         date: new Date().toISOString(),
         scores: [...scores],
         average,
+        xpEarned: xp,
       };
       
       // Сохраняем в историю (useSyncTool автоматически синхронизирует)
       setHistory(prev => [newEntry, ...prev].slice(0, 10));
       
-      // Показываем сравнение если есть предыдущая запись
-      if (lastEntry) {
-        setStep('compare');
-      } else {
-      setStep('result');
-      }
+      // 🎉 Показываем celebration
+      setShowConfetti(true);
+      setStep('celebrate');
       
+      // Отправляем XP
+      onXPGain?.(xp);
       onComplete?.(scores);
+      
+      // Убираем конфетти через 3 секунды
+      setTimeout(() => setShowConfetti(false), 3000);
     }
   };
 
@@ -282,12 +530,30 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
                 <h2 className="text-2xl font-black text-white mb-2">
                   Твой Баланс
                 </h2>
-                <p className="text-white/50 text-sm">
+                <p className="text-white/50 text-sm mb-4">
                   Последняя оценка: {new Date(lastEntry.date).toLocaleDateString('ru-RU', { 
                     day: 'numeric', 
                     month: 'long' 
                   })}
                 </p>
+                
+                {/* Stats */}
+                <div className="flex justify-center gap-3">
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-orange-500/20">
+                    <Flame size={14} className="text-orange-400" />
+                    <span className="text-white text-sm font-bold">{currentStreak}</span>
+                  </div>
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500/20">
+                    <Trophy size={14} className="text-amber-400" />
+                    <span className="text-white text-sm font-bold">{achievements.filter(a => a.unlocked).length}/{achievements.length}</span>
+                  </div>
+                  {lastEntry.xpEarned && (
+                    <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-500/20">
+                      <Zap size={14} className="text-purple-400" />
+                      <span className="text-white text-sm font-bold">+{lastEntry.xpEarned}</span>
+                    </div>
+                  )}
+                </div>
               </div>
               
               {/* Average score card */}
@@ -437,9 +703,28 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
               <h2 className="text-3xl font-black text-white text-center mb-3">
                 Колесо Баланса
               </h2>
-              <p className="text-white/60 text-center mb-8 px-4">
+              <p className="text-white/60 text-center mb-4 px-4">
                 Оцени 8 сфер жизни и узнай, где ты сейчас. Это займёт всего 2 минуты.
               </p>
+              
+              {/* Stats row */}
+              <div className="flex justify-center gap-4 mb-6">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                  <Flame size={18} className="text-orange-400" />
+                  <span className="text-white font-bold">{currentStreak}</span>
+                  <span className="text-white/50 text-sm">дней</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/20 border border-purple-500/30">
+                  <History size={18} className="text-purple-400" />
+                  <span className="text-white font-bold">{history.length}</span>
+                  <span className="text-white/50 text-sm">оценок</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                  <Trophy size={18} className="text-amber-400" />
+                  <span className="text-white font-bold">{achievements.filter(a => a.unlocked).length}</span>
+                  <span className="text-white/50 text-sm">🏆</span>
+                </div>
+              </div>
 
               {/* iOS 26 style preview grid */}
               <div className="grid grid-cols-4 gap-3 mb-8">
@@ -738,6 +1023,218 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
                 <Check size={18} />
                 Смотреть полный результат
               </motion.button>
+            </motion.div>
+          )}
+
+          {/* 🎉 CELEBRATE - новый экран с XP и достижениями */}
+          {step === 'celebrate' && (
+            <motion.div
+              key="celebrate"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="max-w-md mx-auto pt-8 text-center"
+            >
+              {/* Confetti effect */}
+              {showConfetti && (
+                <div className="fixed inset-0 pointer-events-none z-50">
+                  {[...Array(50)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-3 h-3 rounded-full"
+                      style={{
+                        background: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+                        left: `${Math.random() * 100}%`,
+                        top: -20,
+                      }}
+                      animate={{
+                        y: [0, window.innerHeight + 50],
+                        x: [0, (Math.random() - 0.5) * 200],
+                        rotate: [0, 360 * (Math.random() > 0.5 ? 1 : -1)],
+                        opacity: [1, 0],
+                      }}
+                      transition={{
+                        duration: 2 + Math.random() * 2,
+                        delay: Math.random() * 0.5,
+                        ease: "easeOut",
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Animated emoji */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: [0, 1.2, 1] }}
+                transition={{ duration: 0.5, type: "spring" }}
+                className="text-8xl mb-6"
+              >
+                🎉
+              </motion.div>
+
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-3xl font-black text-white mb-2"
+              >
+                Отлично!
+              </motion.h2>
+              
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-white/60 mb-8"
+              >
+                Ты оценил свой баланс
+              </motion.p>
+
+              {/* XP Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="p-6 rounded-3xl mb-6"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(99,102,241,0.3) 0%, rgba(139,92,246,0.2) 100%)',
+                  border: '1px solid rgba(99,102,241,0.3)',
+                }}
+              >
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <Zap size={32} className="text-amber-400" />
+                  <span className="text-5xl font-black text-white">+{earnedXP}</span>
+                  <span className="text-2xl text-white/60">XP</span>
+                </div>
+                
+                {/* XP breakdown */}
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between text-white/50">
+                    <span>Заполнение колеса</span>
+                    <span>+{XP_REWARDS.completeWheel}</span>
+                  </div>
+                  {history.length === 1 && (
+                    <div className="flex justify-between text-amber-400">
+                      <span>🎯 Первое колесо!</span>
+                      <span>+{XP_REWARDS.firstWheel}</span>
+                    </div>
+                  )}
+                  {scores.every(s => s.score >= 7) && (
+                    <div className="flex justify-between text-emerald-400">
+                      <span>⚖️ Идеальный баланс!</span>
+                      <span>+{XP_REWARDS.perfectBalance}</span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Streak */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="flex items-center justify-center gap-3 p-4 rounded-2xl mb-6"
+                style={{
+                  background: 'rgba(251,146,60,0.15)',
+                  border: '1px solid rgba(251,146,60,0.3)',
+                }}
+              >
+                <Flame size={28} className="text-orange-400" />
+                <div className="text-left">
+                  <div className="text-white font-bold">{currentStreak + 1} дней подряд!</div>
+                  <div className="text-white/50 text-xs">Продолжай каждую неделю</div>
+                </div>
+              </motion.div>
+
+              {/* New Achievements */}
+              {newAchievements.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="space-y-3 mb-6"
+                >
+                  <div className="text-white/50 text-sm flex items-center justify-center gap-2">
+                    <Trophy size={16} className="text-amber-400" />
+                    Новые достижения
+                  </div>
+                  {newAchievements.map((a, i) => (
+                    <motion.div
+                      key={a.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.7 + i * 0.1 }}
+                      className="p-4 rounded-2xl flex items-center gap-3"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(245,158,11,0.1) 100%)',
+                        border: '1px solid rgba(251,191,36,0.3)',
+                      }}
+                    >
+                      <span className="text-3xl">{a.emoji}</span>
+                      <div className="text-left flex-1">
+                        <div className="text-white font-bold">{a.name}</div>
+                        <div className="text-white/50 text-xs">{a.description}</div>
+                      </div>
+                      <span className="text-amber-400 font-bold">+20 XP</span>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+
+              {/* Katya Insight */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                className="p-4 rounded-2xl mb-6 text-left"
+                style={{
+                  background: 'rgba(139,92,246,0.15)',
+                  border: '1px solid rgba(139,92,246,0.3)',
+                }}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-purple-500/30 flex items-center justify-center shrink-0">
+                    <span className="text-lg">👩‍🦰</span>
+                  </div>
+                  <div>
+                    <div className="text-white/50 text-xs mb-1">Катя говорит:</div>
+                    <p className="text-white text-sm">{katyaInsight}</p>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Actions */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.9 }}
+                className="flex gap-3"
+              >
+                <button
+                  onClick={() => setStep('result')}
+                  className="flex-1 py-4 rounded-2xl font-bold text-white/70"
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                  }}
+                >
+                  Подробнее
+                </button>
+                <motion.button
+                  onClick={onClose}
+                  className="flex-1 py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
+                  style={{
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    boxShadow: '0 8px 32px rgba(99,102,241,0.4)',
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Check size={18} />
+                  Готово
+                </motion.button>
+              </motion.div>
             </motion.div>
           )}
 

@@ -6,6 +6,8 @@ import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Heart, Za
 import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
 import { ModernLessonView } from './ModernLessonView';
+import { FocusNinjaLesson } from './FocusNinjaLesson';
+import { BatteryLesson } from './BatteryLesson';
 import { MemoryGame } from './MemoryGame';
 import { ShopView } from './ShopView';
 import { AchievementsView } from './AchievementsView';
@@ -61,6 +63,8 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   // TikTok-style lesson mode (modern view)
   const [useTikTokMode, setUseTikTokMode] = useState(true); // Default to new modern view
   const [showModernLesson, setShowModernLesson] = useState(false);
+  // Interactive Quest format for specific lessons (t3)
+  const [showQuestLesson, setShowQuestLesson] = useState(false);
 
   // Katya motivation video after lesson completion
   const { showMotivation, lessonTitle, triggerMotivation, closeMotivation } = useKatyaMotivation();
@@ -231,7 +235,11 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       if (isLocked) return; 
       hapticMedium(); // 📳 Вибрация при выборе урока
       setSelectedTask(task);
-      if (useTikTokMode) {
+      
+      // Урок t3 использует новый интерактивный квест-формат
+      if (task.id === 't3') {
+        setShowQuestLesson(true);
+      } else if (useTikTokMode) {
         setShowModernLesson(true);
       }
   };
@@ -313,6 +321,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
 
     // 9. Close lesson view
     setShowModernLesson(false);
+    setShowQuestLesson(false);
     setSelectedTask(null);
   };
 
@@ -1327,8 +1336,34 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       </div>
 
       {/* MODALS */}
+      {/* Focus Ninja lesson format for lesson t3 */}
+      {selectedTask && selectedTask.id === 't3' && showQuestLesson && (
+        <FocusNinjaLesson
+            task={selectedTask}
+            isOpen={showQuestLesson}
+            onClose={() => {
+              setShowQuestLesson(false);
+              setSelectedTask(null);
+            }}
+            onComplete={() => handleLessonComplete(selectedTask)}
+        />
+      )}
+
+      {/* Battery lesson format for lesson t4 */}
+      {selectedTask && selectedTask.id === 't4' && showQuestLesson && (
+        <BatteryLesson
+            task={selectedTask}
+            isOpen={showQuestLesson}
+            onClose={() => {
+              setShowQuestLesson(false);
+              setSelectedTask(null);
+            }}
+            onComplete={() => handleLessonComplete(selectedTask)}
+        />
+      )}
+
       {/* Modern TikTok-style lesson view */}
-      {selectedTask && useTikTokMode && showModernLesson && (
+      {selectedTask && useTikTokMode && showModernLesson && selectedTask.id !== 't3' && selectedTask.id !== 't4' && (
         <ModernLessonView
             task={selectedTask}
             isOpen={showModernLesson}
@@ -1341,7 +1376,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       )}
       
       {/* Classic lesson view */}
-      {selectedTask && (!useTikTokMode || !showModernLesson) && (
+      {selectedTask && (!useTikTokMode || !showModernLesson) && !showQuestLesson && (
         <TaskModal 
             task={selectedTask} 
             isOpen={!!selectedTask && !showModernLesson} 
