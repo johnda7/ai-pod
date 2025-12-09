@@ -8,6 +8,7 @@ import {
   Calendar, TrendingUp, Zap
 } from 'lucide-react';
 import { useSyncTool } from '../hooks/useSyncTool';
+import { premiumNote, premiumClick, premiumSuccess, hapticLight } from '../services/telegramService';
 
 interface NotesToolProps {
   isOpen: boolean;
@@ -183,7 +184,8 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
     const isFirstNoteToday = stats.lastNoteDate !== today;
     
     if (editingNote) {
-      // Обновление существующей заметки
+      // 🎵 Обновление существующей заметки
+      hapticLight();
       setNotes(notes.map(note => 
         note.id === editingNote.id 
           ? { 
@@ -248,6 +250,8 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
       if (totalNotes === 50) xpEarned += 50;
       if (totalNotes === 100) xpEarned += 100;
       
+      // 🎵 Premium feedback при создании заметки!
+      premiumNote();
       awardXP(xpEarned, 'Новая заметка');
     }
     
@@ -283,6 +287,7 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
   };
 
   const togglePin = (id: string) => {
+    hapticLight();
     setNotes(notes.map(note => 
       note.id === id ? { ...note, isPinned: !note.isPinned } : note
     ));
@@ -368,20 +373,20 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
     
     // Применяем поиск
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase();
       result = result.filter(note => 
-        note.title.toLowerCase().includes(query) ||
-        note.content.toLowerCase().includes(query) ||
-        note.tags.some(tag => tag.toLowerCase().includes(query))
-      );
+      note.title.toLowerCase().includes(query) ||
+      note.content.toLowerCase().includes(query) ||
+      note.tags.some(tag => tag.toLowerCase().includes(query))
+    );
     }
     
     // Сортировка: закреплённые сверху, потом по дате
     return result.sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      return b.updatedAt - a.updatedAt;
-    });
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return b.updatedAt - a.updatedAt;
+  });
   }, [notes, searchQuery, activeFilter]);
 
   const formatDate = (timestamp: number) => {
@@ -489,29 +494,29 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
                 >
                   <Award size={14} className="text-purple-400" />
                   <span className="text-white/80 text-sm font-medium">{stats.totalXP}</span>
-                </div>
-                
-                <button
-                  onClick={onClose}
-                  className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-                >
-                  <X size={20} className="text-white" />
-                </button>
+              </div>
+              
+              <button
+                onClick={onClose}
+                className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+              >
+                <X size={20} className="text-white" />
+              </button>
               </div>
             </div>
 
             {/* Search */}
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Поиск по заметкам..."
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-white placeholder-white/30 text-sm"
-                />
-              </div>
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Поиск по заметкам..."
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-white placeholder-white/30 text-sm"
+              />
+            </div>
               
               {/* Filter Button */}
               <button
@@ -581,7 +586,7 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
                 <div className="flex items-center justify-center gap-2 text-orange-400 text-sm">
                   <Flame size={16} />
                   <span>Веди дневник каждый день и получай бонусы!</span>
-                </div>
+              </div>
               </motion.div>
 
               {/* Templates */}
@@ -617,25 +622,25 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
                   <p className="text-white/40">Ничего не найдено</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
                   {filteredNotes.map((note, index) => {
-                    const color = NOTE_COLORS.find(c => c.id === note.color) || NOTE_COLORS[0];
-                    
-                    return (
-                      <motion.div
-                        key={note.id}
-                        layout
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                const color = NOTE_COLORS.find(c => c.id === note.color) || NOTE_COLORS[0];
+                
+                return (
+                  <motion.div
+                    key={note.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: index * 0.03 }}
-                        onClick={() => editNote(note)}
+                    onClick={() => editNote(note)}
                         className="rounded-2xl p-4 cursor-pointer transition-all active:scale-[0.98] relative overflow-hidden group"
-                        style={{
-                          background: color.bg,
-                          border: `1px solid ${color.border}`,
-                          minHeight: '140px',
-                        }}
-                      >
+                    style={{
+                      background: color.bg,
+                      border: `1px solid ${color.border}`,
+                      minHeight: '140px',
+                    }}
+                  >
                         {/* Color accent line */}
                         <div 
                           className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
@@ -652,34 +657,34 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
                         <span className="text-lg mb-1 block">{note.emoji || '📝'}</span>
                         
                         <h4 className="text-white font-bold text-sm mb-1 line-clamp-1">
-                          {note.title}
-                        </h4>
-                        
+                      {note.title}
+                    </h4>
+                    
                         <p className="text-white/60 text-xs line-clamp-3 mb-3">
                           {note.content.replace(/[#*☐☑>\[\]]/g, '').slice(0, 100)}
-                        </p>
+                    </p>
+                    
+                    <div className="absolute bottom-3 left-4 right-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-white/30 text-[10px] flex items-center gap-1">
+                          <Clock size={10} />
+                          {formatDate(note.updatedAt)}
+                        </span>
                         
-                        <div className="absolute bottom-3 left-4 right-4">
-                          <div className="flex items-center justify-between">
-                            <span className="text-white/30 text-[10px] flex items-center gap-1">
-                              <Clock size={10} />
-                              {formatDate(note.updatedAt)}
-                            </span>
-                            
-                            {note.tags.length > 0 && (
-                              <span 
-                                className="text-[10px] px-1.5 py-0.5 rounded"
-                                style={{ background: color.accent + '30', color: color.accent }}
-                              >
-                                #{note.tags[0]}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
+                        {note.tags.length > 0 && (
+                          <span 
+                            className="text-[10px] px-1.5 py-0.5 rounded"
+                            style={{ background: color.accent + '30', color: color.accent }}
+                          >
+                            #{note.tags[0]}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
               )}
             </>
           )}
@@ -782,15 +787,15 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
                         >
                           <Star size={18} className={editingNote.isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-white/50'} />
                         </button>
-                        <button
-                          onClick={() => {
-                            deleteNote(editingNote.id);
-                            resetEditor();
-                          }}
-                          className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center"
-                        >
-                          <Trash2 size={18} className="text-red-400" />
-                        </button>
+                      <button
+                        onClick={() => {
+                          deleteNote(editingNote.id);
+                          resetEditor();
+                        }}
+                        className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center"
+                      >
+                        <Trash2 size={18} className="text-red-400" />
+                      </button>
                       </>
                     )}
                     <button
@@ -810,17 +815,17 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
                 {/* Color & Emoji Picker */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex gap-2">
-                    {NOTE_COLORS.map((color) => (
-                      <button
-                        key={color.id}
-                        onClick={() => setNoteColor(color.id)}
-                        className={`w-8 h-8 rounded-lg transition-all ${
-                          noteColor === color.id ? 'ring-2 ring-white scale-110' : ''
-                        }`}
-                        style={{ background: color.accent }}
+                  {NOTE_COLORS.map((color) => (
+                    <button
+                      key={color.id}
+                      onClick={() => setNoteColor(color.id)}
+                      className={`w-8 h-8 rounded-lg transition-all ${
+                        noteColor === color.id ? 'ring-2 ring-white scale-110' : ''
+                      }`}
+                      style={{ background: color.accent }}
                         title={color.name}
-                      />
-                    ))}
+                    />
+                  ))}
                   </div>
                   
                   <button
@@ -927,13 +932,13 @@ export const NotesTool: React.FC<NotesToolProps> = ({ isOpen, onClose, onComplet
                     dangerouslySetInnerHTML={{ __html: renderMarkdown(noteContent) }}
                   />
                 ) : (
-                  <textarea
-                    value={noteContent}
-                    onChange={(e) => setNoteContent(e.target.value)}
-                    placeholder="Начни писать..."
+                <textarea
+                  value={noteContent}
+                  onChange={(e) => setNoteContent(e.target.value)}
+                  placeholder="Начни писать..."
                     className="w-full bg-transparent text-white/80 placeholder-white/30 outline-none resize-none min-h-[300px] leading-relaxed"
-                    autoFocus
-                  />
+                  autoFocus
+                />
                 )}
 
                 {/* Tags */}

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, ChevronRight, RotateCcw, Sparkles, TrendingUp, TrendingDown, Award, Lightbulb, Calendar, ArrowRight, History, Flame, Trophy, Target, Star, Zap } from 'lucide-react';
 import { useSyncTool } from '../hooks/useSyncTool';
+import { premiumSuccess, premiumClick, hapticMedium, hapticLight, soundLevelUp } from '../services/telegramService';
 
 interface BalanceWheelProps {
   isOpen: boolean;
@@ -364,16 +365,25 @@ export const BalanceWheel: React.FC<BalanceWheelProps> = ({ isOpen, onClose, onC
   const scoreDesc = getScoreDescription(currentScore);
 
   const handleScoreChange = (value: number) => {
+    // 🎵 Haptic для слайдера оценки
+    hapticLight();
     setScores(prev => prev.map(s => 
       s.id === currentArea.id ? { ...s, score: value } : s
     ));
   };
 
   const handleNext = () => {
+    // 🎵 Haptic при переходе к следующей сфере
+    hapticMedium();
+    
     if (currentAreaIndex < LIFE_AREAS.length - 1) {
       setCurrentAreaIndex(prev => prev + 1);
       setShowTip(false);
     } else {
+      // 🎵 Premium feedback при завершении колеса!
+      premiumSuccess();
+      soundLevelUp();
+      
       // Завершаем оценку
       const average = scores.reduce((sum, s) => sum + s.score, 0) / scores.length;
       
