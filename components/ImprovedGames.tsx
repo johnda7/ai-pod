@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { KatyaCharacter } from './KatyaCharacter';
 import { hapticLight, hapticSuccess, hapticError, hapticMedium } from '../services/telegramService';
-import { playCorrectSound, playWrongSound, playCompleteSound, playClickSound } from '../services/soundService';
+import { playCorrectSound, playWrongSound, playCompleteSound, playClickSound, playComboSound } from '../services/soundService';
 
 // ============================================
 // GAME 1: BUBBLE POP - Лопай пузыри с позитивными мыслями
@@ -121,7 +121,12 @@ export const BubblePopGame: React.FC<BubblePopProps> = ({
       hapticSuccess(); // 📳 Успех!
       playCorrectSound(); // 🔊 Звук успеха
       setScore(s => s + 1 + Math.min(combo, 5));
-      setCombo(c => c + 1);
+      const newCombo = combo + 1;
+      setCombo(newCombo);
+      // 🔊 Комбо звук при 2+ подряд!
+      if (newCombo >= 2) {
+        setTimeout(() => playComboSound(newCombo), 100);
+      }
       setShowFeedback({ text: '+' + (1 + Math.min(combo, 5)), type: 'good' });
     } else {
       // Pop negative - also good but less points
