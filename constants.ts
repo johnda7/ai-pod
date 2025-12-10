@@ -4854,41 +4854,41 @@ export const LECTURES: Lecture[] = [
   }
 ];
 
-// Медитации (минимум рекламы) - источники: GreatMeditation, Honest Guys, relaxdaily
+// 🧘 Медитации — таймер + картинка + фоновые звуки (Web Audio API)
+// Без YouTube — работает в России и офлайн!
 export const MEDITATIONS: Meditation[] = [
-  // Сон - без голоса, только музыка (minimal/no ads)
-  { id: 'm1', title: 'Быстрый сон', category: 'SLEEP', duration: '10 мин', color: 'bg-indigo-500', youtubeId: 'rvaqPPjtxng' }, // Sleep 10min - GreatMeditation
-  { id: 'm2', title: 'Глубокий отдых', category: 'SLEEP', duration: '20 мин', color: 'bg-indigo-600', youtubeId: '1ZYbU82GVz4' }, // Deep sleep - Soothing Relaxation
-  { id: 'm3', title: 'Ночные мысли', category: 'SLEEP', duration: '15 мин', color: 'bg-purple-600', youtubeId: 'tz82xbLvK_k' }, // Sleep piano - Meditation Relax
-  { id: 'm4', title: 'Сонное царство', category: 'SLEEP', duration: '30 мин', color: 'bg-violet-600', youtubeId: 'aXItOY0sLRY' }, // 30min sleep - Yellow Brick Cinema
-  // Фокус - концентрация (minimal ads)
-  { id: 'm5', title: 'Фокус перед экзаменом', category: 'FOCUS', duration: '5 мин', color: 'bg-yellow-500', youtubeId: 'poAk9XgK7Cs' }, // 5min focus - GreatMeditation
-  { id: 'm6', title: 'Утренняя ясность', category: 'FOCUS', duration: '7 мин', color: 'bg-amber-500', youtubeId: 'jPpUNAFHgxM' }, // Morning - Study Music
-  { id: 'm7', title: 'Практика тишины', category: 'FOCUS', duration: '15 мин', color: 'bg-yellow-600', youtubeId: 'MIr3RsUWrdo' }, // Silent - relaxdaily
-  { id: 'm8', title: 'Ясный ум', category: 'FOCUS', duration: '10 мин', color: 'bg-orange-500', youtubeId: '2OEL4P1Rz04' }, // Clear mind - Quiet Quest
-  // Спокойствие (minimal ads)
-  { id: 'm9', title: 'Снять тревогу', category: 'ANXIETY', duration: '7 мин', color: 'bg-emerald-500', youtubeId: 'O-6f5wQXSu8' }, // Anxiety - Goodful
-  { id: 'm10', title: 'Заземление', category: 'ANXIETY', duration: '5 мин', color: 'bg-teal-500', youtubeId: 'SEfs5TJZ6Nk' }, // Grounding - Great Meditation
-  { id: 'm11', title: 'Отпустить страх', category: 'ANXIETY', duration: '10 мин', color: 'bg-green-600', youtubeId: 'z0GtmPnqAd8' }, // Release fear - MindfulPeace
-  { id: 'm12', title: 'Внутренний покой', category: 'ANXIETY', duration: '12 мин', color: 'bg-cyan-600', youtubeId: 'lE6RYpe9IT0' }, // Inner peace - Lavendaire
-  // Энергия (minimal ads)
-  { id: 'm13', title: 'Заряд энергии', category: 'ENERGY', duration: '5 мин', color: 'bg-rose-500', youtubeId: '86m4RC_ADEY' }, // Energy 5min - GreatMeditation
-  { id: 'm14', title: 'Перезагрузка', category: 'ENERGY', duration: '3 мин', color: 'bg-red-500', youtubeId: 'inpok4MKVLM' }, // Quick refresh - Goodful
-  { id: 'm15', title: 'Утренний буст', category: 'ENERGY', duration: '8 мин', color: 'bg-pink-500', youtubeId: 'itZMM5gCboo' }, // Morning energy - relaxdaily
-  { id: 'm16', title: 'Сила момента', category: 'ENERGY', duration: '6 мин', color: 'bg-fuchsia-500', youtubeId: 'cEqZthCaMpo' }, // Power of now - GreatMeditation
+  // Сон
+  { id: 'm1', title: 'Быстрый сон', category: 'SLEEP', duration: '10 мин', color: 'bg-indigo-500' },
+  { id: 'm2', title: 'Глубокий отдых', category: 'SLEEP', duration: '20 мин', color: 'bg-indigo-600' },
+  { id: 'm3', title: 'Ночные мысли', category: 'SLEEP', duration: '15 мин', color: 'bg-purple-600' },
+  { id: 'm4', title: 'Сонное царство', category: 'SLEEP', duration: '30 мин', color: 'bg-violet-600' },
+  // Фокус
+  { id: 'm5', title: 'Фокус перед экзаменом', category: 'FOCUS', duration: '5 мин', color: 'bg-yellow-500' },
+  { id: 'm6', title: 'Утренняя ясность', category: 'FOCUS', duration: '7 мин', color: 'bg-amber-500' },
+  { id: 'm7', title: 'Практика тишины', category: 'FOCUS', duration: '15 мин', color: 'bg-yellow-600' },
+  { id: 'm8', title: 'Ясный ум', category: 'FOCUS', duration: '10 мин', color: 'bg-orange-500' },
+  // Спокойствие
+  { id: 'm9', title: 'Снять тревогу', category: 'ANXIETY', duration: '7 мин', color: 'bg-emerald-500' },
+  { id: 'm10', title: 'Заземление', category: 'ANXIETY', duration: '5 мин', color: 'bg-teal-500' },
+  { id: 'm11', title: 'Отпустить страх', category: 'ANXIETY', duration: '10 мин', color: 'bg-green-600' },
+  { id: 'm12', title: 'Внутренний покой', category: 'ANXIETY', duration: '12 мин', color: 'bg-cyan-600' },
+  // Энергия
+  { id: 'm13', title: 'Заряд энергии', category: 'ENERGY', duration: '5 мин', color: 'bg-rose-500' },
+  { id: 'm14', title: 'Перезагрузка', category: 'ENERGY', duration: '3 мин', color: 'bg-red-500' },
+  { id: 'm15', title: 'Утренний буст', category: 'ENERGY', duration: '8 мин', color: 'bg-pink-500' },
+  { id: 'm16', title: 'Сила момента', category: 'ENERGY', duration: '6 мин', color: 'bg-fuchsia-500' },
 ];
 
-// Звуковые ландшафты для фона (10+ часов, минимум рекламы)
-// Источники: johnnielawson, TheSilentWatcher, relaxdaily - каналы с минимальной/без рекламы
+// 🎵 Звуковые ландшафты — Web Audio API (работает в России и офлайн!)
 export const SOUNDSCAPES: Soundscape[] = [
-    { id: 'snd1', title: 'Дождь', iconType: 'RAIN', color: 'bg-blue-600', youtubeId: 'q76bMs-NwRk' }, // Rain 10h - johnnielawson
-    { id: 'snd2', title: 'Лес', iconType: 'FOREST', color: 'bg-green-600', youtubeId: 'xNN7iTA57jM' }, // Forest Birds 10h - TheSilentWatcher
-    { id: 'snd3', title: 'Океан', iconType: 'OCEAN', color: 'bg-cyan-600', youtubeId: 'bn9F19Hi1Lk' }, // Ocean Waves 10h - johnnielawson
-    { id: 'snd4', title: 'Костёр', iconType: 'FIRE', color: 'bg-orange-600', youtubeId: 'UgHKb_7884o' }, // Fireplace 10h - TheSilentWatcher
-    { id: 'snd5', title: 'Горы', iconType: 'WIND', color: 'bg-slate-500', youtubeId: '2PV1L3hOZ1c' }, // Wind Nature 3h - relaxdaily
-    { id: 'snd6', title: 'Кофейня', iconType: 'CAFE', color: 'bg-amber-700', youtubeId: 'h2zkV-l_TbY' }, // Coffee Shop 3h - Calmed By Nature
-    { id: 'snd7', title: 'Гроза', iconType: 'THUNDER', color: 'bg-indigo-600', youtubeId: 'gVKEM4K8J8A' }, // Thunderstorm 8h - johnnielawson
-    { id: 'snd8', title: 'Ночь', iconType: 'NIGHT', color: 'bg-purple-700', youtubeId: 'eKmRkS1os7k' }, // Night Crickets 8h - TheSilentWatcher
+  { id: 'snd1', title: 'Дождь', iconType: 'RAIN', color: 'bg-blue-600' },
+  { id: 'snd2', title: 'Лес', iconType: 'FOREST', color: 'bg-green-600' },
+  { id: 'snd3', title: 'Океан', iconType: 'OCEAN', color: 'bg-cyan-600' },
+  { id: 'snd4', title: 'Костёр', iconType: 'FIRE', color: 'bg-orange-600' },
+  { id: 'snd5', title: 'Горы', iconType: 'WIND', color: 'bg-slate-500' },
+  { id: 'snd6', title: 'Кофейня', iconType: 'CAFE', color: 'bg-amber-700' },
+  { id: 'snd7', title: 'Гроза', iconType: 'THUNDER', color: 'bg-indigo-600' },
+  { id: 'snd8', title: 'Ночь', iconType: 'NIGHT', color: 'bg-purple-700' },
 ];
 
 // Мотивационные цитаты (обновляются каждый день)
