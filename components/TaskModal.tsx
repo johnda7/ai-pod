@@ -181,6 +181,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
 
   const handleQuizSubmit = (index: number) => {
       if (feedbackStatus !== 'NONE' || currentSlide.type !== 'QUIZ') return;
+      hapticLight(); // 📳 Вибрация при выборе
+      playClickSound(); // 🔊 Звук клика
       setSelectedOption(index);
       
       if (index === currentSlide.correctIndex) {
@@ -192,6 +194,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
 
   const handlePollSubmit = (index: number) => {
     if (feedbackStatus !== 'NONE' || currentSlide.type !== 'POLL') return;
+    hapticLight(); // 📳 Вибрация при выборе
+    playClickSound(); // 🔊 Звук клика
     setSelectedOption(index);
     handleCorrect();
   };
@@ -203,6 +207,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
       if (!item) return; // Safety check
 
       hapticSelection(); // 📳 Свайп выбора
+      playClickSound(); // 🔊 Звук свайпа
       // Trigger animation
       setSwipeDirection(direction);
 
@@ -249,6 +254,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
   // --- PUZZLE LOGIC ---
   const handlePuzzleWordClick = (word: string, fromBank: boolean) => {
       if (feedbackStatus !== 'NONE') return;
+      
+      hapticLight(); // 📳 Вибрация при клике на слово
+      playClickSound(); // 🔊 Звук клика
 
       if (fromBank) {
           setPuzzleWordBank(prev => {
@@ -290,6 +298,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
   const handleMatching = (item: PairItem, side: 'LEFT' | 'RIGHT') => {
       if (currentSlide.type !== 'MATCHING') return;
       
+      hapticLight(); // 📳 Вибрация при выборе
+      playClickSound(); // 🔊 Звук клика
+      
       if (side === 'LEFT') {
           setSelectedPairId(item.id);
       } else {
@@ -302,6 +313,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
 
               if (newMatched.length === currentSlide.pairs.length) {
                   handleCorrect();
+              } else {
+                  // 🔊 Звук при успешной паре (не последней)
+                  hapticMedium();
+                  playCorrectSound();
               }
           } else {
               handleWrong();
@@ -313,6 +328,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
   const handleInputSubmit = () => {
       if (currentSlide.type !== 'INPUT') return;
       if (inputText.length < (currentSlide.minLength || 3)) return;
+      hapticMedium(); // 📳 Вибрация при отправке
       handleCorrect();
   };
 

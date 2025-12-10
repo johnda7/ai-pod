@@ -5,6 +5,8 @@ import {
   Sparkles, Heart, Flame, Play, RefreshCw, ArrowRight, Gift
 } from 'lucide-react';
 import { KatyaCharacter } from './KatyaCharacter';
+import { hapticLight, hapticSuccess, hapticError, hapticMedium } from '../services/telegramService';
+import { playCorrectSound, playWrongSound, playCompleteSound, playClickSound } from '../services/soundService';
 
 // ============================================
 // GAME 1: BUBBLE POP - Лопай пузыри с позитивными мыслями
@@ -111,8 +113,13 @@ export const BubblePopGame: React.FC<BubblePopProps> = ({
   }, [gameState]);
 
   const handleBubblePop = (bubble: Bubble) => {
+    hapticLight(); // 📳 Вибрация при клике
+    playClickSound(); // 🔊 Звук лопания
+    
     if (bubble.isPositive) {
       // Pop positive - GOOD!
+      hapticSuccess(); // 📳 Успех!
+      playCorrectSound(); // 🔊 Звук успеха
       setScore(s => s + 1 + Math.min(combo, 5));
       setCombo(c => c + 1);
       setShowFeedback({ text: '+' + (1 + Math.min(combo, 5)), type: 'good' });
@@ -385,16 +392,24 @@ export const EmotionMatchGame: React.FC<EmotionMatchProps> = ({ onComplete }) =>
   }, [gameState, currentRound, startRound]);
 
   const handleAnswer = (emotion: typeof EMOTIONS[0]) => {
+    hapticLight(); // 📳 Вибрация при выборе
+    playClickSound(); // 🔊 Звук клика
+    
     if (emotion.name === targetEmotion.name) {
+      hapticSuccess(); // 📳 Успех!
+      playCorrectSound(); // 🔊 Звук успеха
       setScore(s => s + 1);
       setFeedback('correct');
     } else {
+      hapticError(); // 📳 Ошибка
+      playWrongSound(); // 🔊 Звук ошибки
       setFeedback('wrong');
     }
 
     setTimeout(() => {
       if (currentRound + 1 >= totalRounds) {
         setGameState('won');
+        playCompleteSound(); // 🔊 Завершение игры!
         setTimeout(() => onComplete((score + (emotion.name === targetEmotion.name ? 1 : 0)) * 15), 2000);
       } else {
         setCurrentRound(r => r + 1);

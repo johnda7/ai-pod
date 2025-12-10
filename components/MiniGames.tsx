@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Target, Zap, Clock, Brain, CheckCircle, XCircle, Crosshair, Sparkles, Shield, Skull, Battery, Flame, Droplets, Ghost, Play, Smartphone, Bell, Gamepad2, BookOpen, AlertTriangle, RefreshCw, Trophy } from 'lucide-react';
 import { GameSlide } from '../types';
+import { hapticLight, hapticSuccess, hapticError, hapticMedium } from '../services/telegramService';
+import { playCorrectSound, playWrongSound, playCompleteSound, playClickSound } from '../services/soundService';
 
 interface MiniGameProps {
   config: GameSlide;
@@ -28,9 +30,13 @@ export const FocusDefender: React.FC<MiniGameProps> = ({ config, onComplete }) =
     if (timeLeft <= 0) {
       // Победа если набрали хотя бы 60% от цели
       if (score >= Math.floor(targetScore * 0.6)) {
+        hapticSuccess(); // 📳 Победа!
+        playCompleteSound(); // 🔊 Звук победы!
         setGameState('WON');
         setTimeout(() => onComplete(Math.max(score * 10, 50)), 1500); 
       } else {
+        hapticError(); // 📳 Проигрыш
+        playWrongSound(); // 🔊 Звук проигрыша
         setGameState('LOST');
       }
       return;
@@ -82,9 +88,14 @@ export const FocusDefender: React.FC<MiniGameProps> = ({ config, onComplete }) =
   const handleTargetClick = (e: React.MouseEvent | React.TouchEvent, id: number, type: 'DISTRACTION' | 'FOCUS') => {
     e.preventDefault();
     e.stopPropagation();
+    
+    hapticLight(); // 📳 Вибрация при клике
+    playClickSound(); // 🔊 Звук клика
 
     if (type === 'DISTRACTION') {
       // Правильный клик! +1 очко + бонус за комбо
+      hapticSuccess(); // 📳 Успех!
+      playCorrectSound(); // 🔊 Звук успеха
       const comboBonus = Math.min(combo, 3);
       setScore(s => s + 1 + comboBonus);
       setCombo(c => c + 1);
@@ -92,6 +103,8 @@ export const FocusDefender: React.FC<MiniGameProps> = ({ config, onComplete }) =
       setTimeout(() => setShowCombo(false), 500);
     } else {
       // Ошибка - только -1 очко (мягкий штраф)
+      hapticError(); // 📳 Ошибка
+      playWrongSound(); // 🔊 Звук ошибки
       setScore(s => Math.max(0, s - 1));
       setCombo(0);
     }

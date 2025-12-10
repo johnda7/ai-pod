@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import { Task, LessonSlide } from '../types';
 import { KatyaMentor } from './KatyaMentor';
-import { hapticSelection, hapticSuccess, hapticLight } from '../services/telegramService';
+import { hapticSelection, hapticSuccess, hapticLight, hapticError, hapticMedium } from '../services/telegramService';
+import { playCorrectSound, playWrongSound, playCompleteSound, playClickSound } from '../services/soundService';
 
 interface ModernLessonViewProps {
   task: Task;
@@ -80,6 +81,7 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
 
   const handleSwipe = useCallback((direction: 'up' | 'down') => {
     hapticSelection(); // 📳 Вибрация при свайпе
+    playClickSound(); // 🔊 Звук свайпа
     
     if (direction === 'up' && currentIndex < totalSlides - 1) {
       setCurrentIndex(prev => prev + 1);
@@ -89,6 +91,7 @@ export const ModernLessonView: React.FC<ModernLessonViewProps> = ({
       setProgress(0);
     } else if (direction === 'up' && currentIndex === totalSlides - 1) {
       hapticSuccess(); // 📳 Успех при завершении!
+      playCompleteSound(); // 🔊 Звук завершения!
       onComplete();
     }
   }, [currentIndex, totalSlides, onComplete]);

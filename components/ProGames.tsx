@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, RefreshCw, Trophy, Zap, Clock, Target, Sparkles, Star } from 'lucide-react';
+import { hapticLight, hapticSuccess, hapticError, hapticMedium } from '../services/telegramService';
+import { playCorrectSound, playWrongSound, playCompleteSound, playClickSound } from '../services/soundService';
 
 // ============================================
 // THERMITE GRID - Профессиональная игра с комбо
@@ -79,9 +81,13 @@ export const ThermiteGrid: React.FC<ThermiteGridProps> = ({
 
     if (timeLeft <= 0) {
       if (score >= targetScore) {
+        hapticSuccess(); // 📳 Победа!
+        playCompleteSound(); // 🔊 Звук победы!
         setGameState('won');
         setTimeout(() => onComplete(score * 10 + totalCombos * 50), 2000);
       } else {
+        hapticError(); // 📳 Проигрыш
+        playWrongSound(); // 🔊 Звук проигрыша
         setGameState('lost');
       }
       return;
@@ -109,6 +115,9 @@ export const ThermiteGrid: React.FC<ThermiteGridProps> = ({
 
     const cell = board[row][col];
     if (!cell.highlighted || cell.status === 'empty') return;
+    
+    hapticLight(); // 📳 Вибрация при клике
+    playClickSound(); // 🔊 Звук клика
 
     const now = Date.now();
     const timeSinceLastClick = now - lastClickTime;
@@ -146,6 +155,8 @@ export const ThermiteGrid: React.FC<ThermiteGridProps> = ({
 
     // Нет ходов = проигрыш
     if (highlightedCount === 0) {
+      hapticError(); // 📳 Ошибка
+      playWrongSound(); // 🔊 Звук проигрыша
       setIsOutOfMoves(true);
       setGameState('lost');
       return;
@@ -185,10 +196,16 @@ export const ThermiteGrid: React.FC<ThermiteGridProps> = ({
 
       // Победа!
       if (newScore >= targetScore) {
+        hapticSuccess(); // 📳 Победа!
+        playCompleteSound(); // 🔊 Звук победы!
         setGameState('won');
         setTimeout(() => onComplete(newScore * 10 + newTotalCombos * 50), 2000);
         return;
       }
+      
+      // 🔊 Звук при успешном попадании
+      hapticMedium();
+      playCorrectSound();
     } else {
       // Не уничтожили = сброс комбо
       newCombo = 0;
