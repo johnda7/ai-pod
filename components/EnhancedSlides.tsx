@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Zap, Target, Battery, Moon, Sparkles, Heart, Star, Trophy, ChevronRight, MessageCircle } from 'lucide-react';
+import { hapticLight, hapticSuccess, hapticError } from '../services/telegramService';
+import { playCorrectSound, playWrongSound, playClickSound, playSlideSound } from '../services/soundService';
 
 // Улучшенный слайд теории с анимациями
 interface TheorySlideProps {
@@ -178,9 +180,21 @@ export const EnhancedQuizSlide: React.FC<QuizSlideProps> = ({
   const handleSelect = (index: number) => {
     if (showResult) return;
     
+    hapticLight(); // 📳 Вибрация при выборе
+    playClickSound(); // 🔊 Звук клика
+    
     setSelectedIndex(index);
     setShowResult(true);
     setIsCorrect(index === correctIndex);
+    
+    // 🔊 Звук результата
+    if (index === correctIndex) {
+      hapticSuccess();
+      playCorrectSound();
+    } else {
+      hapticError();
+      playWrongSound();
+    }
     
     setTimeout(() => {
       if (index === correctIndex) {
