@@ -45,8 +45,60 @@ const MEDITATION_UNIQUE_IMAGES: Record<string, string> = {
   'm16': 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=200&h=200&fit=crop&q=50',
 };
 
+// 🧘 Подсказки для guided meditation по категориям
+const MEDITATION_PROMPTS: Record<string, string[]> = {
+  SLEEP: [
+    'Закрой глаза...',
+    'Сделай глубокий вдох...',
+    'Медленно выдохни...',
+    'Расслабь плечи...',
+    'Отпусти напряжение...',
+    'Представь тёплый свет...',
+    'Ты в безопасности...',
+    'Позволь себе отдохнуть...',
+    'Дыши ровно и спокойно...',
+    'Отпусти мысли дня...',
+  ],
+  FOCUS: [
+    'Сосредоточься на дыхании...',
+    'Вдох... концентрация...',
+    'Выдох... отпусти лишнее...',
+    'Ум становится яснее...',
+    'Ты здесь и сейчас...',
+    'Фокус на моменте...',
+    'Мысли приходят и уходят...',
+    'Возвращайся к дыханию...',
+    'Ясность и спокойствие...',
+    'Ты полностью присутствуешь...',
+  ],
+  ANXIETY: [
+    'Ты в безопасности...',
+    'Глубокий вдох... 4 секунды...',
+    'Задержи... 4 секунды...',
+    'Медленный выдох... 6 секунд...',
+    'Всё проходит...',
+    'Это временно...',
+    'Ты справишься...',
+    'Расслабь челюсть...',
+    'Опусти плечи...',
+    'С каждым выдохом легче...',
+  ],
+  ENERGY: [
+    'Вдохни энергию...',
+    'Почувствуй силу...',
+    'Ты полон жизни...',
+    'Энергия наполняет тело...',
+    'Каждый вдох = сила...',
+    'Ты готов к действию...',
+    'Бодрость и ясность...',
+    'Ты можешь всё...',
+    'Сила внутри тебя...',
+    'Вперёд к целям!',
+  ],
+};
+
 export const MeditationView: React.FC = () => {
-  const [activeSoundId, setActiveSoundId] = useState<string | null>(null);
+  const [activeSoundIds, setActiveSoundIds] = useState<string[]>([]); // 🎵 Микс звуков
   const [isPlaying, setIsPlaying] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -56,8 +108,12 @@ export const MeditationView: React.FC = () => {
   const [selectedMeditation, setSelectedMeditation] = useState<typeof MEDITATIONS[0] | null>(null);
   const [meditationPlaying, setMeditationPlaying] = useState(false);
   const [meditationSeconds, setMeditationSeconds] = useState(0);
+  const [currentPrompt, setCurrentPrompt] = useState<string>(''); // 🧘 Текущая подсказка
   
-  // Track meditation minutes for challenges
+  // Для обратной совместимости
+  const activeSoundId = activeSoundIds[0] || null;
+  
+  // Track meditation minutes for challenges + update total time
   useEffect(() => {
     if (!meditationPlaying) return;
     
@@ -74,6 +130,24 @@ export const MeditationView: React.FC = () => {
           
           localStorage.setItem('meditation_minutes_today', String(currentMinutes + 1));
           localStorage.setItem('meditation_last_date', today);
+          
+          // 📊 Обновляем общее время медитации (для профиля)
+          const totalMinutes = parseInt(localStorage.getItem('meditation_total_minutes') || '0', 10);
+          localStorage.setItem('meditation_total_minutes', String(totalMinutes + 1));
+          
+          // 🏆 Проверяем streak медитаций для достижения "Zen Master"
+          const streakDays = localStorage.getItem('meditation_streak_days') || '0';
+          const lastStreakDate = localStorage.getItem('meditation_streak_last_date');
+          const yesterday = new Date(Date.now() - 86400000).toDateString();
+          
+          if (lastStreakDate === yesterday) {
+            // Продолжаем streak
+            localStorage.setItem('meditation_streak_days', String(parseInt(streakDays, 10) + 1));
+          } else if (lastStreakDate !== today) {
+            // Начинаем новый streak
+            localStorage.setItem('meditation_streak_days', '1');
+          }
+          localStorage.setItem('meditation_streak_last_date', today);
         }
         return newSeconds;
       });
@@ -81,6 +155,28 @@ export const MeditationView: React.FC = () => {
     
     return () => clearInterval(interval);
   }, [meditationPlaying]);
+  
+  // 🧘 Подсказки во время медитации (каждые 8-12 секунд)
+  useEffect(() => {
+    if (!meditationPlaying || !selectedMeditation) {
+      setCurrentPrompt('');
+      return;
+    }
+    
+    const category = selectedMeditation.category;
+    const prompts = MEDITATION_PROMPTS[category] || MEDITATION_PROMPTS.FOCUS;
+    
+    // Показываем первую подсказку сразу
+    setCurrentPrompt(prompts[0]);
+    
+    const interval = setInterval(() => {
+      const randomIndex = Math.floor(Math.random() * prompts.length);
+      setCurrentPrompt(prompts[randomIndex]);
+      hapticLight(); // Мягкая вибрация при смене подсказки
+    }, 8000 + Math.random() * 4000); // 8-12 секунд
+    
+    return () => clearInterval(interval);
+  }, [meditationPlaying, selectedMeditation]);
   
   // Reset seconds when meditation changes
   useEffect(() => {
@@ -105,33 +201,39 @@ export const MeditationView: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // 🎵 Web Audio API для звуков (вместо YouTube - работает в России!)
+  // 🎵 Web Audio API для звуков — поддержка микса!
   useEffect(() => {
-    if (activeSound && isPlaying) {
-      // Маппинг iconType на SoundType
-      const soundTypeMap: Record<string, SoundType> = {
-        'RAIN': 'RAIN',
-        'FOREST': 'FOREST',
-        'OCEAN': 'OCEAN',
-        'FIRE': 'FIRE',
-        'WIND': 'WIND',
-        'CAFE': 'CAFE',
-        'THUNDER': 'THUNDER',
-        'NIGHT': 'NIGHT',
-      };
-      const soundType = soundTypeMap[activeSound.iconType];
-      if (soundType) {
-        ambientSoundService.play(soundType);
+    const soundTypeMap: Record<string, SoundType> = {
+      'RAIN': 'RAIN',
+      'FOREST': 'FOREST',
+      'OCEAN': 'OCEAN',
+      'FIRE': 'FIRE',
+      'WIND': 'WIND',
+      'CAFE': 'CAFE',
+      'THUNDER': 'THUNDER',
+      'NIGHT': 'NIGHT',
+    };
+    
+    if (activeSoundIds.length > 0 && isPlaying) {
+      // Воспроизводим все активные звуки
+      const activeSounds = activeSoundIds
+        .map(id => SOUNDSCAPES.find(s => s.id === id))
+        .filter(Boolean)
+        .map(s => soundTypeMap[s!.iconType])
+        .filter(Boolean);
+      
+      if (activeSounds.length > 0) {
+        ambientSoundService.playMultiple(activeSounds as SoundType[]);
       }
     } else {
-      ambientSoundService.stop();
+      ambientSoundService.fadeOut(); // Плавное затухание
     }
     
     // Cleanup при unmount
     return () => {
-      ambientSoundService.stop();
+      ambientSoundService.fadeOut();
     };
-  }, [activeSound, isPlaying]);
+  }, [activeSoundIds, isPlaying]);
 
   const filteredMeditations = selectedCategory 
     ? MEDITATIONS.filter(m => m.category === selectedCategory)
@@ -144,13 +246,26 @@ export const MeditationView: React.FC = () => {
     { id: 'ENERGY', name: 'Энергия', icon: Sun, color: 'from-rose-500 to-pink-500' },
   ];
 
+  // 🎵 Обработчик клика по звуку (поддержка микса)
   const handleSoundClick = (id: string) => {
-      hapticLight(); // 📳 Выбор звука
-      if (activeSoundId === id) {
-          setIsPlaying(!isPlaying);
+    hapticLight();
+    
+    if (activeSoundIds.includes(id)) {
+      // Убираем звук из микса
+      const newIds = activeSoundIds.filter(sid => sid !== id);
+      setActiveSoundIds(newIds);
+      if (newIds.length === 0) {
+        setIsPlaying(false);
+      }
+    } else {
+      // Добавляем звук в микс (максимум 3 одновременно)
+      if (activeSoundIds.length < 3) {
+        setActiveSoundIds([...activeSoundIds, id]);
+        setIsPlaying(true);
       } else {
-          setActiveSoundId(id);
-          setIsPlaying(true);
+        // Заменяем первый звук
+        setActiveSoundIds([...activeSoundIds.slice(1), id]);
+      }
     }
   };
 
@@ -433,10 +548,11 @@ export const MeditationView: React.FC = () => {
           )}
         </div>
         
-        {/* COMPACT Sound Grid - 4 columns */}
+        {/* COMPACT Sound Grid - 4 columns (🎵 поддержка микса!) */}
         <div className="grid grid-cols-4 gap-2">
           {SOUNDSCAPES.map((sound) => {
-            const isActive = activeSoundId === sound.id && isPlaying;
+            const isActive = activeSoundIds.includes(sound.id) && isPlaying;
+            const mixNumber = activeSoundIds.indexOf(sound.id) + 1;
 
             return (
               <motion.button
@@ -455,12 +571,18 @@ export const MeditationView: React.FC = () => {
                 
                 {isActive && (
                   <div className="absolute inset-0 bg-blue-500/30 flex items-center justify-center">
-                      <div className="flex gap-0.5 items-end h-3">
+                    <div className="flex gap-0.5 items-end h-3">
                       <div className="w-0.5 h-2 bg-white rounded-full animate-[bounce_0.8s_infinite]" />
                       <div className="w-0.5 h-3 bg-white rounded-full animate-[bounce_1s_infinite]" />
                       <div className="w-0.5 h-1.5 bg-white rounded-full animate-[bounce_0.6s_infinite]" />
                     </div>
-                </div>
+                    {/* Номер в миксе */}
+                    {activeSoundIds.length > 1 && (
+                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white/90 flex items-center justify-center">
+                        <span className="text-[8px] font-bold text-blue-600">{mixNumber}</span>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 <div className="absolute bottom-0 left-0 right-0 p-1.5">
@@ -470,6 +592,13 @@ export const MeditationView: React.FC = () => {
             );
           })}
         </div>
+        
+        {/* Подсказка про микс */}
+        {activeSoundIds.length === 1 && isPlaying && (
+          <p className="text-white/40 text-[10px] text-center mt-2">
+            💡 Нажми на другой звук чтобы добавить в микс (макс. 3)
+          </p>
+        )}
       </div>
 
       {/* Category Filter Pills */}
@@ -722,21 +851,50 @@ export const MeditationView: React.FC = () => {
                   )}
                 </motion.button>
 
-                <p className="text-white/40 text-sm mt-6">
-                  {meditationPlaying ? 'Слушай и расслабляйся...' : 'Нажми чтобы начать'}
-                </p>
+                {/* 🧘 Guided meditation prompt */}
+                <AnimatePresence mode="wait">
+                  {meditationPlaying && currentPrompt ? (
+                    <motion.p
+                      key={currentPrompt}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.5 }}
+                      className="text-white/80 text-lg mt-6 font-light italic"
+                    >
+                      {currentPrompt}
+                    </motion.p>
+                  ) : (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-white/40 text-sm mt-6"
+                    >
+                      {meditationPlaying ? 'Слушай и расслабляйся...' : 'Нажми чтобы начать'}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
                 
                 {/* Progress indicator */}
                 {meditationPlaying && (
-                  <div className="mt-4 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="mt-6 px-6 py-4 rounded-2xl bg-white/10 backdrop-blur-sm"
+                  >
                     <p className="text-white/60 text-xs mb-1">Время медитации</p>
-                    <p className="text-white font-bold text-lg">
+                    <p className="text-white font-bold text-2xl">
                       {Math.floor(meditationSeconds / 60)}:{(meditationSeconds % 60).toString().padStart(2, '0')}
                     </p>
                     {meditationSeconds >= 180 && (
-                      <p className="text-green-400 text-xs mt-1">✨ +{meditationSeconds >= 900 ? 35 : meditationSeconds >= 600 ? 25 : meditationSeconds >= 300 ? 15 : 10} ОП за завершение</p>
+                      <p className="text-green-400 text-xs mt-2">✨ +{meditationSeconds >= 900 ? 35 : meditationSeconds >= 600 ? 25 : meditationSeconds >= 300 ? 15 : 10} ОП за завершение</p>
                     )}
-                  </div>
+                    {/* Подсказка про звуки */}
+                    {activeSoundIds.length === 0 && meditationSeconds < 30 && (
+                      <p className="text-white/40 text-[10px] mt-2">💡 Включи звуки (Дождь, Лес) для атмосферы</p>
+                    )}
+                  </motion.div>
                 )}
               </motion.div>
             </div>

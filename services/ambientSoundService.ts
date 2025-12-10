@@ -19,14 +19,17 @@ interface AmbientSound {
   type: SoundType;
   audioContext: AudioContext | null;
   nodes: AudioNode[];
+  gainNode: GainNode | null;
   isPlaying: boolean;
 }
 
 class AmbientSoundService {
   private audioContext: AudioContext | null = null;
   private currentSound: AmbientSound | null = null;
+  private activeSounds: Map<SoundType, AmbientSound> = new Map(); // 🎵 Для микса звуков
   private gainNode: GainNode | null = null;
   private volume: number = 0.5;
+  private fadeTimeout: NodeJS.Timeout | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -56,7 +59,139 @@ class AmbientSoundService {
   }
 
   /**
-   * Воспроизвести ambient звук
+   * 🎵 Воспроизвести несколько звуков одновременно (микс)
+   */
+  async playMultiple(soundTypes: SoundType[]): Promise<void> {
+    // Остановить звуки которые больше не нужны
+    for (const [type, sound] of this.activeSounds) {
+      if (!soundTypes.includes(type)) {
+        this.stopSound(type);
+      }
+    }
+    
+    // Запустить новые звуки
+    for (const soundType of soundTypes) {
+      if (!this.activeSounds.has(soundType)) {
+        await this.playSingle(soundType);
+      }
+    }
+  }
+
+  /**
+   * Воспроизвести один звук (добавить в микс)
+   */
+  private async playSingle(soundType: SoundType): Promise<void> {
+    if (!this.audioContext) {
+      this.initAudioContext();
+    }
+
+    if (!this.audioContext) {
+      console.warn('AudioContext not available');
+      return;
+    }
+
+    if (this.audioContext.state === 'suspended') {
+      await this.audioContext.resume();
+    }
+
+    // Создаём отдельный gain node для этого звука (для независимой громкости)
+    const soundGain = this.audioContext.createGain();
+    // Уменьшаем громкость каждого звука в миксе чтобы не было слишком громко
+    const mixVolume = this.volume / Math.max(1, this.activeSounds.size + 1);
+    soundGain.gain.value = mixVolume;
+    soundGain.connect(this.gainNode!);
+
+    const sound: AmbientSound = {
+      type: soundType,
+      audioContext: this.audioContext,
+      nodes: [],
+      gainNode: soundGain,
+      isPlaying: true,
+    };
+    
+    this.activeSounds.set(soundType, sound);
+    this.currentSound = sound;
+
+    // Создать звук
+    switch (soundType) {
+      case 'RAIN': this.createRainSound(); break;
+      case 'FOREST': this.createForestSound(); break;
+      case 'OCEAN': this.createOceanSound(); break;
+      case 'FIRE': this.createFireSound(); break;
+      case 'WIND': this.createWindSound(); break;
+      case 'CAFE': this.createCafeSound(); break;
+      case 'THUNDER': this.createThunderSound(); break;
+      case 'NIGHT': this.createNightSound(); break;
+    }
+    
+    // Обновляем громкость всех звуков для баланса
+    this.rebalanceVolumes();
+  }
+  
+  /**
+   * Перебалансировка громкости при миксе
+   */
+  private rebalanceVolumes() {
+    const count = this.activeSounds.size;
+    if (count === 0) return;
+    
+    const volumePerSound = this.volume / Math.sqrt(count); // sqrt для лучшего баланса
+    
+    for (const [, sound] of this.activeSounds) {
+      if (sound.gainNode && this.audioContext) {
+        sound.gainNode.gain.setTargetAtTime(volumePerSound, this.audioContext.currentTime, 0.3);
+      }
+    }
+  }
+
+  /**
+   * Остановить конкретный звук
+   */
+  private stopSound(type: SoundType) {
+    const sound = this.activeSounds.get(type);
+    if (sound) {
+      sound.isPlaying = false;
+      sound.nodes.forEach(node => {
+        try { node.disconnect(); } catch (e) { /* ignore */ }
+      });
+      if (sound.gainNode) {
+        try { sound.gainNode.disconnect(); } catch (e) { /* ignore */ }
+      }
+      this.activeSounds.delete(type);
+      this.rebalanceVolumes();
+    }
+  }
+
+  /**
+   * 🎵 Плавное затухание всех звуков
+   */
+  fadeOut(duration: number = 1000): void {
+    if (this.fadeTimeout) {
+      clearTimeout(this.fadeTimeout);
+    }
+    
+    if (!this.gainNode || !this.audioContext) {
+      this.stop();
+      return;
+    }
+    
+    // Плавное уменьшение громкости
+    const currentTime = this.audioContext.currentTime;
+    this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, currentTime);
+    this.gainNode.gain.linearRampToValueAtTime(0, currentTime + duration / 1000);
+    
+    // Остановить после затухания
+    this.fadeTimeout = setTimeout(() => {
+      this.stop();
+      // Восстановить громкость для следующего воспроизведения
+      if (this.gainNode) {
+        this.gainNode.gain.value = this.volume;
+      }
+    }, duration);
+  }
+
+  /**
+   * Воспроизвести ambient звук (совместимость со старым API)
    */
   async play(soundType: SoundType): Promise<void> {
     // Остановить текущий звук
@@ -113,9 +248,16 @@ class AmbientSoundService {
   }
 
   /**
-   * Остановить звук
+   * Остановить все звуки
    */
   stop() {
+    // Остановить все звуки из микса
+    for (const [type] of this.activeSounds) {
+      this.stopSound(type);
+    }
+    this.activeSounds.clear();
+    
+    // Остановить текущий звук (обратная совместимость)
     if (this.currentSound) {
       this.currentSound.isPlaying = false;
       this.currentSound.nodes.forEach(node => {
@@ -126,6 +268,12 @@ class AmbientSoundService {
         }
       });
       this.currentSound = null;
+    }
+    
+    // Очистить fade timeout
+    if (this.fadeTimeout) {
+      clearTimeout(this.fadeTimeout);
+      this.fadeTimeout = null;
     }
   }
 

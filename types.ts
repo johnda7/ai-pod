@@ -162,7 +162,6 @@ export interface Meditation {
   category: 'SLEEP' | 'FOCUS' | 'ANXIETY' | 'ENERGY';
   duration: string;
   color: string;
-  youtubeId?: string;
 }
 
 export interface Soundscape {
@@ -170,7 +169,6 @@ export interface Soundscape {
   title: string;
   iconType: 'RAIN' | 'FOREST' | 'OCEAN' | 'FIRE' | 'WIND' | 'CAFE' | 'THUNDER' | 'NIGHT';
   color: string;
-  youtubeId: string;
 }
 
 // Система достижений
