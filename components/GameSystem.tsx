@@ -372,7 +372,7 @@ export const GameSystem: React.FC<GameSystemProps> = ({ userId, onReward, onClos
                   {isUnlocked && (
                     <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-center gap-4 text-xs">
                       <span className="flex items-center gap-1 text-indigo-400">
-                        <Zap size={12} /> +{level.rewards.xp} XP
+                        <Zap size={12} /> +{level.rewards.xp} ОП
                       </span>
                       <span className="flex items-center gap-1 text-yellow-400">
                         <Coins size={12} /> +{level.rewards.coins}

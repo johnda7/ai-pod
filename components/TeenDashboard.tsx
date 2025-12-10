@@ -135,12 +135,14 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
     };
   }, []);
 
-  // Show tutorial for new users
+  // Show tutorial for new users - ОТКЛЮЧЕНО
   useEffect(() => {
-    const hasSeenTutorial = localStorage.getItem('ai_pod_tutorial_seen');
-    if (!hasSeenTutorial && user.completedTaskIds.length === 0) {
-      setShowTutorial(true);
-    }
+    // Онбординг отключен по запросу
+    // const hasSeenTutorial = localStorage.getItem('ai_pod_tutorial_seen');
+    // if (!hasSeenTutorial && user.completedTaskIds.length === 0) {
+    //   setShowTutorial(true);
+    // }
+    setShowTutorial(false);
   }, []);
 
   const handleCloseTutorial = () => {
@@ -197,7 +199,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
           coins: prev.coins + result.coinsBonus,
           level: Math.floor((prev.xp + result.xpBonus) / 500) + 1
         }));
-        setToastMessage(`🏆 ${result.milestone} уроков! +${result.xpBonus} XP, +${result.coinsBonus} монет!`);
+        setToastMessage(`🏆 ${result.milestone} уроков! +${result.xpBonus} ОП, +${result.coinsBonus} монет!`);
         setTimeout(() => {
           setShowConfetti(false);
           setToastMessage('');
@@ -236,8 +238,8 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       hapticMedium(); // 📳 Вибрация при выборе урока
       setSelectedTask(task);
       
-      // Урок t3 использует новый интерактивный квест-формат
-      if (task.id === 't3') {
+      // Уроки t3 и t4 используют новый интерактивный квест-формат
+      if (task.id === 't3' || task.id === 't4') {
         setShowQuestLesson(true);
       } else if (useTikTokMode) {
         setShowModernLesson(true);
@@ -537,7 +539,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                         </div>
                         <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
                             <div className="text-lg font-black text-white">{user.xp}</div>
-                            <div className="text-[8px] font-bold text-slate-400 uppercase">XP</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase">ОП</div>
                         </div>
                         <div className="flex flex-col items-center p-2 rounded-xl bg-white/5">
                             <div className="text-lg font-black text-yellow-400">{user.coins || 0}</div>
@@ -553,7 +555,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                     <div className="relative z-10 w-full">
                         <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1">
                             <span>Уровень {user.level}</span>
-                            <span>{user.xp - prevLevelXp}/{nextLevelXp - prevLevelXp} XP</span>
+                            <span>{user.xp - prevLevelXp}/{nextLevelXp - prevLevelXp} ОП</span>
                         </div>
                         <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
                             <div 
@@ -971,7 +973,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                     <div className="relative">
                         <div className="flex items-center justify-between mb-1">
                             <span className="text-white/60 text-[10px] font-medium">Уровень {user.level}</span>
-                            <span className="text-white/40 text-[10px]">{user.xp % 500}/500 XP</span>
+                            <span className="text-white/40 text-[10px]">{user.xp % 500}/500 ОП</span>
                         </div>
                         <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                             <div 
@@ -1239,7 +1241,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
                                          <span className={`text-[9px] font-medium ${
                                              isCompleted ? 'text-green-400/60' : isActive ? 'text-yellow-400' : 'text-white/20'
                                          }`}>
-                                             +{task.xpReward} XP
+                                             +{task.xpReward} ОП
                                          </span>
                                        </div>
                                         </div>
@@ -1345,7 +1347,15 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
               setShowQuestLesson(false);
               setSelectedTask(null);
             }}
-            onComplete={() => handleLessonComplete(selectedTask)}
+            onComplete={(earnedXp, earnedCoins) => {
+              // Модифицируем task с реально заработанными наградами
+              const modifiedTask = {
+                ...selectedTask,
+                xpReward: earnedXp || selectedTask.xpReward,
+                coinsReward: earnedCoins || selectedTask.coinsReward
+              };
+              handleLessonComplete(modifiedTask);
+            }}
         />
       )}
 
@@ -1358,7 +1368,15 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
               setShowQuestLesson(false);
               setSelectedTask(null);
             }}
-            onComplete={() => handleLessonComplete(selectedTask)}
+            onComplete={(earnedXp, earnedCoins) => {
+              // Модифицируем task с реально заработанными наградами
+              const modifiedTask = {
+                ...selectedTask,
+                xpReward: earnedXp || selectedTask.xpReward,
+                coinsReward: earnedCoins || selectedTask.coinsReward
+              };
+              handleLessonComplete(modifiedTask);
+            }}
         />
       )}
 
@@ -1470,7 +1488,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
         setUser(prev => ({ ...prev, xp: prev.xp + 50 }));
         setFloatingXPAmount(50);
         setShowFloatingXP(true);
-        setToastMessage('Катя рада познакомиться! +50 XP');
+        setToastMessage('Катя рада познакомиться! +50 ОП');
       }} />
       
       {/* Katya Motivation Video - shows after completing lessons */}
