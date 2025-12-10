@@ -1,15 +1,17 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { UserRole, Task, User } from './types';
 import { TeenDashboard } from './components/TeenDashboard';
-import { ParentDashboard } from './components/ParentDashboard';
-import { CuratorDashboard } from './components/CuratorDashboard';
-import { ParentZone } from './components/ParentZone';
 import { initTelegramApp, getTelegramUser } from './services/telegramService';
 import { getOrCreateUser, completeTask, refreshUserFromSupabase } from './services/db';
-import { KatyaChat } from './components/KatyaChat';
 import { Wifi, AlertCircle, RefreshCw } from 'lucide-react';
 import { isSupabaseEnabled } from './services/supabaseClient';
+
+// 🚀 LAZY LOADING - загружаем только когда нужны
+const ParentDashboard = lazy(() => import('./components/ParentDashboard').then(m => ({ default: m.ParentDashboard })));
+const CuratorDashboard = lazy(() => import('./components/CuratorDashboard').then(m => ({ default: m.CuratorDashboard })));
+const ParentZone = lazy(() => import('./components/ParentZone').then(m => ({ default: m.ParentZone })));
+const KatyaChat = lazy(() => import('./components/KatyaChat').then(m => ({ default: m.KatyaChat })));
 
 // 🔀 Определяем режим по URL
 const getAppMode = (): 'teen' | 'parent' => {
@@ -22,6 +24,16 @@ const getAppMode = (): 'teen' | 'parent' => {
   }
   return 'teen';
 };
+
+// 🎨 Skeleton Loading для lazy компонентов
+const LoadingFallback = () => (
+  <div className="h-full flex items-center justify-center bg-[#020617]">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 rounded-full border-4 border-purple-500/30 border-t-purple-500 animate-spin" />
+      <span className="text-white/60 text-sm">Загрузка...</span>
+    </div>
+  </div>
+);
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -173,7 +185,9 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-y-auto scroll-smooth bg-[#020617]">
         {/* 👨‍👩‍👧 РОДИТЕЛЬСКИЙ РЕЖИМ - отдельный вход */}
         {appMode === 'parent' ? (
-          <ParentZone isOpen={true} onClose={() => window.location.href = '/'} />
+          <Suspense fallback={<LoadingFallback />}>
+            <ParentZone isOpen={true} onClose={() => window.location.href = '/'} />
+          </Suspense>
         ) : (
           <>
         {currentUser.role === UserRole.TEEN && (
@@ -186,17 +200,25 @@ const App: React.FC = () => {
           />
         )}
         {currentUser.role === UserRole.PARENT && (
-          <ParentDashboard />
+          <Suspense fallback={<LoadingFallback />}>
+            <ParentDashboard />
+          </Suspense>
         )}
         {currentUser.role === UserRole.CURATOR && (
-          <CuratorDashboard />
+          <Suspense fallback={<LoadingFallback />}>
+            <CuratorDashboard />
+          </Suspense>
             )}
           </>
         )}
       </main>
 
-      {/* AI Assistant (Only for Teen mode) */}
-      {appMode === 'teen' && currentUser.role === UserRole.TEEN && <KatyaChat />}
+      {/* AI Assistant (Only for Teen mode) - Lazy loaded */}
+      {appMode === 'teen' && currentUser.role === UserRole.TEEN && (
+        <Suspense fallback={null}>
+          <KatyaChat />
+        </Suspense>
+      )}
     </div>
   );
 };

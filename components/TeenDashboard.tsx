@@ -1,17 +1,9 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { TASKS, SHOP_ITEMS, ACHIEVEMENTS } from '../constants';
 import { Task, User, ShopItem } from '../types';
 import { Check, Lock, Star, LayoutGrid, User as UserIcon, ShoppingBag, Heart, Zap, ShieldCheck, HelpCircle, ChevronRight, LogOut, Edit3, Sparkles, Gift, Target, Coins, Skull, Info, Award, Flame, Wrench, Trophy, Calendar, Play } from 'lucide-react';
-import { MeditationView } from './MeditationView';
 import { TaskModal } from './TaskModal';
-import { ModernLessonView } from './ModernLessonView';
-import { FocusNinjaLesson } from './FocusNinjaLesson';
-import { BatteryLesson } from './BatteryLesson';
-import { MemoryGame } from './MemoryGame';
-import { ShopView } from './ShopView';
-import { AchievementsView } from './AchievementsView';
-import { ToolsView } from './ToolsView';
 import { purchaseItem, checkAndUpdateStreak, checkMilestoneReward, syncToolsDataToSupabase } from '../services/db';
 import { isSupabaseEnabled, supabase } from '../services/supabaseClient';
 import { GameTutorial } from './GameTutorial';
@@ -23,6 +15,26 @@ import { ActivityChart } from './ActivityChart';
 import { DailyQuoteWidget } from './KatyaQuotes';
 import { HabitsWidget } from './HabitsWidget';
 import { KatyaWelcome, KatyaMotivation, useKatyaMotivation } from './KatyaVideo';
+
+// 🚀 LAZY LOADING - тяжёлые компоненты загружаются только когда нужны
+const MeditationView = lazy(() => import('./MeditationView').then(m => ({ default: m.MeditationView })));
+const ModernLessonView = lazy(() => import('./ModernLessonView').then(m => ({ default: m.ModernLessonView })));
+const FocusNinjaLesson = lazy(() => import('./FocusNinjaLesson').then(m => ({ default: m.FocusNinjaLesson })));
+const BatteryLesson = lazy(() => import('./BatteryLesson').then(m => ({ default: m.BatteryLesson })));
+const MemoryGame = lazy(() => import('./MemoryGame').then(m => ({ default: m.MemoryGame })));
+const ShopView = lazy(() => import('./ShopView').then(m => ({ default: m.ShopView })));
+const AchievementsView = lazy(() => import('./AchievementsView').then(m => ({ default: m.AchievementsView })));
+const ToolsView = lazy(() => import('./ToolsView').then(m => ({ default: m.ToolsView })));
+
+// 🎨 Loading fallback для lazy компонентов
+const LazyLoadingFallback = () => (
+  <div className="fixed inset-0 z-[60] bg-[#020617] flex items-center justify-center">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-16 h-16 rounded-full border-4 border-purple-500/30 border-t-purple-500 animate-spin" />
+      <span className="text-white/60 text-sm font-medium">Загружаю...</span>
+    </div>
+  </div>
+);
 
 interface TeenDashboardProps {
   user: User;
@@ -475,8 +487,16 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
   };
 
   const renderContent = () => {
-    if (activeTab === 'TOOLS') return <ToolsView user={user} onXpEarned={handleGameReward} onNavigateToSection={setActiveTab} />;
-    if (activeTab === 'RELAX') return <MeditationView />;
+    if (activeTab === 'TOOLS') return (
+      <Suspense fallback={<LazyLoadingFallback />}>
+        <ToolsView user={user} onXpEarned={handleGameReward} onNavigateToSection={setActiveTab} />
+      </Suspense>
+    );
+    if (activeTab === 'RELAX') return (
+      <Suspense fallback={<LazyLoadingFallback />}>
+        <MeditationView />
+      </Suspense>
+    );
 
     if (activeTab === 'PROFILE') {
         // Use Telegram user data from state
@@ -1284,7 +1304,9 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
           >
             ✕
           </button>
-          <AchievementsView user={user} />
+          <Suspense fallback={<LazyLoadingFallback />}>
+            <AchievementsView user={user} />
+          </Suspense>
         </div>
       )}
       
@@ -1340,6 +1362,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       {/* MODALS */}
       {/* Focus Ninja lesson format for lesson t3 */}
       {selectedTask && selectedTask.id === 't3' && showQuestLesson && (
+        <Suspense fallback={<LazyLoadingFallback />}>
         <FocusNinjaLesson
             task={selectedTask}
             isOpen={showQuestLesson}
@@ -1357,10 +1380,12 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
               handleLessonComplete(modifiedTask);
             }}
         />
+        </Suspense>
       )}
 
       {/* Battery lesson format for lesson t4 */}
       {selectedTask && selectedTask.id === 't4' && showQuestLesson && (
+        <Suspense fallback={<LazyLoadingFallback />}>
         <BatteryLesson
             task={selectedTask}
             isOpen={showQuestLesson}
@@ -1378,10 +1403,12 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
               handleLessonComplete(modifiedTask);
             }}
         />
+        </Suspense>
       )}
 
       {/* Modern TikTok-style lesson view */}
       {selectedTask && useTikTokMode && showModernLesson && selectedTask.id !== 't3' && selectedTask.id !== 't4' && (
+        <Suspense fallback={<LazyLoadingFallback />}>
         <ModernLessonView
             task={selectedTask}
             isOpen={showModernLesson}
@@ -1391,6 +1418,7 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
             }}
             onComplete={() => handleLessonComplete(selectedTask)}
         />
+        </Suspense>
       )}
       
       {/* Classic lesson view */}
@@ -1408,11 +1436,13 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
       )}
 
       {isGameOpen && (
+          <Suspense fallback={<LazyLoadingFallback />}>
           <MemoryGame 
             isOpen={isGameOpen}
             onClose={() => setIsGameOpen(false)}
             onComplete={handleGameComplete}
           />
+          </Suspense>
       )}
 
       {/* NEW UI COMPONENTS */}
@@ -1478,7 +1508,9 @@ export const TeenDashboard: React.FC<TeenDashboardProps> = ({ user: initialUser,
           >
             ✕
           </button>
-          <ShopView user={user} onBuy={handleBuyItem} />
+          <Suspense fallback={<LazyLoadingFallback />}>
+            <ShopView user={user} onBuy={handleBuyItem} />
+          </Suspense>
         </div>
       )}
       
