@@ -10,6 +10,7 @@ import {
 import { GratitudeJournal } from './GratitudeJournal';
 import { ZenVisualizer } from './ZenVisualizer';
 import { hapticLight, hapticMedium, hapticSuccess } from '../services/telegramService';
+import { playCompleteSound } from '../services/soundService';
 import { ambientSoundService, SoundType } from '../services/ambientSoundService';
 
 // 🚀 ОПТИМИЗАЦИЯ: уменьшены размеры изображений + качество для быстрой загрузки
@@ -160,6 +161,14 @@ export const MeditationView: React.FC = () => {
     const [cycles, setCycles] = useState(0);
     const [elapsedSeconds, setElapsedSeconds] = useState(0);
       
+      // Блокируем scroll при открытии модалки
+      useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+          document.body.style.overflow = '';
+        };
+      }, []);
+      
       useEffect(() => {
           const interval = setInterval(() => {
               setElapsedSeconds(prev => prev + 1);
@@ -187,6 +196,25 @@ export const MeditationView: React.FC = () => {
           
           localStorage.setItem('meditation_minutes_today', String(currentMinutes + minutesSpent));
           localStorage.setItem('meditation_last_date', today);
+          
+          // Награда за дыхание: 1 цикл = 5 XP, минимум 1 минута = 10 XP
+          const cyclesXp = cycles * 5;
+          const timeXp = minutesSpent > 0 ? 10 : 0;
+          const totalXp = Math.max(cyclesXp, timeXp);
+          
+          if (totalXp > 0) {
+            // Обновляем XP пользователя через localStorage
+            const users = JSON.parse(localStorage.getItem('ai_teenager_users_v6') || '[]');
+            if (users.length > 0) {
+              const user = users[0];
+              user.xp = (user.xp || 0) + totalXp;
+              user.coins = (user.coins || 0) + Math.floor(totalXp * 0.5);
+              user.level = Math.floor(user.xp / 500) + 1;
+              localStorage.setItem('ai_teenager_users_v6', JSON.stringify(users));
+              hapticSuccess();
+              playCompleteSound();
+            }
+          }
         }
         setShowBreathing(false);
       };
@@ -602,6 +630,15 @@ export const MeditationView: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onAnimationStart={() => {
+              // Блокируем scroll при открытии модалки
+              document.body.style.overflow = 'hidden';
+            }}
+            onAnimationComplete={() => {
+              if (!selectedMeditation) {
+                document.body.style.overflow = '';
+              }
+            }}
           >
             {/* Background Image */}
             <div className="absolute inset-0">
@@ -615,7 +652,35 @@ export const MeditationView: React.FC = () => {
 
             {/* Close Button */}
             <button
-              onClick={() => { setSelectedMeditation(null); setMeditationPlaying(false); }}
+              onClick={() => {
+                // Награда за медитацию при закрытии
+                const minutesSpent = Math.floor(meditationSeconds / 60);
+                if (minutesSpent > 0) {
+                  // Награды: 3 мин = 10 XP, 5 мин = 15 XP, 10 мин = 25 XP, 15+ мин = 35 XP
+                  let xpReward = 0;
+                  if (minutesSpent >= 15) xpReward = 35;
+                  else if (minutesSpent >= 10) xpReward = 25;
+                  else if (minutesSpent >= 5) xpReward = 15;
+                  else if (minutesSpent >= 3) xpReward = 10;
+                  
+                  if (xpReward > 0) {
+                    const users = JSON.parse(localStorage.getItem('ai_teenager_users_v6') || '[]');
+                    if (users.length > 0) {
+                      const user = users[0];
+                      user.xp = (user.xp || 0) + xpReward;
+                      user.coins = (user.coins || 0) + Math.floor(xpReward * 0.5);
+                      user.level = Math.floor(user.xp / 500) + 1;
+                      localStorage.setItem('ai_teenager_users_v6', JSON.stringify(users));
+                      hapticSuccess();
+                      playCompleteSound();
+                    }
+                  }
+                }
+                setSelectedMeditation(null);
+                setMeditationPlaying(false);
+                setMeditationSeconds(0);
+                document.body.style.overflow = '';
+              }}
               className="absolute top-6 right-6 z-[100] w-12 h-12 rounded-full flex items-center justify-center text-white/60 hover:text-white transition-colors"
               style={{
                 background: 'rgba(255,255,255,0.1)',
@@ -660,6 +725,19 @@ export const MeditationView: React.FC = () => {
                 <p className="text-white/40 text-sm mt-6">
                   {meditationPlaying ? 'Слушай и расслабляйся...' : 'Нажми чтобы начать'}
                 </p>
+                
+                {/* Progress indicator */}
+                {meditationPlaying && (
+                  <div className="mt-4 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm">
+                    <p className="text-white/60 text-xs mb-1">Время медитации</p>
+                    <p className="text-white font-bold text-lg">
+                      {Math.floor(meditationSeconds / 60)}:{(meditationSeconds % 60).toString().padStart(2, '0')}
+                    </p>
+                    {meditationSeconds >= 180 && (
+                      <p className="text-green-400 text-xs mt-1">✨ +{meditationSeconds >= 900 ? 35 : meditationSeconds >= 600 ? 25 : meditationSeconds >= 300 ? 15 : 10} ОП за завершение</p>
+                    )}
+                  </div>
+                )}
               </motion.div>
             </div>
 

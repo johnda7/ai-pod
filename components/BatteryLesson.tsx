@@ -14,7 +14,7 @@ interface BatteryLessonProps {
   task: Task;
   isOpen: boolean;
   onClose: () => void;
-  onComplete: () => void;
+  onComplete: (earnedXp?: number, earnedCoins?: number) => void;
 }
 
 // Фазы урока
@@ -213,6 +213,7 @@ export const BatteryLesson: React.FC<BatteryLessonProps> = ({
 }) => {
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
+  const [coinsEarned, setCoinsEarned] = useState(0);
   const [completedStages, setCompletedStages] = useState<Set<string>>(new Set());
   const [showXpPopup, setShowXpPopup] = useState(false);
   const [popupXp, setPopupXp] = useState(0);
@@ -232,6 +233,7 @@ export const BatteryLesson: React.FC<BatteryLessonProps> = ({
     if (isOpen) {
       setCurrentStageIndex(0);
       setXpEarned(0);
+      setCoinsEarned(0);
       setCompletedStages(new Set());
       setKatyaState('waving');
       setBatteryLevel(50);
@@ -267,11 +269,14 @@ export const BatteryLesson: React.FC<BatteryLessonProps> = ({
     setTimeout(() => setShowXpPopup(false), 1500);
   }, [comboCount]);
 
-  const markStageComplete = useCallback((stageId: string, xp: number = 0, isCorrect: boolean = true) => {
+  const markStageComplete = useCallback((stageId: string, xp: number = 0, isCorrect: boolean = true, coins: number = 0) => {
     if (!completedStages.has(stageId)) {
       setCompletedStages(prev => new Set([...prev, stageId]));
       if (xp > 0) {
         addXp(xp, isCorrect);
+      }
+      if (coins > 0) {
+        setCoinsEarned(prev => prev + coins);
       }
     }
   }, [completedStages, addXp]);
@@ -440,7 +445,7 @@ export const BatteryLesson: React.FC<BatteryLessonProps> = ({
             <div className="px-8 py-4 rounded-2xl bg-gradient-to-r from-yellow-500 to-orange-500 shadow-2xl shadow-orange-500/50">
               <div className="flex items-center gap-3">
                 <Sparkles size={28} className="text-white" />
-                <span className="text-white font-black text-2xl">+{popupXp} XP</span>
+                <span className="text-white font-black text-2xl">+{popupXp} ОП</span>
               </div>
             </div>
           </motion.div>
@@ -582,7 +587,7 @@ const StageRenderer: React.FC<StageRendererProps> = ({ stage, onComplete, onNext
     case 'input':
       return <InputStage stage={stage} onComplete={onComplete} onNext={onNext} />;
     case 'reward':
-      return <RewardStage stage={stage} onNext={onNext} setShowConfetti={setShowConfetti} />;
+      return <RewardStage stage={stage} onNext={onNext} setShowConfetti={setShowConfetti} onComplete={onComplete} />;
     default:
       return <TheoryStage stage={stage} onNext={onNext} />;
   }
@@ -1636,7 +1641,7 @@ const InputStage: React.FC<{ stage: any; onComplete: any; onNext: any }> = ({ st
 };
 
 // === REWARD ===
-const RewardStage: React.FC<{ stage: any; onNext: any; setShowConfetti?: (show: boolean) => void }> = ({ stage, onNext, setShowConfetti }) => {
+const RewardStage: React.FC<{ stage: any; onNext: any; setShowConfetti?: (show: boolean) => void; onComplete?: (stageId: string, xp?: number, isCorrect?: boolean, coins?: number) => void }> = ({ stage, onNext, setShowConfetti, onComplete }) => {
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   
   React.useEffect(() => {
@@ -1646,6 +1651,7 @@ const RewardStage: React.FC<{ stage: any; onNext: any; setShowConfetti?: (show: 
       return () => clearTimeout(timer);
     }
     hapticSuccess();
+    // НЕ вызываем onComplete здесь - финальная награда передаётся в goToNextStage
   }, [setShowConfetti]);
 
   const handleClaimReward = () => {
@@ -1696,7 +1702,7 @@ const RewardStage: React.FC<{ stage: any; onNext: any; setShowConfetti?: (show: 
         >
           <div className="flex items-center gap-2">
             <Zap size={24} className="text-yellow-400" />
-            <span className="text-yellow-300 font-black text-xl">+{stage.xpReward || 150} XP</span>
+            <span className="text-yellow-300 font-black text-xl">+{stage.xpReward || 150} ОП</span>
           </div>
         </motion.div>
         <motion.div 

@@ -657,7 +657,7 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-yellow-500/10">
                           <Zap size={12} className="text-yellow-400" />
-                          <span className="text-yellow-400 font-medium">+{challenge.reward.xp} XP</span>
+                          <span className="text-yellow-400 font-medium">+{challenge.reward.xp} ОП</span>
                         </div>
                         <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-yellow-500/10">
                           <span className="text-yellow-400">🪙</span>
@@ -848,7 +848,7 @@ export const ChallengeSystem: React.FC<ChallengeSystemProps> = ({
                         <div className="flex items-center justify-center gap-4 mb-5">
                           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-yellow-500/10">
                             <Zap size={16} className="text-yellow-400" />
-                            <span className="text-yellow-400 font-bold">+{selectedChallenge.reward.xp} XP</span>
+                            <span className="text-yellow-400 font-bold">+{selectedChallenge.reward.xp} ОП</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-yellow-500/10">
                             <span className="text-yellow-400">🪙</span>

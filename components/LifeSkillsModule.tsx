@@ -680,7 +680,7 @@ export const LifeSkillsModule: React.FC<LifeSkillsModuleProps> = ({ isOpen, onCl
                             </span>
                             <span className="text-xs flex items-center gap-1" style={{ color: '#fbbf24' }}>
                               <Zap size={10} />
-                              +{lesson.xp} XP
+                              +{lesson.xp} ОП
                             </span>
                           </div>
                         </div>
