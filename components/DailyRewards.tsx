@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Gift, Sparkles, Check, Clock, Flame } from 'lucide-react';
+import { hapticSuccess, hapticMedium } from '../services/telegramService';
+import { playDailyRewardSound } from '../services/soundService';
 
 interface DailyRewardsProps {
   isOpen: boolean;
@@ -50,9 +52,12 @@ export const DailyRewards: React.FC<DailyRewardsProps> = ({
   const handleClaim = (reward: DayReward) => {
     if (claimedToday) return;
     
+    hapticMedium(); // 📳 Вибрация при клике
     setClaimingDay(reward.day);
     
     setTimeout(() => {
+      hapticSuccess(); // 📳 Успех!
+      playDailyRewardSound(); // 🔊 Праздничный звук!
       const today = new Date().toDateString();
       localStorage.setItem('daily_reward_last_claim', today);
       setClaimedToday(true);

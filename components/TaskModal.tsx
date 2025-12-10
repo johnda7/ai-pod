@@ -11,7 +11,7 @@ import { ThermiteGrid } from './ProGames';
 import { RiveKatya } from './RiveKatya';
 import { KatyaMentor } from './KatyaMentor';
 import { hapticLight, hapticMedium, hapticSuccess, hapticError, hapticSelection } from '../services/telegramService';
-import { playCorrectSound, playWrongSound, playCompleteSound, playClickSound } from '../services/soundService';
+import { playCorrectSound, playWrongSound, playCompleteSound, playClickSound, playFirstCompleteSound, playSlideSound } from '../services/soundService';
 
 interface TaskModalProps {
   task: Task;
@@ -153,9 +153,15 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, userInterest
       playClickSound(); // 🔊 Клик
       if (currentSlideIndex < slides.length - 1) {
           setCurrentSlideIndex(prev => prev + 1);
+          playSlideSound(); // 🔊 Мягкий звук перехода
       } else {
           hapticSuccess(); // 📳 Урок завершён!
-          playCompleteSound(); // 🔊 Завершение урока!
+          // 🔊 Особый звук для первого прохождения!
+          if (!isPreviouslyCompleted) {
+              playFirstCompleteSound();
+          } else {
+              playCompleteSound();
+          }
           // 💾 Очищаем сохранённый прогресс после завершения
           localStorage.removeItem(PROGRESS_KEY);
           onComplete();

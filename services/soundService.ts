@@ -277,4 +277,151 @@ export const playSurpriseSound = () => {
   });
 };
 
+// 🔥 Звук комбо (разный для x2, x3, x5+)
+export const playComboSound = (comboLevel: number) => {
+  if (!isSoundEnabled()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  // Разные ноты для разных уровней комбо
+  let notes: number[];
+  let waveType: OscillatorType = 'sine';
+  
+  if (comboLevel >= 5) {
+    // x5+ ЭПИЧЕСКИЙ комбо!
+    notes = [523, 659, 784, 1047, 1319, 1568]; // C5, E5, G5, C6, E6, G6
+    waveType = 'triangle';
+  } else if (comboLevel >= 3) {
+    // x3-x4 Отличный комбо
+    notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+  } else {
+    // x2 Базовый комбо
+    notes = [523, 784]; // C5, G5
+  }
+  
+  notes.forEach((freq, i) => {
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.type = waveType;
+    oscillator.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.05);
+
+    const volume = comboLevel >= 5 ? 0.2 : comboLevel >= 3 ? 0.18 : 0.15;
+    gainNode.gain.setValueAtTime(volume, ctx.currentTime + i * 0.05);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.05 + 0.15);
+
+    oscillator.start(ctx.currentTime + i * 0.05);
+    oscillator.stop(ctx.currentTime + i * 0.05 + 0.15);
+  });
+};
+
+// 🎁 Звук ежедневной награды (праздничный!)
+export const playDailyRewardSound = () => {
+  if (!isSoundEnabled()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  // Фанфары!
+  const notes = [392, 523, 659, 784, 1047, 1319]; // G4, C5, E5, G5, C6, E6
+  
+  notes.forEach((freq, i) => {
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.type = 'triangle';
+    oscillator.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.08);
+
+    gainNode.gain.setValueAtTime(0.25, ctx.currentTime + i * 0.08);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.08 + 0.3);
+
+    oscillator.start(ctx.currentTime + i * 0.08);
+    oscillator.stop(ctx.currentTime + i * 0.08 + 0.3);
+  });
+};
+
+// 🏆 Звук достижения (эпический!)
+export const playAchievementSound = () => {
+  if (!isSoundEnabled()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  // Торжественная мелодия
+  const notes = [392, 523, 659, 784, 659, 784, 1047]; // G4, C5, E5, G5, E5, G5, C6
+  const delays = [0, 0.1, 0.2, 0.3, 0.45, 0.55, 0.7];
+  
+  notes.forEach((freq, i) => {
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(freq, ctx.currentTime + delays[i]);
+
+    gainNode.gain.setValueAtTime(0.2, ctx.currentTime + delays[i]);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delays[i] + 0.25);
+
+    oscillator.start(ctx.currentTime + delays[i]);
+    oscillator.stop(ctx.currentTime + delays[i] + 0.25);
+  });
+};
+
+// 🌟 Звук "WOW" для первого прохождения урока
+export const playFirstCompleteSound = () => {
+  if (!isSoundEnabled()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  // Волшебная мелодия
+  const notes = [523, 659, 784, 1047, 1319, 1568, 1047, 1319, 1568]; 
+  const delays = [0, 0.08, 0.16, 0.24, 0.32, 0.4, 0.55, 0.63, 0.71];
+  
+  notes.forEach((freq, i) => {
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.type = i < 6 ? 'sine' : 'triangle';
+    oscillator.frequency.setValueAtTime(freq, ctx.currentTime + delays[i]);
+
+    gainNode.gain.setValueAtTime(0.18, ctx.currentTime + delays[i]);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delays[i] + 0.2);
+
+    oscillator.start(ctx.currentTime + delays[i]);
+    oscillator.stop(ctx.currentTime + delays[i] + 0.2);
+  });
+};
+
+// 📖 Звук перехода на новый слайд (мягкий)
+export const playSlideSound = () => {
+  if (!isSoundEnabled()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  const oscillator = ctx.createOscillator();
+  const gainNode = ctx.createGain();
+
+  oscillator.connect(gainNode);
+  gainNode.connect(ctx.destination);
+
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+  oscillator.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
+
+  gainNode.gain.setValueAtTime(0.08, ctx.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+
+  oscillator.start(ctx.currentTime);
+  oscillator.stop(ctx.currentTime + 0.1);
+};
+
 

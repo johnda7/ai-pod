@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Target, Zap, Clock, Brain, CheckCircle, XCircle, Crosshair, Sparkles, Shield, Skull, Battery, Flame, Droplets, Ghost, Play, Smartphone, Bell, Gamepad2, BookOpen, AlertTriangle, RefreshCw, Trophy } from 'lucide-react';
 import { GameSlide } from '../types';
 import { hapticLight, hapticSuccess, hapticError, hapticMedium } from '../services/telegramService';
-import { playCorrectSound, playWrongSound, playCompleteSound, playClickSound } from '../services/soundService';
+import { playCorrectSound, playWrongSound, playCompleteSound, playClickSound, playComboSound } from '../services/soundService';
 
 interface MiniGameProps {
   config: GameSlide;
@@ -98,7 +98,12 @@ export const FocusDefender: React.FC<MiniGameProps> = ({ config, onComplete }) =
       playCorrectSound(); // 🔊 Звук успеха
       const comboBonus = Math.min(combo, 3);
       setScore(s => s + 1 + comboBonus);
-      setCombo(c => c + 1);
+      const newCombo = combo + 1;
+      setCombo(newCombo);
+      // 🔊 Комбо звук при 2+ подряд!
+      if (newCombo >= 2) {
+        setTimeout(() => playComboSound(newCombo), 100);
+      }
       setShowCombo(true);
       setTimeout(() => setShowCombo(false), 500);
     } else {
