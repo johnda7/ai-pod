@@ -11,6 +11,8 @@ import {
   Trophy, Star, Heart, Target, Brain
 } from 'lucide-react';
 import { Task, LessonSlide } from '../types';
+import { hapticLight, hapticSuccess, hapticError, hapticMedium } from '../services/telegramService';
+import { playCorrectSound, playWrongSound, playCompleteSound, playClickSound, playSlideSound } from '../services/soundService';
 
 interface Lesson2GamifiedProps {
   task: Task;
@@ -180,6 +182,8 @@ const DragToUnlockQuiz: React.FC<{
     setDraggedIndex(null);
     
     if (index === correctIndex) {
+      hapticSuccess(); // 📳 Успех!
+      playCorrectSound(); // 🔊 Звук успеха
       setIsUnlocked(true);
       onComplete(20);
       
@@ -188,6 +192,8 @@ const DragToUnlockQuiz: React.FC<{
         onNext();
       }, 2000);
     } else {
+      hapticError(); // 📳 Ошибка
+      playWrongSound(); // 🔊 Звук ошибки
       onComplete(5);
     }
   };
@@ -338,9 +344,13 @@ export const Lesson2Gamified: React.FC<Lesson2GamifiedProps> = ({
   }, [isOpen]);
   
   const handleNext = () => {
+    hapticLight(); // 📳 Вибрация
+    playSlideSound(); // 🔊 Звук перехода
     if (currentIndex < totalSlides - 1) {
       setCurrentIndex(prev => prev + 1);
     } else {
+      hapticSuccess(); // 📳 Завершение!
+      playCompleteSound(); // 🔊 Звук завершения!
       onComplete();
     }
   };

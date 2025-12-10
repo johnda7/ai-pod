@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Zap, Brain, Trophy } from 'lucide-react';
 import { Task } from '../types';
+import { hapticLight, hapticSuccess, hapticError, hapticMedium } from '../services/telegramService';
+import { playCorrectSound, playWrongSound, playCompleteSound, playClickSound } from '../services/soundService';
 
 interface MemoryGameProps {
   isOpen: boolean;
@@ -80,6 +82,9 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({ isOpen, onClose, onCompl
   const handleColorClick = (index: number) => {
       if (!isPlaying || isShowingSequence || gameOver) return;
 
+      hapticLight(); // 📳 Вибрация при клике
+      playClickSound(); // 🔊 Звук клика
+      
       // Visual feedback
       setActiveColorIndex(index);
       setTimeout(() => setActiveColorIndex(null), 200);
@@ -87,10 +92,15 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({ isOpen, onClose, onCompl
       const currentMove = playerSequence.length;
       // Check correctness
       if (index !== sequence[currentMove]) {
+          hapticError(); // 📳 Ошибка!
+          playWrongSound(); // 🔊 Звук ошибки
           setGameOver(true);
           setIsPlaying(false);
           return;
       }
+      
+      hapticMedium(); // 📳 Правильно!
+      playCorrectSound(); // 🔊 Звук успеха
 
       const newPlayerSeq = [...playerSequence, index];
       setPlayerSequence(newPlayerSeq);
@@ -98,6 +108,8 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({ isOpen, onClose, onCompl
       // Check if sequence completed
       if (newPlayerSeq.length === sequence.length) {
           if (level >= 5) { // Win condition
+              hapticSuccess(); // 📳 Победа!
+              playCompleteSound(); // 🔊 Звук победы!
               setGameWon(true);
               setIsPlaying(false);
               onComplete(100); // Award 100 XP
